@@ -9,7 +9,6 @@ const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
-    clientId: "devs",
 })
 ```
 
@@ -31,7 +30,6 @@ const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
-    clientId: "devs",
 })
 // highlight-next-line
 await mqtt.publish("devs/log", "hello")
@@ -50,7 +48,6 @@ const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
-    clientId: "devs",
 })
 // highlight-next-line
 const id = deviceIdentifier("self")
@@ -68,7 +65,6 @@ const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
-    clientId: "devs",
 })
 
 // highlight-next-line

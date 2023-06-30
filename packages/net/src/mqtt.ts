@@ -4,7 +4,13 @@
  * A port of https://github.com/rovale/micro-mqtt for MakeCode, ported to DeviceScript.
  */
 
-import { AsyncVoid, delay, emitter, wait } from "@devicescript/core"
+import {
+    AsyncVoid,
+    delay,
+    deviceIdentifier,
+    emitter,
+    wait,
+} from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
 import {
     Observable,
@@ -17,13 +23,13 @@ import {
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
  */
 const enum MQTTConnectFlags {
-    UserName = 128,
-    Password = 64,
-    WillRetain = 32,
-    WillQoS2 = 16,
-    WillQoS1 = 8,
-    Will = 4,
-    CleanSession = 2,
+    UserName = 1 << 7,
+    Password = 1 << 6,
+    WillRetain = 1 << 5,
+    WillQoS2 = 1 << 4,
+    WillQoS1 = 1 << 3,
+    Will = 1 << 2,
+    CleanSession = 1 << 1,
 }
 
 /**
@@ -105,7 +111,7 @@ const enum Constants {
 export interface MQTTConnectOptions extends SocketConnectOptions {
     username?: string
     password?: string
-    clientId: string
+    clientId?: string
     will?: MQTTConnectOptionsWill
 }
 
@@ -147,16 +153,16 @@ function encodeRemainingLength(remainingLength: number): number[] {
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
  */
 function createConnectFlags(options: MQTTConnectOptions): number {
+    const { username, password, will } = options
     let flags: number = 0
-    flags |= options.username ? MQTTConnectFlags.UserName : 0
-    flags |=
-        options.username && options.password ? MQTTConnectFlags.Password : 0
+    flags |= username ? MQTTConnectFlags.UserName : 0
+    flags |= username && password ? MQTTConnectFlags.Password : 0
     flags |= MQTTConnectFlags.CleanSession
 
-    if (options.will) {
+    if (will) {
         flags |= MQTTConnectFlags.Will
-        flags |= (options.will.qos || 0) << 3
-        flags |= options.will.retain ? MQTTConnectFlags.WillRetain : 0
+        flags |= (will.qos || 0) << 3
+        flags |= will.retain ? MQTTConnectFlags.WillRetain : 0
     }
 
     return flags
@@ -164,6 +170,8 @@ function createConnectFlags(options: MQTTConnectOptions): number {
 
 // Returns the MSB and LSB.
 function getBytes(int16: number): number[] {
+    if (int16 < 0 || int16 > 65535)
+        throw new RangeError("bytes must be between 0 and 65535")
     return [int16 >> 8, int16 & 255]
 }
 
@@ -216,7 +224,7 @@ function createConnect(options: MQTTConnectOptions): Buffer {
     nums[2] = 0
     nums[3] = Constants.KeepAlive
 
-    let payload = pack(options.clientId)
+    let payload = pack(options.clientId || "")
 
     if (options.will) {
         payload = payload.concat(
@@ -389,14 +397,13 @@ export class MQTTClient {
     private mqttHandlers: MQTTHandler[] = []
 
     constructor(opt: MQTTConnectOptions) {
-        opt.port = opt.port || 8883
-        opt.clientId = opt.clientId
-
+        opt.proto = opt.proto || "tls"
+        if (!opt.port) opt.port = opt.proto === "tls" ? 8883 : 1883
+        if (!opt.clientId) opt.clientId = `devs_${deviceIdentifier("self")}`
         if (opt.will) {
             opt.will.qos = opt.will.qos || Constants.DefaultQos
             opt.will.retain = opt.will.retain || false
         }
-
         this.opt = opt
     }
 
@@ -476,7 +483,7 @@ export class MQTTClient {
             self.readyState = MQTTState.Closed
             self.socket = null
         })
-        self.log("socket opened, connecting to broker")
+        self.log(`socket opened, connecting ${self.opt.clientId} to broker`)
         this.readyState = MQTTState.Open
         await self.send(createConnect(self.opt))
         await wait(this.onconnect, self.opt.timeout)
