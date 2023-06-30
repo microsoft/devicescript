@@ -50,8 +50,7 @@ ds.Buffer.prototype.setBit = function setBit(bitindex: number, on: boolean) {
 }
 
 ds.Buffer.prototype.readUInt16LE = function readUInt16LE(offset: number) {
-    if (offset < 0 || offset + 2 > this.length) return 0
-    return (this[offset + 1] << 8) | this[offset]
+    return this.getAt(offset, 'u16')
 }
 
 ds.Buffer.prototype.readUInt16BE = function readUInt16BE(offset: number) {

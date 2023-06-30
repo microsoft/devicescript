@@ -79,8 +79,8 @@ describe("net", () => {
         const mqtt = await connectMQTT(opts)
         let received = false
         const recv = emitter()
-        const payload = Buffer.from(Math.random() + "")
-        //console.log({ payload: payload.toString("hex") })
+        const payload = Buffer.from("<payload-" + Math.random() + ">")
+        console.debug({ payload: payload.toString("hex") })
         const obs = await mqtt.subscribe("devs/tcp")
         obs.subscribe(async msg => {
             // console.log(msg)
