@@ -105,6 +105,13 @@ export function devsFactory() {
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
         setDevsDmesg()
+
+        const prev = devsInst.sockWrite
+        devsInst.sockWrite = function (data, len) {
+            console.log(toHex(devsInst.HEAPU8.slice(data, data + len)))
+            return prev(data, len)
+        }
+
         // m.devsInit() - don't init here, we may still want to do more setup
         return m
     })
