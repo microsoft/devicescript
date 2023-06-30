@@ -21,7 +21,7 @@ static void init_used(void) {
             break;
         const char *p = strstr(info->key, "pin");
         if (p && p > info->key && (p[-1] == '.' || (uint8_t)p[-1] >= 0x80)) {
-            int pin = dcfg_get_pin(info->key);
+            unsigned pin = dcfg_get_pin(info->key);
             if (pin != NO_PIN && pin < (sizeof(usedpins) * 8)) {
                 usedpins[pin / 8] |= 1 << (pin & 7);
             }
@@ -30,7 +30,7 @@ static void init_used(void) {
 }
 
 static bool is_pin_used(int gpio) {
-    if (gpio == NO_PIN || gpio < 0 || gpio >= MAX_PIN)
+    if (gpio == NO_PIN || gpio < 0 || gpio >= (int)MAX_PIN)
         return false;
     return (usedpins[gpio / 8] & (1 << (gpio & 7))) != 0;
 }
