@@ -1,15 +1,14 @@
 ---
 sidebar_position: 3
-description: Learn how to read air pressure sensor data using Jacdac's
-  `AirPressure` client. Subscribe to changes or read the data directly.
+description: Learn how to read air pressure sensor data using
+    `AirPressure` client. Subscribe to changes or read the data directly.
 ---
 
 # Register
 
 The `sensor` client exposes `pressure` register object.
 We can read the register value to retreive the air pressure
-sensor last reading. As mentionned in the Jacdac docs,
-the reading is in `hPa` and should be around 1000.
+sensor last reading. The reading is in `hPa` and should be around 1000.
 
 ## subscribe
 
@@ -29,8 +28,9 @@ The `subscribe` method returns an `unsubscribe` callback.
 
 ```ts edit
 const sensor = new ds.AirPressure()
-const unsubscribe = sensor.reading
-    .subscribe(async pressure => console.data({ pressure }))
+const unsubscribe = sensor.reading.subscribe(async pressure =>
+    console.data({ pressure })
+)
 
 // cleanup
 // highlight-next-line
