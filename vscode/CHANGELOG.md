@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.7](https://github.com/microsoft/devicescript/compare/v2.13.6...v2.13.7)
+
+> 29 June 2023
+
+- MQTT [`#513`](https://github.com/microsoft/devicescript/pull/513)
+- Palette, display in graphics [`#511`](https://github.com/microsoft/devicescript/pull/511)
+- removing eventtarget [`66fdd86`](https://github.com/microsoft/devicescript/commit/66fdd86202c86931a80dacb4bcd2e7f597498a50)
+- add DOM-like EventTarget [`dcb40e1`](https://github.com/microsoft/devicescript/commit/dcb40e13fa081269c41d8e44c47d4a0cc44e9c6e)
+- add common events on socket type [`56b4f2a`](https://github.com/microsoft/devicescript/commit/56b4f2a0382c32371a5511281d849e6385281372)
+
 #### [v2.13.6](https://github.com/microsoft/devicescript/compare/v2.13.5...v2.13.6)
 
 > 26 June 2023

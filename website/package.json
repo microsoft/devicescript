@@ -1,6 +1,6 @@
 {
     "name": "website",
-    "version": "2.13.7",
+    "version": "2.13.8",
     "private": true,
     "scripts": {
         "docusaurus": "docusaurus",
