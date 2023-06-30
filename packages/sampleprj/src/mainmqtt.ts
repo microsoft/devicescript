@@ -4,7 +4,6 @@ const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
-    clientId: "devs",
 })
 const payload = Buffer.from("hello")
 await mqtt.subscribe("devs/tcp", async msg => {
