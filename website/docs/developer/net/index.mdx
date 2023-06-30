@@ -35,12 +35,12 @@ HTTP POST encrypted data and read encrypted responses using symmetric encryption
 
 ## MQTT client
 
-The [connectMQTT](/developer/net/mqtt) function connects to a MQTT broker using TCP or TLS.
+The [startMQTTClient](/developer/net/mqtt) function connects to a MQTT broker using TCP or TLS.
 
 ```ts
-import { connectMQTT } from "@devicescript/net"
+import { startMQTTClient } from "@devicescript/net"
 
-const mqtt = await connectMQTT({
+const mqtt = await startMQTTClient({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,

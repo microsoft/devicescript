@@ -2,7 +2,7 @@ import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
 import { assert, delay, emitter, wait } from "@devicescript/core"
 import { fetch } from "./fetch"
-import { MQTTConnectOptions, connectMQTT } from "./mqtt"
+import { MQTTConnectOptions, startMQTTClient } from "./mqtt"
 
 describe("net", () => {
     test("URL", () => {
@@ -76,7 +76,7 @@ describe("net", () => {
     })
 
     const testMqtt = async (opts: MQTTConnectOptions) => {
-        const mqtt = await connectMQTT(opts)
+        const mqtt = await startMQTTClient(opts)
         let received = false
         const recv = emitter()
         const payload = Buffer.from("<payload-" + Math.random() + ">")
@@ -91,7 +91,7 @@ describe("net", () => {
         })
         await mqtt.publish("devs/tcp", payload)
         await wait(recv, 15000)
-        await mqtt.close()
+        await mqtt.stop()
 
         assert(received, "mqtt msg sent and received")
         console.log(`mqtt: ok`)

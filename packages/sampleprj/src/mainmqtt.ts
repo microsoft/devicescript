@@ -1,11 +1,11 @@
-import { connectMQTT } from "@devicescript/net"
+import { startMQTTClient } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 const host = await readSetting<string>("MQTT_HOST")
 const port = await readSetting<number>("MQTT_PORT", 8883)
 const username = await readSetting<string>("MQTT_USER")
 const password = await readSetting<string>("MQTT_PWD")
-const mqtt = await connectMQTT({
+const mqtt = await startMQTTClient({
     host,
     proto: "tls",
     port,

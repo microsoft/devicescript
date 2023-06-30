@@ -1,11 +1,11 @@
 # MQTT client
 
-The `connectMQTT` function connects to a MQTT broker using TCP or TLS.
+The `startMQTTClient` function connects to a MQTT broker using TCP or TLS.
 
 ```ts
-import { connectMQTT } from "@devicescript/net"
+import { startMQTTClient } from "@devicescript/net"
 
-const mqtt = await connectMQTT({
+const mqtt = await startMQTTClient({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
@@ -24,9 +24,9 @@ with public data.
 The `publish` function sends a message on a topic.
 
 ```ts
-import { connectMQTT } from "@devicescript/net"
+import { startMQTTClient } from "@devicescript/net"
 
-const mqtt = await connectMQTT({
+const mqtt = await startMQTTClient({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
@@ -42,9 +42,9 @@ in the topic
 
 ```ts
 import { deviceIdentifier } from "@devicescript/core"
-import { connectMQTT } from "@devicescript/net"
+import { startMQTTClient } from "@devicescript/net"
 
-const mqtt = await connectMQTT({
+const mqtt = await startMQTTClient({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
@@ -60,8 +60,8 @@ The `subscribe` function creates a subscription for a topic route.
 The function takes a an optional handler an returns an [observable](/developer/observables).
 
 ```ts
-import { connectMQTT } from "@devicescript/net"
-const mqtt = await connectMQTT({
+import { startMQTTClient } from "@devicescript/net"
+const mqtt = await startMQTTClient({
     host: "broker.hivemq.com",
     proto: "tcp",
     port: 1883,
@@ -73,9 +73,10 @@ await mqtt.subscribe(`devs/log/#`, msg => {
 })
 ```
 
-## close
+## stop
 
-You can close the connection and socket using `close`.
+The MQTT client will automatically retry to connect once it detects that connectivity is lost.
+To close the current socket and stop the reconnect task, use `stop`.
 
 ## Acknowledgements
 

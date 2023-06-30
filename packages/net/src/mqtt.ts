@@ -435,13 +435,11 @@ export class MQTTClient {
     /**
      * Close the current connection and socket
      */
-    public async close(): Promise<void> {
+    private async close(): Promise<void> {
         if (this.readyState === MQTTState.Closed) return
 
         this.readyState = MQTTState.Closing
         this.log("disconnect")
-        clearInterval(this.watchdogId)
-        this.watchdogId = undefined
         clearInterval(this.pingId)
         this.pingId = undefined
         const s = this.socket
@@ -452,12 +450,13 @@ export class MQTTClient {
         this.readyState = MQTTState.Closed
     }
 
-    public async connect(): Promise<void> {
-        if (this.readyState !== MQTTState.Closed) return
-
+    /**
+     * Starts the MQTT client and watchdog
+     */
+    public async start(): Promise<void> {
+        if (this.running()) return
         const self = this
-        this.readyState = MQTTState.Connecting
-        this.log(`socket connecting to ${this.opt.host}:${this.opt.port}`)
+        // start watchdog
         clearInterval(this.watchdogId)
         this.watchdogId = setInterval(async () => {
             if (self.readyState !== MQTTState.Connected) {
@@ -466,27 +465,63 @@ export class MQTTClient {
                 await self.connect()
             }
         }, Constants.WatchDogInterval * 1000)
+        await self.connect()
+    }
 
-        this.socket = await connect(this.opt)
-        this.socket.onmessage.subscribe(async () => {
-            const msg = await self.socket?.recv()
-            self.trace(`recv ${msg.length}b ${msg.toString("hex")}`)
-            await self.handleMessage(msg)
-        })
-        this.socket.onerror.subscribe(err => {
-            self.log("error")
-            self.onerror.emit(err)
-        })
-        this.socket.onclose.subscribe(() => {
-            self.log("Close.")
-            self.onclose.emit(undefined)
-            self.readyState = MQTTState.Closed
-            self.socket = null
-        })
-        self.log(`socket opened, connecting ${self.opt.clientId} to broker`)
-        this.readyState = MQTTState.Open
-        await self.send(createConnect(self.opt))
-        await wait(this.onconnect, self.opt.timeout)
+    /**
+     * Indicates if the MQTT client is started
+     * and running.
+     * @returns
+     */
+    public running() {
+        return !!this.watchdogId
+    }
+
+    /**
+     * Close connection and stop watchdog.
+     */
+    public async stop() {
+        clearInterval(this.watchdogId)
+        this.watchdogId = undefined
+        await this.close()
+    }
+
+    /**
+     * Attempts to connect to the MQTT broker
+     * @returns
+     */
+    private async connect(): Promise<void> {
+        if (this.readyState !== MQTTState.Closed) return
+
+        const self = this
+        this.readyState = MQTTState.Connecting
+        this.log(`socket connecting to ${this.opt.host}:${this.opt.port}`)
+
+        try {
+            this.socket = await connect(this.opt)
+            this.socket.onmessage.subscribe(async () => {
+                const msg = await self.socket?.recv()
+                self.trace(`recv ${msg.length}b ${msg.toString("hex")}`)
+                await self.handleMessage(msg)
+            })
+            this.socket.onerror.subscribe(err => {
+                self.log("error")
+                self.onerror.emit(err)
+            })
+            this.socket.onclose.subscribe(() => {
+                self.log("Close.")
+                self.onclose.emit(undefined)
+                self.readyState = MQTTState.Closed
+                self.socket = null
+            })
+            self.log(`socket opened, connecting ${self.opt.clientId} to broker`)
+            this.readyState = MQTTState.Open
+            await self.send(createConnect(self.opt))
+            await wait(this.onconnect, self.opt.timeout)
+        } catch (e) {
+            this.onerror.emit(e as Error)
+            await this.close()
+        }
     }
 
     private async canSend() {
@@ -529,10 +564,11 @@ export class MQTTClient {
     }
 
     /**
-     * Subscribe to a MQTT topic
+     * Subscribe to a MQTT topic and returns an observable
      * @param topic
-     * @param handler
+     * @param handler optional handler to attach
      * @param qos
+     * @returns observable for topic messages
      */
     public async subscribe(
         topic: string,
@@ -541,14 +577,13 @@ export class MQTTClient {
     ): Promise<Observable<MQTTMessage>> {
         this.log(`subscribe: ${topic}`)
         const sub = createSubscribe(topic, qos)
-        if (!(await this.send1(sub))) return undefined
         if (topic[topic.length - 1] === "#")
             topic = topic.slice(0, topic.length - 1)
         const o = register<MQTTMessage>()
         if (handler) o.subscribe(handler)
         const h = new MQTTHandler(sub, topic, o)
         this.mqttHandlers.push(h)
-        // sub ack
+        await this.send1(sub)
         return o
     }
 
@@ -678,8 +713,8 @@ export class MQTTClient {
  * @param options connection options
  * @returns connected MQTT client
  */
-export async function connectMQTT(options: MQTTConnectOptions) {
+export async function startMQTTClient(options: MQTTConnectOptions) {
     const mqtt = new MQTTClient(options)
-    await mqtt.connect()
+    await mqtt.start()
     return mqtt
 }
