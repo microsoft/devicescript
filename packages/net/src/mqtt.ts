@@ -397,8 +397,9 @@ export class MQTTClient {
     private mqttHandlers: MQTTHandler[] = []
 
     constructor(opt: MQTTConnectOptions) {
-        opt.port = opt.port || 8883
-        if (!opt.clientId) opt.clientId = `devs-${deviceIdentifier("self")}`
+        opt.proto = opt.proto || "tls"
+        if (!opt.port) opt.port = opt.proto === "tls" ? 8883 : 1883
+        if (!opt.clientId) opt.clientId = `devs_${deviceIdentifier("self")}`
         if (opt.will) {
             opt.will.qos = opt.will.qos || Constants.DefaultQos
             opt.will.retain = opt.will.retain || false
