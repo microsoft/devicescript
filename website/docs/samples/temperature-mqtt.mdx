@@ -1,0 +1,41 @@
+---
+sidebar_position: 2
+---
+
+# Temperature + MQTT
+
+This sample uses an ESP32-C3 board [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
+and a [SHTC3 sensor](/api/servers/shtc3) to publish a temperature reading to
+the [HiveMQ public MQTT broker](https://www.mqtt-dashboard.com/) every minute.
+
+```ts
+import "@dsboard/adafruit_qt_py_c3"
+import { deviceIdentifier } from "@devicescript/core"
+import { startMQTTClient } from "@devicescript/net"
+import { startSHTC3 } from "@devicescript/drivers"
+import { schedule } from "@devicescript/runtime"
+
+// mqtt settings
+const mqtt = await startMQTTClient({
+    host: "broker.hivemq.com",
+    proto: "tcp",
+    port: 1883,
+})
+const topic = `devs/temp/${deviceIdentifier("self")}`
+console.log({ topic })
+
+// sensors
+const { temperature } = await startSHTC3()
+// pushing temperature every minute
+schedule(async () => {
+    const t = await temperature.reading.read()
+    console.data({ t })
+    await mqtt.publish(topic, { t })
+})
+```
+
+:::warning
+
+This is a public MQTT broker, anyone can listen to the messages.
+
+:::

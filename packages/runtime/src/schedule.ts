@@ -2,6 +2,7 @@ import { AsyncVoid } from "@devicescript/core"
 
 /**
  * Schedules a handler to be called at a later time. Executes timeout before interval if combined.
+ * If not specified, default to timeout 20ms and interval 60s.
  *
  * @param handler function to execute
  * @param options options to configure the scheduling
@@ -9,7 +10,7 @@ import { AsyncVoid } from "@devicescript/core"
  */
 export function schedule(
     handler: () => AsyncVoid,
-    options: {
+    options?: {
         /**
          * Time in milliseconds to wait before the first execution of the handler.
          */
@@ -30,8 +31,11 @@ export function schedule(
 
     if (!handler) return unsub
 
-    let { interval, timeout } = options
-    if (interval === undefined && timeout === undefined) timeout = 20
+    let { interval, timeout } = options || {}
+    if (interval === undefined && timeout === undefined) {
+        timeout = 20
+        interval = 60000
+    }
     if (timeout >= 0 && interval >= 0) {
         timerId = setTimeout(async () => {
             await handler()

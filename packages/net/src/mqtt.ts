@@ -557,16 +557,28 @@ export class MQTTClient {
             this.readyState = MQTTState.Connected
     }
 
-    // Publish a message
+    /**
+     * Attempts to publish a message on the MQTT stack
+     * @param topic topic of the message
+     * @param message payload as string, object that will be JSON serialized or buffer
+     * @param qos
+     * @param retained
+     * @returns
+     */
     public async publish(
         topic: string,
-        message?: string | Buffer,
+        message?: string | object | Buffer,
         qos: number = Constants.DefaultQos,
         retained: boolean = false
     ): Promise<boolean> {
-        const buf = typeof message === "string" ? Buffer.from(message) : message
-        message = null
         if (!(await this.canSend())) return false
+        const buf: Buffer =
+            typeof message === "string"
+                ? Buffer.from(message)
+                : message instanceof Buffer
+                ? message
+                : Buffer.from(JSON.stringify(message))
+        message = null
         const messageLen = buf ? buf.length : 0
         this.trace(`publish: ${topic} ${messageLen}b`)
         await this.send(createPublishHeader(topic, messageLen, qos, retained))
