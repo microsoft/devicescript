@@ -404,8 +404,6 @@ export class MQTTClient {
             opt.will.qos = opt.will.qos || Constants.DefaultQos
             opt.will.retain = opt.will.retain || false
         }
-        if (opt.clientId.length > 23)
-            throw new RangeError("clientId must be at most 23 characters long.")
         this.opt = opt
     }
 
