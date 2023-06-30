@@ -16,14 +16,6 @@ import { Utils } from "vscode-uri"
 import { checkFileExists } from "./fs"
 import { showErrorMessage } from "./telemetry"
 
-function startSimulatorsOnStart() {
-    const settings = vscode.workspace.getConfiguration("devicescript.debugger")
-    if (settings.get("showTerminalOnStart"))
-        vscode.commands.executeCommand("extension.devicescript.terminal.show")
-    if (settings.get("showSimulatorsOnStart"))
-        vscode.commands.executeCommand("extension.devicescript.openSimulators")
-}
-
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
     const { subscriptions } = context
@@ -221,6 +213,37 @@ export class DeviceScriptConfigurationProvider
         return this.extensionState.bus
     }
 
+    private simsShownOnce = false
+    private startSimulatorsOnStart() {
+        const settings = vscode.workspace.getConfiguration(
+            "devicescript.debugger"
+        )
+        if (settings.get("showTerminalOnStart"))
+            vscode.commands.executeCommand(
+                "extension.devicescript.terminal.show"
+            )
+        if (settings.get("showSimulatorsOnStart")) {
+            if (this.simsShownOnce) {
+                vscode.window
+                    .showInformationMessage(
+                        "DeviceScript: Start simulators?",
+                        "Start"
+                    )
+                    .then(res => {
+                        if (res === "Start")
+                            vscode.commands.executeCommand(
+                                "extension.devicescript.openSimulators"
+                            )
+                    })
+            } else {
+                this.simsShownOnce = true
+                vscode.commands.executeCommand(
+                    "extension.devicescript.openSimulators"
+                )
+            }
+        }
+    }
+
     async resolveDebugConfigurationWithSubstitutedVariables(
         folder: vscode.WorkspaceFolder,
         config: vscode.DebugConfiguration,
@@ -359,7 +382,7 @@ export class DeviceScriptConfigurationProvider
         )
 
         // show UI
-        startSimulatorsOnStart()
+        this.startSimulatorsOnStart()
 
         // run, no debug
         if (sessionConfig?.noDebug) {

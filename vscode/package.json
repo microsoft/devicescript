@@ -270,6 +270,11 @@
         "menus": {
             "editor/title": [
                 {
+                    "command": "extension.devicescript.openSimulators",
+                    "when": "resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
+                    "group": "navigation"
+                },
+                {
                     "command": "extension.devicescript.editor.build",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@1"
@@ -295,11 +300,6 @@
             "view/title": [
                 {
                     "command": "extension.devicescript.connect",
-                    "when": "view == extension.devicescript.jdom",
-                    "group": "navigation"
-                },
-                {
-                    "command": "extension.devicescript.openSimulators",
                     "when": "view == extension.devicescript.jdom",
                     "group": "navigation"
                 },
