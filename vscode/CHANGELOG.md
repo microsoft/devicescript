@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.8](https://github.com/microsoft/devicescript/compare/v2.13.7...v2.13.8)
+
+> 30 June 2023
+
+- MQTT updates [`#516`](https://github.com/microsoft/devicescript/pull/516)
+- mqtt: better handling of disconnection [`851582a`](https://github.com/microsoft/devicescript/commit/851582a57b599ce5de23fb8cff51318de0cd925b)
+- added mqtt sample [`c09018d`](https://github.com/microsoft/devicescript/commit/c09018d1ac28df16b7069cc3f6c61b4c932ccf14)
+- more configuration options [`6685ff0`](https://github.com/microsoft/devicescript/commit/6685ff0bbedaf7b9ffef5a93777096e0a5b07483)
+
 #### [v2.13.7](https://github.com/microsoft/devicescript/compare/v2.13.6...v2.13.7)
 
 > 29 June 2023

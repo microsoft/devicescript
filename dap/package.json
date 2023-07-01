@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/dap",
     "private": false,
-    "version": "2.13.8",
+    "version": "2.13.9",
     "description": "DeviceScript Compiler",
     "keywords": [
         "devicescript",
