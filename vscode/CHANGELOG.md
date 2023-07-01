@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.9](https://github.com/microsoft/devicescript/compare/v2.13.8...v2.13.9)
+
+> 1 July 2023
+
+- Fix typos in website API docs [`#522`](https://github.com/microsoft/devicescript/pull/522)
+- Fixing spelling in getting started [`#521`](https://github.com/microsoft/devicescript/pull/521)
+- added Array.at array package [`#520`](https://github.com/microsoft/devicescript/pull/520)
+- added schedule blinky sample [`b142b1c`](https://github.com/microsoft/devicescript/commit/b142b1c82e57bab81fa97c8edc35a8967d1da582)
+- added doubleblinky sample [`6a14ed9`](https://github.com/microsoft/devicescript/commit/6a14ed9f3507d576973dc06e90d537bb5edeb577)
+- less aggressive about showing the simulator pane [`fcffd49`](https://github.com/microsoft/devicescript/commit/fcffd49fee2c31f192e0569d2838bf5d72b43998)
+
 #### [v2.13.8](https://github.com/microsoft/devicescript/compare/v2.13.7...v2.13.8)
 
 > 30 June 2023
