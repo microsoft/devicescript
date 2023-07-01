@@ -16,3 +16,12 @@ The buffer is stored in flash.
 ```js
 const buf: Buffer = hex`00 ab 12 2f 00`
 ```
+
+Comments and whitespace are allowed in `hex` literals:
+
+```ts
+const commentedData: Buffer = hex`
+01 02 03 // first three numbers
+ff aa    // two more bytes
+`
+```

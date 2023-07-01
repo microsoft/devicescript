@@ -2390,6 +2390,18 @@ class Program implements TopOpWriter {
         }
     }
 
+    private decodeHexLiteral(expr: ts.TaggedTemplateExpression) {
+        const text = (expr.template as ts.NoSubstitutionTemplateLiteral).text
+        const hexbuf = text
+            .replace(/\/\/.*$/gm, "") // remove comments
+            .replace(/\s+/g, "")
+            .toLowerCase()
+        const m = /[^0-9a-f]/.exec(hexbuf)
+        if (m) throwError(expr, `invalid character in hex: ${m[0]}`)
+        if (hexbuf.length & 1) throwError(expr, "non-even hex length")
+        return this.writer.emitString(fromHex(hexbuf))
+    }
+
     private bufferLiteral(expr: Expr) {
         if (expr && ts.isTaggedTemplateExpression(expr)) {
             const tp = idName(expr.tag)
@@ -2401,11 +2413,7 @@ class Program implements TopOpWriter {
                     `\${}-expressions not supported in ${tp} literals`
                 )
             if (tp == "img") return this.decodeImage(expr, expr.template.text)
-            const hexbuf = expr.template.text.replace(/\s+/g, "").toLowerCase()
-            if (hexbuf.length & 1) throwError(expr, "non-even hex length")
-            if (!/^[0-9a-f]*$/.test(hexbuf))
-                throwError(expr, "invalid characters in hex")
-            return this.writer.emitString(fromHex(hexbuf))
+            return this.decodeHexLiteral(expr)
         }
 
         return undefined

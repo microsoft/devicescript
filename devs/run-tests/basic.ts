@@ -228,6 +228,12 @@ function testBuffer() {
     isEq(buf[2], 0x33)
     isEq(buf[3], 0x12)
     isEq(buf[4], 0x13)
+
+    const b3 = hex`
+        72 // comment
+        33 23 // something
+        12`
+    isEq(b2.toString("hex"), b3.toString("hex"))
 }
 
 function three(a: number, b: number, c: number) {

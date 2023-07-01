@@ -32,6 +32,15 @@ const data = hex`010203040506070809`
 console.log(data)
 ```
 
+Comments and whitespace are allowed in `hex` literals:
+
+```ts
+const commentedData = hex`
+01 02 03 // first three numbers
+ff aa    // two more bytes
+`
+```
+
 ## packet
 
 There is a special buffer called `ds.packet` which represents a buffer to be passed to next
