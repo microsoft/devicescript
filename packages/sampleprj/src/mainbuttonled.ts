@@ -1,15 +1,17 @@
-import { pins } from "@dsboard/seeed_xiao_esp32c3"
-import { startButton, startLightBulb  } from "@devicescript/servers"
+import { pins } from "@dsboard/esp32c3_bare"
+import { startLightBulb, startButton } from "@devicescript/servers"
 
-// configure LED and button
-const lightBulb = startLightBulb({
-    pin: pins.D1,
+// List of pins: https://microsoft.github.io/devicescript/devices/esp32/esp32c3-bare
+const led = startLightBulb({
+  pin: pins.P2,
 })
 const button = startButton({
-    pin: pins.D0,
+    pin: pins.P5,
 })
+console.log(`press button to toggle light`)
 // listen for button down events
 button.down.subscribe(async () => {
     // toggle light on/off
-    await lightBulb.toggle()
+    console.log(`toggle`)
+    await led.toggle()
 })
