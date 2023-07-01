@@ -1,4 +1,4 @@
-import { AsyncVoid } from "@devicescript/core"
+import { AsyncVoid, millis } from "@devicescript/core"
 
 /**
  * Schedules a handler to be called at a later time. Executes timeout before interval if combined.
@@ -9,7 +9,20 @@ import { AsyncVoid } from "@devicescript/core"
  * @returns clear timer function
  */
 export function schedule(
-    handler: () => AsyncVoid,
+    handler: (props: {
+        /**
+         * Number of times the handler has been called.
+         */
+        counter: number
+        /**
+         * Time in milliseconds since the first execution of the handler.
+         */
+        elapsed: number
+        /**
+         * Time in milliseconds since the last execution of the handler.
+         */
+        delta: number
+    }) => AsyncVoid,
     options?: {
         /**
          * Time in milliseconds to wait before the first execution of the handler.
@@ -31,6 +44,21 @@ export function schedule(
 
     if (!handler) return unsub
 
+    let start = millis()
+    let last = millis()
+    let counter = 0
+
+    const run = async () => {
+        const now = millis()
+        const props = {
+            counter: counter++,
+            elapsed: now - start,
+            delta: now - last,
+        }
+        last = now
+        await handler(props)
+    }
+
     let { interval, timeout } = options || {}
     if (interval === undefined && timeout === undefined) {
         timeout = 20
@@ -38,15 +66,14 @@ export function schedule(
     }
     if (timeout >= 0 && interval >= 0) {
         timerId = setTimeout(async () => {
-            await handler()
+            await run()
             // check if cancelled or schedule
-            if (timerId !== undefined)
-                intervalId = setInterval(handler, interval)
+            if (timerId !== undefined) intervalId = setInterval(run, interval)
         }, 20)
     } else if (timeout) {
-        timerId = setTimeout(handler, timeout)
+        timerId = setTimeout(run, timeout)
     } else if (interval) {
-        intervalId = setInterval(handler, interval)
+        intervalId = setInterval(run, interval)
     }
     return unsub
 }

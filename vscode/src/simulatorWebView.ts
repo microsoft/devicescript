@@ -115,7 +115,16 @@ export class SimulatorsWebView extends JDEventSource {
         }
     }
 
-    private async handleOpen() {
+    private async handleOpen(options?: { askUser?: boolean }) {
+        const { askUser } = options || {}
+        if (!this.simulatorsWebviewPanel && askUser) {
+            const res = await vscode.window.showInformationMessage(
+                "DeviceScript: Start simulators?",
+                "Start"
+            )
+            if (res !== "Start") return
+        }
+
         if (this.simulatorsWebviewPanel) {
             this.simulatorsWebviewPanel.reveal(undefined, true)
             // make sure the tools are running

@@ -223,24 +223,11 @@ export class DeviceScriptConfigurationProvider
                 "extension.devicescript.terminal.show"
             )
         if (settings.get("showSimulatorsOnStart")) {
-            if (this.simsShownOnce) {
-                vscode.window
-                    .showInformationMessage(
-                        "DeviceScript: Start simulators?",
-                        "Start"
-                    )
-                    .then(res => {
-                        if (res === "Start")
-                            vscode.commands.executeCommand(
-                                "extension.devicescript.openSimulators"
-                            )
-                    })
-            } else {
-                this.simsShownOnce = true
-                vscode.commands.executeCommand(
-                    "extension.devicescript.openSimulators"
-                )
-            }
+            vscode.commands.executeCommand(
+                "extension.devicescript.openSimulators",
+                { askUser: this.simsShownOnce }
+            )
+            this.simsShownOnce = true
         }
     }
 
