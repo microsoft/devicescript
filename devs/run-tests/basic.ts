@@ -1118,6 +1118,31 @@ function testForIn() {
     }
 }
 
+function testQQ() {
+    testQQu(undefined)
+    testQQu(null)
+    testQQd(12)
+    testQQd(false)
+    testQQd(0)
+    testQQd(7)
+
+    function testQQu(v: number) {
+        ds.assert((v ?? 7) === 7)
+        ds.assert((v ?? null) === null)
+        ds.assert((v ?? undefined) === undefined)
+    }
+
+    function fail() {
+        ds.assert(false)
+        return 0
+    }
+
+    function testQQd(v: any) {
+        ds.assert((v ?? 7) === v)
+        ds.assert((v ?? fail()) === v)
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1162,5 +1187,6 @@ testWhenUsed()
 testStringMethods()
 testObjArrayCtor()
 testForIn()
+testQQ()
 
 console.log("all OK")

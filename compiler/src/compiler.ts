@@ -3248,15 +3248,20 @@ class Program implements TopOpWriter {
 
         const wr = this.writer
 
-        if (op == SK.AmpersandAmpersandToken || op == SK.BarBarToken) {
+        if (
+            op == SK.AmpersandAmpersandToken ||
+            op == SK.BarBarToken ||
+            op == SK.QuestionQuestionToken
+        ) {
             const a = this.emitExpr(expr.left)
             const tmp = wr.cacheValue(a, true)
-            const tst = wr.emitExpr(
-                op == SK.AmpersandAmpersandToken
-                    ? Op.EXPR1_TO_BOOL
-                    : Op.EXPR1_NOT,
-                tmp.emit()
-            )
+            let tst: Value
+            if (op == SK.QuestionQuestionToken)
+                tst = wr.emitExpr(Op.EXPR1_IS_NULLISH, tmp.emit())
+            else if (op == SK.BarBarToken)
+                tst = wr.emitExpr(Op.EXPR1_NOT, tmp.emit())
+            else tst = wr.emitExpr(Op.EXPR1_TO_BOOL, tmp.emit())
+
             const skipB = wr.mkLabel("lazyB")
             wr.emitJumpIfFalse(skipB, tst)
             tmp.store(this.emitExpr(expr.right))
