@@ -574,7 +574,7 @@ export async function addNpm(options: AddNpmOptions) {
     }
     if (!pkg.version) pkg.version = "0.0.0"
     if (!pkg.name) pkg.name = options.name || basename(resolve("."))
-    delete pkg.private
+    pkg.private = false
     let lst = await readdir("src")
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
     for (const fn of lst) {
