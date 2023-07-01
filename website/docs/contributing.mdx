@@ -38,6 +38,31 @@ The main places that need updating is:
 After adding a new packages, run `yarn` at the top-level to update workspace links,
 followed by the usual `yarn build`.
 
+### Samples
+
+Documentation samples are located under `website/docs/samples`.
+Each `.mdx` file contains a single self-contained sample.
+
+It is typically easiest to develop a sample in a dedicate `.ts` file
+to leverage the editor's features, and then copy it to the `.mdx` file.
+
+To run the docs locally, run `yarn docs`. This will launch the docusaurus development server
+and refresh the documentation page on each edit.
+
+If your sample requires multiple files, such as images,
+
+-   create a folder with the same name as the `.mdx`
+    file
+-   move your `.mdx` file and rename it to `index.mdx`
+-   add a `_category_.json` file with the front matter
+
+```json
+{
+    "label": "Samples",
+    "position": 3
+}
+```
+
 ### Documenting/patching console output
 
 To add new substitions from console output message to pretty text + URL, do the following.
