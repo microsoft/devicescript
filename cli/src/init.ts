@@ -286,7 +286,7 @@ nodeLinker: node-modules`,
     },
     [MAIN]: `${IMPORT_PREFIX}
 
-setInterval(() => {
+setInterval(async () => {
     console.log(":)")
 }, 1000)\n`,
     "README.md": `# - project name -
