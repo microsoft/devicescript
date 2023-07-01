@@ -42,7 +42,7 @@ const MADCTL_RGB = 0x00
 const MADCTL_BGR = 0x08
 const MADCTL_MH = 0x04
 
-export interface ST7735Options {
+export interface STLikeDisplayOptions {
     /**
      * SPI CS pin
      */
@@ -76,13 +76,31 @@ export interface ST7735Options {
      * @default 0x00_06_03
      */
     frmctr1?: number
+
+    /**
+     * X-offset of the matrix.
+     *
+     * @default 0
+     */
+    offX?: number
+
+    /**
+     * Y-offset of the matrix.
+     *
+     * @default 0
+     */
+    offY?: number
 }
 
-export class ST7735Driver implements Display {
+export class STLikeDisplayDriver implements Display {
     public readonly palette: Palette
     private rot = 0
 
-    constructor(public image: Image, public options: ST7735Options) {
+    constructor(
+        public image: Image,
+        public options: STLikeDisplayOptions,
+        protected initSeq: Buffer
+    ) {
         assert(image.bpp === 4)
         this.options = Object.assign({}, this.options)
         if (this.options.frmctr1 == undefined) this.options.frmctr1 = 0x000603
@@ -91,6 +109,23 @@ export class ST7735Driver implements Display {
         this.palette = Palette.arcade()
         if (image.width > image.height) this.rot = 1
         if (this.options.flip) this.rot |= 2
+    }
+
+    protected async sendSeq(seq: Buffer) {
+        let i = 0
+        while (i < seq.length) {
+            const cmd = seq[i++]
+            const len = seq[i++]
+            const args: number[] = []
+            for (let j = 0; j < (len & 0x7f); ++j) args.push(seq[i++])
+            let delayMS = 0
+            if (len & 0x80) {
+                delayMS = seq[i++]
+                if (delayMS === 0xff) delayMS = 500
+            }
+            await this.sendCmd(cmd, ...args)
+            if (delayMS) await delay(delayMS)
+        }
     }
 
     private async cmdPrep(cmd: number) {
@@ -128,16 +163,7 @@ export class ST7735Driver implements Display {
         dc.setMode(GPIOMode.OutputHigh)
         cs.setMode(GPIOMode.OutputHigh)
 
-        await this.sendCmd(ST7735_SWRESET)
-        await delay(120)
-        await this.sendCmd(ST7735_SLPOUT)
-        await delay(120)
-        await this.sendCmd(ST7735_INVOFF)
-        await this.sendCmd(ST7735_COLMOD, 0b101) // 16-bit
-        await this.sendCmd(ST7735_NORON)
-        await delay(10)
-        await this.sendCmd(ST7735_DISPON)
-        await delay(10)
+        await this.sendSeq(this.initSeq)
 
         await this.sendCmd(ST7735_MADCTL, hex`00 40 C0 80`[this.rot])
         const frmctr1 = [
@@ -148,9 +174,23 @@ export class ST7735Driver implements Display {
         if (frmctr1[2] === 0xff) frmctr1.pop()
         await this.sendCmd(ST7735_FRMCTR1, ...frmctr1)
 
+        const offX = this.options.offX ?? 0
+        const offY = this.options.offY ?? 0
+
         if (this.rot & 1)
-            await this.setAddrWindow(0, 0, this.image.width, this.image.height)
-        else await this.setAddrWindow(0, 0, this.image.height, this.image.width)
+            await this.setAddrWindow(
+                offX,
+                offY,
+                this.image.width,
+                this.image.height
+            )
+        else
+            await this.setAddrWindow(
+                offY,
+                offX,
+                this.image.height,
+                this.image.width
+            )
     }
 
     async init() {
@@ -174,5 +214,43 @@ export class ST7735Driver implements Display {
         })
 
         cs.write(1)
+    }
+}
+
+export interface ST7735Options extends STLikeDisplayOptions {}
+
+export class ST7735Driver extends STLikeDisplayDriver {
+    constructor(image: Image, options: ST7735Options) {
+        super(
+            image,
+            options,
+            hex`
+01 80 78 // SWRESET + 120ms
+11 80 78 // SLPOUT + 120ms
+20 00    // INVOFF
+3A 01 05 // COLMOD 16bit
+13 80 0A // NORON + 10ms
+29 80 0A // DISPON + 10ms
+`
+        )
+    }
+}
+
+export interface ST7789Options extends STLikeDisplayOptions {}
+
+export class ST7789Driver extends STLikeDisplayDriver {
+    constructor(image: Image, options: ST7789Options) {
+        super(
+            image,
+            options,
+            hex`
+01 80 78 // SWRESET + 120ms
+11 80 78 // SLPOUT + 120ms
+21 00    // INVON
+3A 01 55 // COLMOD 16bit 16bit
+13 80 0A // NORON + 10ms
+29 80 0A // DISPON + 10ms
+`
+        )
     }
 }
