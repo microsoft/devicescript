@@ -234,11 +234,9 @@ async function main() {
                 logLevel: "warning",
                 inject,
                 external: [
-                    "@devicescript/compiler",
                     "serialport",
                     "vscode",
                     "crypto",
-                    "update-notifier",
                 ],
                 platform,
                 metafile: true,
