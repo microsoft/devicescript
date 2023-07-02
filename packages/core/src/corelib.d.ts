@@ -421,6 +421,42 @@ interface ArrayConstructor {
 
 declare var Array: ArrayConstructor
 
+interface Set<T> {
+
+    elements: T[] 
+
+    /**
+     * Appends a new element with a specified value to the end of the Set.
+     */
+    add(value: T): this;
+
+    clear(): void;
+    /**
+     * Removes a specified value from the Set.
+     * @returns Returns true if an element in the Set existed and has been removed, or false if the element does not exist.
+     */
+    delete(value: T): boolean;
+    /**
+     * Executes a provided function once per each value in the Set object, in insertion order.
+     */
+    forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void;
+    /**
+     * @returns a boolean indicating whether an element with the specified value exists in the Set or not.
+     */
+    has(value: T): boolean;
+    /**
+     * @returns the number of (unique) elements in Set.
+     */
+    readonly size: number;
+}
+
+interface SetConstructor {
+    new <T = any>(values?: readonly T[] | null): Set<T>;
+    readonly prototype: Set<any>;
+}
+
+declare var Set: SetConstructor;
+
 declare namespace console {
     /**
      * Same as `console.log`.
