@@ -128,7 +128,10 @@ function buildPrelude(folder, outp) {
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
     srvcfg = srvcfg
-        .replace("type HexInt = integer | string", "type HexInt = integer" + "\n" + additions)
+        .replace(
+            "type HexInt = integer | string",
+            "type HexInt = integer" + "\n" + additions
+        )
         .replace(/type \w*Pin = .*/g, "")
         .replace("/srvcfg", "/servers")
         .replace(
@@ -233,11 +236,7 @@ async function main() {
                 outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
                 inject,
-                external: [
-                    "serialport",
-                    "vscode",
-                    "crypto",
-                ],
+                external: ["serialport", "vscode", "crypto", "update-notifier"],
                 platform,
                 metafile: true,
                 target: "es2019",
