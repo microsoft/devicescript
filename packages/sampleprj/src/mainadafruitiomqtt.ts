@@ -4,7 +4,7 @@ import { startSHTC3 } from "@devicescript/drivers"
 import { startMQTTClient } from "@devicescript/net"
 // extra APIs
 import { readSetting } from "@devicescript/settings"
-import { schedule } from "@devicescript/runtime"
+import { ewma, auditTime } from "@devicescript/observables"
 
 // mounting a temperature server for the SHTC3 sensor
 const { temperature } = await startSHTC3()
@@ -23,12 +23,6 @@ const mqtt = await startMQTTClient({
 })
 const topic = `${username}/feeds/${feed}/json`
 
-schedule(
-    async () => {
-        // read data from temperature sensor
-        const value = await temperature.reading.read()
-        // publish to feed topic
-        await mqtt.publish(topic, { value })
-    },
-    { timeout: 1000, interval: 60000 }
-)
+temperature.reading
+    .pipe(ewma(0.5), auditTime(60000))
+    .subscribe(async value => await mqtt.publish(topic, { value }))

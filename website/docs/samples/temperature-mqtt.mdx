@@ -51,3 +51,17 @@ schedule(
     { timeout: 1000, interval: 60000 }
 )
 ```
+
+## Filtering data
+
+You could use [observables](/developer/observables) to smooth the sensor
+data. For example, apply an exponentially moving average
+on the feed of temperature readings.
+
+```ts skip
+import { ewma, auditTime } from "@devicescript/observables"
+...
+temperature.reading
+    .pipe(ewma(0.5), auditTime(60000))
+    .subscribe(async value => await mqtt.publish(topic, { value }))
+```
