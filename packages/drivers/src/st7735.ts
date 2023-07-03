@@ -1,4 +1,10 @@
-import { GPIOMode, OutputPin, assert, delay } from "@devicescript/core"
+import {
+    GPIOMode,
+    OutputPin,
+    assert,
+    delay,
+    isSimulator,
+} from "@devicescript/core"
 import { SPI, spi } from "@devicescript/spi"
 import {
     Display,
@@ -137,6 +143,7 @@ export class STLikeDisplayDriver implements Display {
     }
 
     private async sendCmd(cmd: number, ...args: number[]) {
+        if (isSimulator()) return
         const { spi, cs } = this.options
         await this.cmdPrep(cmd)
         if (args.length) await spi.write(Buffer.from(args))
@@ -151,17 +158,19 @@ export class STLikeDisplayDriver implements Display {
     }
 
     private async doInit() {
-        const { cs, dc, reset } = this.options
+        if (!isSimulator()) {
+            const { cs, dc, reset } = this.options
 
-        if (reset) {
-            reset.setMode(GPIOMode.OutputLow)
-            await delay(20)
-            reset.setMode(GPIOMode.OutputHigh)
-            await delay(20)
+            if (reset) {
+                reset.setMode(GPIOMode.OutputLow)
+                await delay(20)
+                reset.setMode(GPIOMode.OutputHigh)
+                await delay(20)
+            }
+
+            dc.setMode(GPIOMode.OutputHigh)
+            cs.setMode(GPIOMode.OutputHigh)
         }
-
-        dc.setMode(GPIOMode.OutputHigh)
-        cs.setMode(GPIOMode.OutputHigh)
 
         await this.sendSeq(this.initSeq)
 
@@ -198,6 +207,8 @@ export class STLikeDisplayDriver implements Display {
     }
 
     async show() {
+        if (isSimulator()) return
+
         const { spi, cs } = this.options
         await this.cmdPrep(ST7735_RAMWR)
 
