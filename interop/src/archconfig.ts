@@ -16,6 +16,12 @@ export interface DeviceScriptConfig extends DeviceHardwareInfo {
      * on the computer connected via USB.
      */
     devNetwork?: boolean
+
+    /**
+     * Labels to expose pins in `@dsboard/foo` modules
+     * If pin X (`pins.X`) is to be exposed as Y, then `$pins.Y == X`.
+     */
+    $pins?: Record<string, string>
 }
 
 export type UserHardwareInfo = Partial<
