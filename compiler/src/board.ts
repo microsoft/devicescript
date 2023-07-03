@@ -319,7 +319,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
 
         const ex = infos.find(p => p.gpio == gpio)
 
-        if (ex && ex.label[0] != "@")
+        if (ex && ex.label[0] != "@" && !label.startsWith("$services"))
             return errors.push(
                 `GPIO${gpio} marked as both ${ex.label} and ${label}`
             )
@@ -334,6 +334,19 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
             gpio,
             functions,
         })
+    }
+
+    function addPinExt(label: string, refOrGpio: number | string): unknown {
+        if (typeof refOrGpio == "string") {
+            const ex = infos.find(p => p.label == refOrGpio)
+            if (!ex)
+                return errors.push(
+                    `${label} is set to ${refOrGpio} which wasn't found`
+                )
+            ex.label = label // override
+            return
+        }
+        return addPin(label, refOrGpio)
     }
 
     for (const lbl of Object.keys(devcfg?.pins ?? {})) {
@@ -355,7 +368,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
                 if (k.startsWith("#")) continue
                 const path = (path0 ? path0 + "." : "") + k
                 if (k != "pins" && k.startsWith("pin")) {
-                    addPin(path, obj[k])
+                    addPinExt(path, obj[k])
                 } else {
                     validateConfig(obj[k], path)
                 }
