@@ -1,19 +1,3 @@
----
-sidebar_position: 2
----
-
-# Temperature + MQTT
-
-This sample uses an ESP32-C3 board [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
-and a [SHTC3 sensor](https://www.adafruit.com/product/4636) to publish a temperature reading to
-the [Adafruit.io MQTT APIs](https://www.mqtt-dashboard.com/) every minute.
-
-To make this work, you will to get an account with https://io.adafruit.com
-and store your username and password in the [settings](/developer/settings)
-as the `IO_USERNAME` and `IO_KEY` keys (make sure your key is in `env.local`).
-Also create a feed and update the feed key in the example below.
-
-```ts
 // hardware configuration and drivers
 import "@dsboard/adafruit_qt_py_c3"
 import { startSHTC3 } from "@devicescript/drivers"
@@ -25,7 +9,6 @@ import { schedule } from "@devicescript/runtime"
 // mounting a temperature server for the SHTC3 sensor
 const { temperature } = await startSHTC3()
 
-// update feed key
 const feed = "temperature"
 const username = await readSetting("IO_USERNAME")
 // this secret is stored in the .env.local and uploaded to the device settings
@@ -38,7 +21,6 @@ const mqtt = await startMQTTClient({
     username,
     password,
 })
-// https://io.adafruit.com/api/docs/mqtt.html#feed-topic-format
 const topic = `${username}/feeds/${feed}/json`
 
 schedule(
@@ -50,4 +32,3 @@ schedule(
     },
     { timeout: 1000, interval: 60000 }
 )
-```
