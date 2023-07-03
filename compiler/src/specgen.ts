@@ -35,7 +35,7 @@ import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { PacketSpecCode, runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, oops, upperCamel, upperFirst } from "./util"
-import { pinFunctions } from "./board"
+import { pinsInfo } from "./board"
 import { assert } from "./jdutil"
 import { TSDOC_NATIVE, TSDOC_START } from "./compiler"
 
@@ -312,25 +312,34 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
     r += `    }\n`
     r += `    const board: Board\n`
     r += `    interface BoardPins {\n`
-    const pinMap = (binfo.pins ?? {}) as Record<string, number>
-    for (const pinName of Object.keys(pinMap)) {
-        if (pinName.startsWith("#")) continue
-        if (pinName.startsWith("@")) continue
-        const gpio = pinMap[pinName]
-        const funs = pinFunctions(arch.pins, gpio)
+    const { infos } = pinsInfo(arch, binfo)
+    for (const pin of infos) {
+        if (
+            pin.label.startsWith("@") ||
+            (pin.functionLabel && !pin.functionLabel.startsWith("$services")) ||
+            pin.functionLabel === pin.silkLabel
+        )
+            continue
+
+        const funs = pin.functions
         const types = funs
             .map(s => pinFunToType[s])
             .filter(s => !!s)
             .map(s => "ds." + s)
-        if (types.length == 0) r += `        // ${pinName} seems invalid\n`
+        if (types.length == 0) r += `        // ${pin.label} seems invalid\n`
         else {
+            const cmn = pin.commonLabel != pin.silkLabel
             r += [
                 `/**`,
-                ` * Pin ${pinName} (GPIO${gpio}, ${funs.join(", ")})`,
+                ` * Pin ${pin.silkLabel} (GPIO${pin.gpio}, ${funs.join(", ")})`,
+                pin.functionLabel
+                    ? ` * @note can be also used as ${pin.functionLabel}`
+                    : undefined,
+                cmn ? ` * @${TSDOC_NATIVE} GPIO.${pin.commonLabel}` : undefined,
                 ` */`,
-                // `//% gpio=${gpio}`,
-                `${pinName}: ${types.join(" & ")}`,
+                `${pin.silkLabel}: ${types.join(" & ")}`,
             ]
+                .filter(Boolean)
                 .map(l => "        " + l + "\n")
                 .join("")
         }

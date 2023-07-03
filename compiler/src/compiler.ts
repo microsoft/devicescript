@@ -890,6 +890,9 @@ class Program implements TopOpWriter {
         if (ts.isPropertyAccessExpression(node)) {
             const tags = getSymTags(this.getSymAtLocation(node.expression))
             if (tags[TSDOC_NATIVE] == "GPIO") {
+                const t2 = getSymTags(this.getSymAtLocation(node))
+                if (t2[TSDOC_NATIVE])
+                    return t2[TSDOC_NATIVE].replace(/^GPIO\./, "")
                 const lbl = this.forceName(node.name)
                 return lbl // pin name
             }
@@ -2855,8 +2858,16 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression) {
         const tags = getSymTags(this.getSymAtLocation(expr))
-        if (tags[TSDOC_NATIVE]) {
-            const id = builtInObjByName["#" + tags[TSDOC_NATIVE]]
+        const nat = tags[TSDOC_NATIVE]
+        const wr = this.writer
+        if (nat) {
+            if (nat.startsWith("GPIO.")) {
+                return wr.emitIndex(
+                    wr.emitBuiltInObject(BuiltInObject.GPIO),
+                    wr.emitString(nat.slice(5))
+                )
+            }
+            const id = builtInObjByName["#" + nat]
             if (id === undefined) {
                 this.reportError(
                     expr,
@@ -2866,12 +2877,9 @@ class Program implements TopOpWriter {
                             .join(", "),
                     ts.DiagnosticCategory.Message
                 )
-                throwError(
-                    expr,
-                    `invalid @${TSDOC_NATIVE} tag '${tags[TSDOC_NATIVE]}'`
-                )
+                throwError(expr, `invalid @${TSDOC_NATIVE} tag '${nat}'`)
             }
-            return this.writer.emitBuiltInObject(id)
+            return wr.emitBuiltInObject(id)
         }
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }

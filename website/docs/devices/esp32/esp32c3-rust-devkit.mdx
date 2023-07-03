@@ -11,8 +11,9 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 
 ## Features
 
--  I2C on SDA/SCL: 10/8 using Header connector
--  WS2812B RGB LED on 2  (use [setStatusLight](/developer/status-light) to control)
+-  I2C on 10/8 using Header connector
+-  WS2812B RGB LED on pin 2  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin P21 at 115200 8N1
 -  Service: buttonBOOT (button)
 
 ## Stores
@@ -23,17 +24,19 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
+| **LED** |  GPIO7 |  debug,  io |
 | **P0** |  GPIO0 |  analogIn,  io |
 | **P1** |  GPIO1 |  analogIn,  io |
 | **P20** |  GPIO20 |  bootUart,  io |
+| **P21** |  GPIO21 |  log.pinTX,  bootUart,  io |
 | **P3** |  GPIO3 |  analogIn,  io |
 | **P4** |  GPIO4 |  analogIn,  debug,  io |
 | **P5** |  GPIO5 |  debug,  io |
 | **P6** |  GPIO6 |  debug,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
-| **i2c.pinSCL** |  GPIO8 |  boot,  io |
-| **i2c.pinSDA** |  GPIO10 |  io |
-| **led.pin** |  GPIO2 |  analogIn,  boot,  io |
+| **P9** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **i2c.pinSCL** |  GPIO8 |  i2c.pinSCL,  boot,  io |
+| **i2c.pinSDA** |  GPIO10 |  i2c.pinSDA,  io |
+| **led.pin** |  GPIO2 |  led.pin,  analogIn,  boot,  io |
 
 
 
@@ -65,7 +68,7 @@ devicescript flash --board esp32c3_rust_devkit
     "$services": [
         {
             "name": "buttonBOOT",
-            "pin": 9,
+            "pin": "P9",
             "service": "button"
         }
     ],
@@ -78,17 +81,20 @@ devicescript flash --board esp32c3_rust_devkit
         "pin": 2,
         "type": 1
     },
+    "log": {
+        "pinTX": "P21"
+    },
     "pins": {
-        "@LED": 7,
-        "@P21": 21,
+        "LED": 7,
         "P0": 0,
         "P1": 1,
         "P20": 20,
+        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
-        "P6": 6
-    },
-    "uartLog": true
+        "P6": 6,
+        "P9": 9
+    }
 }
 ```

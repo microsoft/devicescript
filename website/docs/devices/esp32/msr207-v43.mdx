@@ -8,6 +8,7 @@ description: MSR JM Brain S2-mini 207 v4.3
 
 -  Jacdac on pin 17 using Jacdac connector
 -  RGB LED on pins 8, 7, 6  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin 43 at 115200 8N1
 -  Service: power (auto-start)
 
 ## Stores
@@ -19,16 +20,17 @@ description: MSR JM Brain S2-mini 207 v4.3
 |:---------|:------------|---------:|
 | **P33** |  GPIO33 |  io |
 | **P34** |  GPIO34 |  io |
-| **jacdac.pin** |  GPIO17 |  analogOut,  io |
-| **led.rgb[0].pin** |  GPIO8 |  analogIn,  io |
-| **led.rgb[1].pin** |  GPIO7 |  analogIn,  io |
-| **led.rgb[2].pin** |  GPIO6 |  analogIn,  io |
-| **sd.pinCS** |  GPIO38 |  io |
-| **sd.pinMISO** |  GPIO37 |  io |
-| **sd.pinMOSI** |  GPIO35 |  io |
-| **sd.pinSCK** |  GPIO36 |  io |
-| **services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
-| **services.power[0].pinFault** |  GPIO13 |  io |
+| **jacdac.pin** |  GPIO17 |  jacdac.pin,  analogOut,  io |
+| **led.rgb[0].pin** |  GPIO8 |  led.rgb[0].pin,  analogIn,  io |
+| **led.rgb[1].pin** |  GPIO7 |  led.rgb[1].pin,  analogIn,  io |
+| **led.rgb[2].pin** |  GPIO6 |  led.rgb[2].pin,  analogIn,  io |
+| **log.pinTX** |  GPIO43 |  log.pinTX,  io |
+| **sd.pinCS** |  GPIO38 |  sd.pinCS,  io |
+| **sd.pinMISO** |  GPIO37 |  sd.pinMISO,  io |
+| **sd.pinMOSI** |  GPIO35 |  sd.pinMOSI,  io |
+| **sd.pinSCK** |  GPIO36 |  sd.pinSCK,  io |
+| **services.power[0].pinEn** |  GPIO2 |  services.power[0].pinEn,  analogIn,  io |
+| **services.power[0].pinFault** |  GPIO13 |  services.power[0].pinFault,  io |
 
 
 
@@ -75,6 +77,9 @@ devicescript flash --board msr207_v43
             }
         ]
     },
+    "log": {
+        "pinTX": 43
+    },
     "pins": {
         "P33": 33,
         "P34": 34
@@ -94,7 +99,6 @@ devicescript flash --board msr207_v43
             "pinFault": 13,
             "service": "power"
         }
-    ],
-    "uartLog": true
+    ]
 }
 ```

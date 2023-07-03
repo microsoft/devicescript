@@ -11,9 +11,10 @@ A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.
 
 ## Features
 
--  Jacdac on pin 5 using Jacdac connector
--  I2C on SDA/SCL: 6/7 using Qwiic connector
--  WS2812B RGB LED on 10  (use [setStatusLight](/developer/status-light) to control)
+-  Jacdac on pin JD using Jacdac connector
+-  I2C on SDA/SCL using Qwiic connector
+-  WS2812B RGB LED on pin LED  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin TX at 115200 8N1
 
 ## Stores
 
@@ -27,12 +28,13 @@ A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.
 | **A1** |  GPIO3 |  analogIn,  io |
 | **A2** |  GPIO4 |  analogIn,  debug,  io |
 | **D9** |  GPIO9 |  boot,  io |
+| **JD** |  GPIO5 |  jacdac.pin,  debug,  io |
+| **LED** |  GPIO10 |  led.pin,  io |
 | **LED_PWR** |  GPIO8 |  boot,  io |
 | **RX** |  GPIO20 |  bootUart,  io |
-| **i2c.pinSCL** |  GPIO7 |  debug,  io |
-| **i2c.pinSDA** |  GPIO6 |  debug,  io |
-| **jacdac.pin** |  GPIO5 |  debug,  io |
-| **led.pin** |  GPIO10 |  io |
+| **SCL** |  GPIO7 |  i2c.pinSCL,  debug,  io |
+| **SDA** |  GPIO6 |  i2c.pinSDA,  debug,  io |
+| **TX** |  GPIO21 |  log.pinTX,  bootUart,  io |
 
 
 
@@ -64,33 +66,35 @@ devicescript flash --board seeed_xiao_esp32c3_msr218
     "$services": [],
     "i2c": {
         "$connector": "Qwiic",
-        "pinSCL": 7,
-        "pinSDA": 6
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
     },
     "jacdac": {
         "$connector": "Jacdac",
-        "pin": 5
+        "pin": "JD"
     },
     "led": {
-        "pin": 10,
+        "pin": "LED",
         "type": 1
     },
+    "log": {
+        "pinTX": "TX"
+    },
     "pins": {
-        "@JD": 5,
-        "@LED": 10,
-        "@SCL": 7,
-        "@SDA": 6,
-        "@TX": 21,
         "A0": 2,
         "A1": 3,
         "A2": 4,
         "D9": 9,
+        "JD": 5,
+        "LED": 10,
         "LED_PWR": 8,
-        "RX": 20
+        "RX": 20,
+        "SCL": 7,
+        "SDA": 6,
+        "TX": 21
     },
     "sPin": {
         "LED_PWR": 1
-    },
-    "uartLog": true
+    }
 }
 ```
