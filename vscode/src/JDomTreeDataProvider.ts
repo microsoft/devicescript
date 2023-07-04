@@ -878,7 +878,7 @@ class JDomCustomTreeItem extends JDomTreeItem {
 class JDomRoleTreeItem extends JDomCustomTreeItem {
     readonly role: Role
     constructor(
-        parent: JDomTreeItem,
+        parent: JDomRoleManagerTreeItem,
         service: JDService,
         role: Role,
         props: TreeItemProps
@@ -891,6 +891,7 @@ class JDomRoleTreeItem extends JDomCustomTreeItem {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
         })
         this.role = role
+        this.id += role.name
         this.update()
     }
 
@@ -952,6 +953,7 @@ class JDomRoleManagerTreeItem extends JDomCustomTreeItem {
 
     protected createChildrenTreeItems(): JDomTreeItem[] {
         const roles = this._client?.roles || []
+        console.log({ roles })
         const nodes = roles.map(
             role => new JDomRoleTreeItem(this, this.service, role, this.props)
         )
