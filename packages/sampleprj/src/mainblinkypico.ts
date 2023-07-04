@@ -4,7 +4,7 @@ import { startLightBulb } from "@devicescript/servers"
 // start a lightbulb server on pin GP1
 // and store client in `led` variable
 const led = startLightBulb({
-    pin: pins.P1,
+    pin: pins.GP1,
 })
 
 // start interval timer every 1000ms
