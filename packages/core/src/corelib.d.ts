@@ -771,3 +771,94 @@ type Capitalize<S extends string> = intrinsic
  * Convert first character of string literal type to lowercase
  */
 type Uncapitalize<S extends string> = intrinsic
+
+interface MapConstructor {
+    new <K, V>(): Map<K, V>
+    new <K, V>(entries: readonly [K, V][]): Map<K, V>
+    readonly prototype: Map<any, any>
+}
+
+declare var Map: MapConstructor
+
+/**
+ * Represents a collection of key-value pairs.
+ * @interface Map
+ * @template K The type of keys in the Map.
+ * @template V The type of values in the Map.
+ */
+interface Map<K, V> {
+    /**
+     * Gets the number of key-value pairs in the Map.
+     * @readonly
+     */
+    size: number
+
+    /**
+     * Sets the value for the specified key in the Map.
+     * @param key The key to set.
+     * @param value The value to set for the key.
+     * @returns The updated Map object.
+     */
+    set(key: K, value: V): this
+
+    /**
+     * Gets the value associated with the specified key in the Map.
+     * @param key The key to retrieve the value for.
+     * @returns The value associated with the key, or undefined if the key doesn't exist in the Map.
+     */
+    get(key: K): V | undefined
+
+    /**
+     * Checks if the specified key exists in the Map.
+     * @param key The key to check for existence.
+     * @returns A boolean indicating whether the key exists in the Map.
+     */
+    has(key: K): boolean
+
+    /**
+     * Deletes the specified key and its associated value from the Map.
+     * @param key The key to delete.
+     * @returns A boolean indicating whether the key was successfully deleted.
+     */
+    delete(key: K): boolean
+
+    /**
+     * Removes all key-value pairs from the Map.
+     */
+    clear(): void
+
+    /**
+     * Executes a provided function once for each key-value pair in the Map.
+     * @param callbackFn The function to execute for each key-value pair.
+     * @param thisArg The value to use as "this" when executing the callback function.
+     */
+    forEach(
+        callbackFn: (value: V, key: K, map: Map<K, V>) => void,
+        thisArg?: any
+    ): void
+
+    /**
+     * Returns an iterator for the keys of the Map, in insertion order.
+     * @returns An iterator for the keys of the Map.
+     */
+    keys(): IterableIterator<K>
+
+    /**
+     * Returns an iterator for the values of the Map, in insertion order.
+     * @returns An iterator for the values of the Map.
+     */
+    values(): IterableIterator<V>
+
+    /**
+     * Returns an iterator for the key-value pairs of the Map, in insertion order.
+     * @returns An iterator for the key-value pairs of the Map.
+     */
+    entries(): IterableIterator<[K, V]>
+
+    /**
+     * Returns the iterator for the key-value pairs of the Map, in insertion order.
+     * @returns The iterator for the key-value pairs of the Map.
+     */
+    [Symbol.iterator](): IterableIterator<[K, V]>
+}
+
