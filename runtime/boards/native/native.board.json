@@ -1,5 +1,5 @@
 {
-    "$schema": "../../jacdac-c/dcfg/deviceconfig.schema.json",
+    "$schema": "../deviceconfig.schema.json",
     "devName": "DeviceScript Simulator (native)",
     "productId": "0x3aac7f0e"
 }
