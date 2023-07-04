@@ -1,0 +1,27 @@
+{
+    "$schema": "../deviceconfig.schema.json",
+    "devName": "Generic Feather board",
+    "productId": "0x3e41e4bb",
+    "pins": {
+        "A0": 70,
+        "A1": 71,
+        "A2": 72,
+        "A3": 73,
+        "A4_D24": 74,
+        "A5_D25": 75,
+        "SCK": 76,
+        "MOSI": 77,
+        "MISO": 78,
+        "RX_D0": 79,
+        "TX_D1": 80,
+        "SDA": 81,
+        "SCL": 82,
+        "D5": 83,
+        "D6": 84,
+        "D9": 85,
+        "D10": 86,
+        "D11": 87,
+        "D12": 88,
+        "D13": 89
+    }
+}
