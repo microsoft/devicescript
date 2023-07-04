@@ -772,26 +772,24 @@ type Capitalize<S extends string> = intrinsic
  */
 type Uncapitalize<S extends string> = intrinsic
 
-interface MapConstructor {
-    new <K, V>(): Map<K, V>
-    new <K, V>(entries: readonly [K, V][]): Map<K, V>
-    readonly prototype: Map<any, any>
-}
-
-declare var Map: MapConstructor
-
 /**
  * Represents a collection of key-value pairs.
  * @interface Map
  * @template K The type of keys in the Map.
  * @template V The type of values in the Map.
  */
+
 interface Map<K, V> {
     /**
      * Gets the number of key-value pairs in the Map.
      * @readonly
      */
     size: number
+    /**
+     * Returns the iterator for the key-value pairs of the Map, in insertion order.
+     * @returns The iterator for the key-value pairs of the Map.
+     */
+    [Symbol.iterator](): IterableIterator<[K, V]>
 
     /**
      * Sets the value for the specified key in the Map.
@@ -854,11 +852,21 @@ interface Map<K, V> {
      * @returns An iterator for the key-value pairs of the Map.
      */
     entries(): IterableIterator<[K, V]>
-
-    /**
-     * Returns the iterator for the key-value pairs of the Map, in insertion order.
-     * @returns The iterator for the key-value pairs of the Map.
-     */
-    [Symbol.iterator](): IterableIterator<[K, V]>
 }
 
+interface MapConstructor {
+    /**
+     * Creates a new Map object.
+     * @param entries An optional array or iterable containing key-value pairs to initialize the Map.
+     */
+    new <K = any, V = any>(
+        entries?: Array<readonly [K, V]> | null
+    ): Map<K, V>
+
+    /**
+     * The prototype object of the Map constructor.
+     */
+    readonly prototype: Map<any, any>
+}
+
+declare var Map: MapConstructor
