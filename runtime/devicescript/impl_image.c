@@ -1102,7 +1102,7 @@ int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
             int cols = width - x;
             if (cols == 0)
                 return 0;
-            if (cols * stride > len)
+            if (cols * (int)stride > len)
                 cols = len / stride;
             JD_ASSERT(cols > 0);
 
