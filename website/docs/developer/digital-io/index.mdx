@@ -13,23 +13,28 @@ It is recommend to encapsulate the GPIO access into server implementation as the
 
 ## Pin mappings
 
-You can either use hardware GPIO numbers using [gpio](/developer/servers/gpio) function, or you can import
-a board definition file and use the labels present on the board.
+While you can use hardware GPIO numbers with the `ds.gpio()` function, 
+it is highly recommended that you instead import a board definition file an use pin names
+matching silk on the hardware.
 
 ```ts
 import { pins } from "@dsboard/adafruit_qt_py_c3"
 
 // highlight-next-line
-const A2 = pins.A2
+const A2 = pins.A2_D2
 ```
 
-The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
+The doc-string for `pins.A2_D2` will tell you GPIO number (`1` in this case).
 Using named pins is also less error-prone since pins used for internal
 functions are not exposed through the `pins` object and the pins that are
 exposed are annotated with type (input, output, analog, etc.) which is then
 required by the `startSomething()` functions.
 
+Pins generally share names for boards with the same pinout.
+In particular, QT Py and XIAO share names.
+
 The `gpio()` function does not check for pin functions or usage.
+It will return `undefined` when named pin is not available or used for something else.
 
 ```ts
 import { gpio } from "@devicescript/core"

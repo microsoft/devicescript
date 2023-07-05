@@ -301,6 +301,7 @@ void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v);
 #define DEVS_GIMAGE_XFER_MODE_MASK 0x000f
 #define DEVS_GIMAGE_XFER_MODE_MONO 0x0000
 #define DEVS_GIMAGE_XFER_MODE_565 0x0001
+#define DEVS_GIMAGE_XFER_MODE_MONO_REV 0x0002
 
 #define DEVS_GIMAGE_XFER_ORDER_MASK 0x10000
 #define DEVS_GIMAGE_XFER_BY_COL 0x00000
@@ -314,7 +315,7 @@ typedef struct {
     uint16_t x, y;
     uint8_t data[];
 } devs_gimage_xfer_state_t;
-devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *img, value_t palette,
-                                                uint32_t flags, unsigned max_buf);
+devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *img,
+                                                value_t palette, uint32_t flags, unsigned max_buf);
 int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state);
 devs_gimage_t *devs_to_gimage(devs_ctx_t *ctx, value_t s);
