@@ -11,8 +11,9 @@ A tiny ESP32-C3 board.
 
 ## Features
 
--  I2C on SDA/SCL: 5/6 using Qwiic connector
--  WS2812B RGB LED on 2  (use [setStatusLight](/developer/status-light) to control)
+-  I2C on SDA_D4/SCL_D5 using Qwiic connector
+-  WS2812B RGB LED on pin 2  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin TX_D6 at 115200 8N1
 -  Service: buttonBOOT (button)
 
 ## Stores
@@ -23,18 +24,19 @@ A tiny ESP32-C3 board.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
-| **A0** |  GPIO4 |  analogIn,  debug,  io |
-| **A1** |  GPIO3 |  analogIn,  io |
-| **A2** |  GPIO1 |  analogIn,  io |
-| **A3** |  GPIO0 |  analogIn,  io |
-| **MISO** |  GPIO8 |  boot,  io |
-| **MOSI** |  GPIO7 |  debug,  io |
-| **RX** |  GPIO20 |  bootUart,  io |
-| **SCK** |  GPIO10 |  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
-| **i2c.pinSCL** |  GPIO6 |  debug,  io |
-| **i2c.pinSDA** |  GPIO5 |  debug,  io |
-| **led.pin** |  GPIO2 |  analogIn,  boot,  io |
+| **A0_D0** |  GPIO4 |  analogIn,  debug,  io |
+| **A1_D1** |  GPIO3 |  analogIn,  io |
+| **A2_D2** |  GPIO1 |  analogIn,  io |
+| **A3_D3** |  GPIO0 |  analogIn,  io |
+| **MISO_D9** |  GPIO8 |  boot,  io |
+| **MOSI_D10** |  GPIO7 |  debug,  io |
+| **RX_D7** |  GPIO20 |  bootUart,  io |
+| **SCK_D8** |  GPIO10 |  io |
+| **SCL_D5** |  GPIO6 |  i2c.pinSCL,  debug,  io |
+| **SDA_D4** |  GPIO5 |  i2c.pinSDA,  debug,  io |
+| **TX_D6** |  GPIO21 |  log.pinTX,  bootUart,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **led.pin** |  GPIO2 |  led.pin,  analogIn,  boot,  io |
 
 
 
@@ -72,24 +74,28 @@ devicescript flash --board adafruit_qt_py_c3
     ],
     "i2c": {
         "$connector": "Qwiic",
-        "pinSCL": 6,
-        "pinSDA": 5
+        "pinSCL": "SCL_D5",
+        "pinSDA": "SDA_D4"
     },
     "led": {
         "pin": 2,
         "type": 1
     },
-    "pins": {
-        "@TX": 21,
-        "A0": 4,
-        "A1": 3,
-        "A2": 1,
-        "A3": 0,
-        "MISO": 8,
-        "MOSI": 7,
-        "RX": 20,
-        "SCK": 10
+    "log": {
+        "pinTX": "TX_D6"
     },
-    "uartLog": true
+    "pins": {
+        "A0_D0": 4,
+        "A1_D1": 3,
+        "A2_D2": 1,
+        "A3_D3": 0,
+        "MISO_D9": 8,
+        "MOSI_D10": 7,
+        "RX_D7": 20,
+        "SCK_D8": 10,
+        "SCL_D5": 6,
+        "SDA_D4": 5,
+        "TX_D6": 21
+    }
 }
 ```

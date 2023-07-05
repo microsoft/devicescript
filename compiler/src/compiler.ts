@@ -108,8 +108,8 @@ export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 export const TSDOC_PART = "devsPart"
 export const TSDOC_SERVICES = "devsServices"
 export const TSDOC_START = "devsStart"
-export const TSDOC_GPIO = "devsGPIO"
 export const TSDOC_WHEN_USED = "devsWhenUsed"
+export const TSDOC_NATIVE = "devsNative"
 
 const coreModule = "@devicescript/core"
 
@@ -887,14 +887,21 @@ class Program implements TopOpWriter {
             return json
         }
 
+        if (ts.isPropertyAccessExpression(node)) {
+            const tags = getSymTags(this.getSymAtLocation(node.expression))
+            if (tags[TSDOC_NATIVE] == "GPIO") {
+                const t2 = getSymTags(this.getSymAtLocation(node))
+                if (t2[TSDOC_NATIVE])
+                    return t2[TSDOC_NATIVE].replace(/^GPIO\./, "")
+                const lbl = this.forceName(node.name)
+                return lbl // pin name
+            }
+        }
+
         if (ts.isCallExpression(node)) {
             const nam = this.nodeName(node.expression)
             if (nam == "#ds.gpio") return this.toLiteralJSON(node.arguments[0])
         }
-
-        const tags = getSymTags(this.getSymAtLocation(node))
-        const gpio = parseInt(tags[TSDOC_GPIO])
-        if (!isNaN(gpio)) return gpio
 
         throwError(node, `expecting JSON literal here`)
     }
@@ -1845,7 +1852,7 @@ class Program implements TopOpWriter {
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 const tags = getSymTags(sym)
-                if (tags.hasOwnProperty("devsNative")) continue
+                if (tags.hasOwnProperty(TSDOC_NATIVE)) continue
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -2851,14 +2858,16 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression) {
         const tags = getSymTags(this.getSymAtLocation(expr))
-        const gpio = parseInt(tags[TSDOC_GPIO])
-        if (!isNaN(gpio)) {
-            const wr = this.writer
-            wr.emitCall(this.dsMember("gpio"), literal(gpio))
-            return this.retVal()
-        }
-        if (tags["devsNative"]) {
-            const id = builtInObjByName["#" + tags["devsNative"]]
+        const nat = tags[TSDOC_NATIVE]
+        const wr = this.writer
+        if (nat) {
+            if (nat.startsWith("GPIO.")) {
+                return wr.emitIndex(
+                    wr.emitBuiltInObject(BuiltInObject.GPIO),
+                    wr.emitString(nat.slice(5))
+                )
+            }
+            const id = builtInObjByName["#" + nat]
             if (id === undefined) {
                 this.reportError(
                     expr,
@@ -2868,12 +2877,9 @@ class Program implements TopOpWriter {
                             .join(", "),
                     ts.DiagnosticCategory.Message
                 )
-                throwError(
-                    expr,
-                    `invalid @devsNative tag '${tags["devsNative"]}'`
-                )
+                throwError(expr, `invalid @${TSDOC_NATIVE} tag '${nat}'`)
             }
-            return this.writer.emitBuiltInObject(id)
+            return wr.emitBuiltInObject(id)
         }
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }

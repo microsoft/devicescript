@@ -1,0 +1,2163 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "AccelerometerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "accelerometer"
+                    ],
+                    "type": "string"
+                },
+                "trX": {
+                    "default": 1,
+                    "description": "Transform for X axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "trY": {
+                    "default": 2,
+                    "description": "Transform for Y axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "trZ": {
+                    "default": 3,
+                    "description": "Transform for Z axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ButtonConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeHigh": {
+                    "description": "Button is normally active-low and pulled high.\nThis makes it active-high and pulled low.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinBacklight": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "This pin is set high when the button is pressed."
+                },
+                "service": {
+                    "enum": [
+                        "button"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "BuzzerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the `pin` will be set to `1` when no sound is playing\n(because power flows through speaker when `pin` is set to `0`).\nWhen unset, the `pin` will be set to `0` when no sound is playing.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The driving pin."
+                },
+                "service": {
+                    "enum": [
+                        "buzzer"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "FlexConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinH": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinL": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinM": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "service": {
+                    "enum": [
+                        "flex"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pinH",
+                "pinL",
+                "pinM",
+                "service"
+            ],
+            "type": "object"
+        },
+        "GamepadConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeHigh": {
+                    "description": "Buttons are normally active-low and pulled high.\nThis makes them active-high and pulled low.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinA": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button A"
+                },
+                "pinAX": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "When gamepad is analog, set this to horizontal pin."
+                },
+                "pinAY": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "When gamepad is analog, set this to vertical pin."
+                },
+                "pinB": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button B"
+                },
+                "pinDown": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Down"
+                },
+                "pinExit": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Exit"
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLeft": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Left"
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "pinMenu": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Menu"
+                },
+                "pinReset": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Reset"
+                },
+                "pinRight": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Right"
+                },
+                "pinSelect": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Select"
+                },
+                "pinUp": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Up"
+                },
+                "pinX": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button X"
+                },
+                "pinY": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin for button Y"
+                },
+                "service": {
+                    "enum": [
+                        "gamepad"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HexInt": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "HidJoystickConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidJoystick"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HidKeyboardConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidKeyboard"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HidMouseConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidMouse"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "I2CConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "$connector": {
+                    "description": "How I2C devices are attached.",
+                    "enum": [
+                        "Grove",
+                        "Header",
+                        "Qwiic"
+                    ],
+                    "type": "string"
+                },
+                "inst": {
+                    "description": "Hardware instance index.",
+                    "type": "integer"
+                },
+                "kHz": {
+                    "default": 100,
+                    "description": "How fast to run the I2C, typically either 100 or 400.",
+                    "type": "integer"
+                },
+                "pinSCL": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinSDA": {
+                    "$ref": "#/definitions/Pin"
+                }
+            },
+            "required": [
+                "pinSCL",
+                "pinSDA"
+            ],
+            "type": "object"
+        },
+        "JacdacConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "$connector": {
+                    "enum": [
+                        "Header",
+                        "Jacdac"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
+        "LedChannel": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "mult": {
+                    "description": "Multiplier to compensate for different LED strengths.",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
+        "LedConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeHigh": {
+                    "description": "Applies to all LED channels/pins.",
+                    "type": "boolean"
+                },
+                "isMono": {
+                    "description": "Defaults to `true` if `pin` is set and `type` is 0.\nOtherwise `false`.",
+                    "type": "boolean"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "If a single mono LED, or programmable RGB LED."
+                },
+                "pinCLK": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Clock pin, if any."
+                },
+                "rgb": {
+                    "description": "RGB LED driven by PWM.",
+                    "items": {
+                        "$ref": "#/definitions/LedChannel"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                },
+                "type": {
+                    "default": 0,
+                    "description": "0 - use `pin` or `rgb` as regular pins\n1 - use `pin` as WS2812B (supported only on some boards)\n2 - use `pin` as APA102 DATA, and `pinCLK` as CLOCK\n3 - use `pin` as SK9822 DATA, and `pinCLK` as CLOCK\nOther options (in range 100+) are also possible on some boards.",
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "LightBulbConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "dimmable": {
+                    "description": "When set, the pin will be operated with PWM at a few kHz.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The driving pin."
+                },
+                "service": {
+                    "enum": [
+                        "lightBulb"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "LightLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:lightLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "LogConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "baud": {
+                    "default": 115200,
+                    "description": "Speed to use.",
+                    "type": "integer"
+                },
+                "pinTX": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Where to send logs."
+                }
+            },
+            "required": [
+                "pinTX"
+            ],
+            "type": "object"
+        },
+        "MotionConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the sensor is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "angle": {
+                    "default": 120,
+                    "description": "Sensing angle in degrees.",
+                    "type": "integer"
+                },
+                "minDistance": {
+                    "default": 1200,
+                    "description": "Maximum sensing distance in centimeters.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The input pin."
+                },
+                "service": {
+                    "enum": [
+                        "motion"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "MotorConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin1": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The channel 1 pin."
+                },
+                "pin2": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The channel 2 pin."
+                },
+                "pinEnable": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The enable (NSLEEP) pin if any, active high."
+                },
+                "service": {
+                    "enum": [
+                        "motor"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin1",
+                "service"
+            ],
+            "type": "object"
+        },
+        "Pin": {
+            "description": "Hardware pin number or label.\nNaming convention - fields with `Pin` type start with `pin*`",
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "PinLabels": {
+            "additionalProperties": false,
+            "description": "Typical pin labels, others are allowed.\nPin labels starting with '@' are hidden to the user.",
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "A0": {
+                    "type": "integer"
+                },
+                "A0_D0": {
+                    "type": "integer"
+                },
+                "A1": {
+                    "type": "integer"
+                },
+                "A10": {
+                    "type": "integer"
+                },
+                "A11": {
+                    "type": "integer"
+                },
+                "A12": {
+                    "type": "integer"
+                },
+                "A13": {
+                    "type": "integer"
+                },
+                "A14": {
+                    "type": "integer"
+                },
+                "A15": {
+                    "type": "integer"
+                },
+                "A1_D1": {
+                    "type": "integer"
+                },
+                "A2": {
+                    "type": "integer"
+                },
+                "A2_D2": {
+                    "type": "integer"
+                },
+                "A3": {
+                    "type": "integer"
+                },
+                "A3_D3": {
+                    "type": "integer"
+                },
+                "A4": {
+                    "type": "integer"
+                },
+                "A4_D24": {
+                    "type": "integer"
+                },
+                "A5": {
+                    "type": "integer"
+                },
+                "A5_D25": {
+                    "type": "integer"
+                },
+                "A6": {
+                    "type": "integer"
+                },
+                "A7": {
+                    "type": "integer"
+                },
+                "A8": {
+                    "type": "integer"
+                },
+                "A9": {
+                    "type": "integer"
+                },
+                "BOOT": {
+                    "type": "integer"
+                },
+                "CS": {
+                    "type": "integer"
+                },
+                "D0": {
+                    "type": "integer"
+                },
+                "D1": {
+                    "type": "integer"
+                },
+                "D10": {
+                    "type": "integer"
+                },
+                "D11": {
+                    "type": "integer"
+                },
+                "D12": {
+                    "type": "integer"
+                },
+                "D13": {
+                    "type": "integer"
+                },
+                "D14": {
+                    "type": "integer"
+                },
+                "D15": {
+                    "type": "integer"
+                },
+                "D2": {
+                    "type": "integer"
+                },
+                "D3": {
+                    "type": "integer"
+                },
+                "D4": {
+                    "type": "integer"
+                },
+                "D5": {
+                    "type": "integer"
+                },
+                "D6": {
+                    "type": "integer"
+                },
+                "D7": {
+                    "type": "integer"
+                },
+                "D8": {
+                    "type": "integer"
+                },
+                "D9": {
+                    "type": "integer"
+                },
+                "GP0": {
+                    "type": "integer"
+                },
+                "GP1": {
+                    "type": "integer"
+                },
+                "GP10": {
+                    "type": "integer"
+                },
+                "GP11": {
+                    "type": "integer"
+                },
+                "GP12": {
+                    "type": "integer"
+                },
+                "GP13": {
+                    "type": "integer"
+                },
+                "GP14": {
+                    "type": "integer"
+                },
+                "GP15": {
+                    "type": "integer"
+                },
+                "GP16": {
+                    "type": "integer"
+                },
+                "GP17": {
+                    "type": "integer"
+                },
+                "GP18": {
+                    "type": "integer"
+                },
+                "GP19": {
+                    "type": "integer"
+                },
+                "GP2": {
+                    "type": "integer"
+                },
+                "GP20": {
+                    "type": "integer"
+                },
+                "GP21": {
+                    "type": "integer"
+                },
+                "GP22": {
+                    "type": "integer"
+                },
+                "GP23": {
+                    "type": "integer"
+                },
+                "GP24": {
+                    "type": "integer"
+                },
+                "GP25": {
+                    "type": "integer"
+                },
+                "GP26": {
+                    "type": "integer"
+                },
+                "GP26_A0": {
+                    "type": "integer"
+                },
+                "GP27": {
+                    "type": "integer"
+                },
+                "GP27_A1": {
+                    "type": "integer"
+                },
+                "GP28": {
+                    "type": "integer"
+                },
+                "GP28_A2": {
+                    "type": "integer"
+                },
+                "GP29": {
+                    "type": "integer"
+                },
+                "GP3": {
+                    "type": "integer"
+                },
+                "GP30": {
+                    "type": "integer"
+                },
+                "GP31": {
+                    "type": "integer"
+                },
+                "GP32": {
+                    "type": "integer"
+                },
+                "GP33": {
+                    "type": "integer"
+                },
+                "GP34": {
+                    "type": "integer"
+                },
+                "GP35": {
+                    "type": "integer"
+                },
+                "GP36": {
+                    "type": "integer"
+                },
+                "GP37": {
+                    "type": "integer"
+                },
+                "GP38": {
+                    "type": "integer"
+                },
+                "GP39": {
+                    "type": "integer"
+                },
+                "GP4": {
+                    "type": "integer"
+                },
+                "GP40": {
+                    "type": "integer"
+                },
+                "GP41": {
+                    "type": "integer"
+                },
+                "GP42": {
+                    "type": "integer"
+                },
+                "GP43": {
+                    "type": "integer"
+                },
+                "GP44": {
+                    "type": "integer"
+                },
+                "GP45": {
+                    "type": "integer"
+                },
+                "GP46": {
+                    "type": "integer"
+                },
+                "GP47": {
+                    "type": "integer"
+                },
+                "GP48": {
+                    "type": "integer"
+                },
+                "GP49": {
+                    "type": "integer"
+                },
+                "GP5": {
+                    "type": "integer"
+                },
+                "GP50": {
+                    "type": "integer"
+                },
+                "GP51": {
+                    "type": "integer"
+                },
+                "GP52": {
+                    "type": "integer"
+                },
+                "GP53": {
+                    "type": "integer"
+                },
+                "GP54": {
+                    "type": "integer"
+                },
+                "GP55": {
+                    "type": "integer"
+                },
+                "GP56": {
+                    "type": "integer"
+                },
+                "GP57": {
+                    "type": "integer"
+                },
+                "GP58": {
+                    "type": "integer"
+                },
+                "GP59": {
+                    "type": "integer"
+                },
+                "GP6": {
+                    "type": "integer"
+                },
+                "GP60": {
+                    "type": "integer"
+                },
+                "GP61": {
+                    "type": "integer"
+                },
+                "GP62": {
+                    "type": "integer"
+                },
+                "GP63": {
+                    "type": "integer"
+                },
+                "GP7": {
+                    "type": "integer"
+                },
+                "GP8": {
+                    "type": "integer"
+                },
+                "GP9": {
+                    "type": "integer"
+                },
+                "LED": {
+                    "type": "integer"
+                },
+                "LED0": {
+                    "type": "integer"
+                },
+                "LED1": {
+                    "type": "integer"
+                },
+                "LED2": {
+                    "type": "integer"
+                },
+                "LED3": {
+                    "type": "integer"
+                },
+                "LED_PWR": {
+                    "type": "integer"
+                },
+                "MISO": {
+                    "type": "integer"
+                },
+                "MISO_D9": {
+                    "type": "integer"
+                },
+                "MOSI": {
+                    "type": "integer"
+                },
+                "MOSI_D10": {
+                    "type": "integer"
+                },
+                "P0": {
+                    "type": "integer"
+                },
+                "P1": {
+                    "type": "integer"
+                },
+                "P10": {
+                    "type": "integer"
+                },
+                "P11": {
+                    "type": "integer"
+                },
+                "P12": {
+                    "type": "integer"
+                },
+                "P13": {
+                    "type": "integer"
+                },
+                "P14": {
+                    "type": "integer"
+                },
+                "P15": {
+                    "type": "integer"
+                },
+                "P16": {
+                    "type": "integer"
+                },
+                "P17": {
+                    "type": "integer"
+                },
+                "P18": {
+                    "type": "integer"
+                },
+                "P19": {
+                    "type": "integer"
+                },
+                "P2": {
+                    "type": "integer"
+                },
+                "P20": {
+                    "type": "integer"
+                },
+                "P21": {
+                    "type": "integer"
+                },
+                "P22": {
+                    "type": "integer"
+                },
+                "P23": {
+                    "type": "integer"
+                },
+                "P24": {
+                    "type": "integer"
+                },
+                "P25": {
+                    "type": "integer"
+                },
+                "P26": {
+                    "type": "integer"
+                },
+                "P27": {
+                    "type": "integer"
+                },
+                "P28": {
+                    "type": "integer"
+                },
+                "P29": {
+                    "type": "integer"
+                },
+                "P3": {
+                    "type": "integer"
+                },
+                "P30": {
+                    "type": "integer"
+                },
+                "P31": {
+                    "type": "integer"
+                },
+                "P32": {
+                    "type": "integer"
+                },
+                "P33": {
+                    "type": "integer"
+                },
+                "P34": {
+                    "type": "integer"
+                },
+                "P35": {
+                    "type": "integer"
+                },
+                "P36": {
+                    "type": "integer"
+                },
+                "P37": {
+                    "type": "integer"
+                },
+                "P38": {
+                    "type": "integer"
+                },
+                "P39": {
+                    "type": "integer"
+                },
+                "P4": {
+                    "type": "integer"
+                },
+                "P40": {
+                    "type": "integer"
+                },
+                "P41": {
+                    "type": "integer"
+                },
+                "P42": {
+                    "type": "integer"
+                },
+                "P43": {
+                    "type": "integer"
+                },
+                "P44": {
+                    "type": "integer"
+                },
+                "P45": {
+                    "type": "integer"
+                },
+                "P46": {
+                    "type": "integer"
+                },
+                "P47": {
+                    "type": "integer"
+                },
+                "P48": {
+                    "type": "integer"
+                },
+                "P49": {
+                    "type": "integer"
+                },
+                "P5": {
+                    "type": "integer"
+                },
+                "P50": {
+                    "type": "integer"
+                },
+                "P51": {
+                    "type": "integer"
+                },
+                "P52": {
+                    "type": "integer"
+                },
+                "P53": {
+                    "type": "integer"
+                },
+                "P54": {
+                    "type": "integer"
+                },
+                "P55": {
+                    "type": "integer"
+                },
+                "P56": {
+                    "type": "integer"
+                },
+                "P57": {
+                    "type": "integer"
+                },
+                "P58": {
+                    "type": "integer"
+                },
+                "P59": {
+                    "type": "integer"
+                },
+                "P6": {
+                    "type": "integer"
+                },
+                "P60": {
+                    "type": "integer"
+                },
+                "P61": {
+                    "type": "integer"
+                },
+                "P62": {
+                    "type": "integer"
+                },
+                "P63": {
+                    "type": "integer"
+                },
+                "P7": {
+                    "type": "integer"
+                },
+                "P8": {
+                    "type": "integer"
+                },
+                "P9": {
+                    "type": "integer"
+                },
+                "PWR": {
+                    "type": "integer"
+                },
+                "RX": {
+                    "type": "integer"
+                },
+                "RX_D0": {
+                    "type": "integer"
+                },
+                "RX_D7": {
+                    "type": "integer"
+                },
+                "SCK": {
+                    "type": "integer"
+                },
+                "SCK_D8": {
+                    "type": "integer"
+                },
+                "SCL": {
+                    "type": "integer"
+                },
+                "SCL_D5": {
+                    "type": "integer"
+                },
+                "SDA": {
+                    "type": "integer"
+                },
+                "SDA_D4": {
+                    "type": "integer"
+                },
+                "TX": {
+                    "type": "integer"
+                },
+                "TX_D1": {
+                    "type": "integer"
+                },
+                "TX_D6": {
+                    "type": "integer"
+                },
+                "VN": {
+                    "type": "integer"
+                },
+                "VP": {
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "PotentiometerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:potentiometer"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "PowerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "faultIgnoreMs": {
+                    "default": 16,
+                    "description": "How long (in milliseconds) to ignore the `pinFault` after enabling.",
+                    "type": "integer"
+                },
+                "mode": {
+                    "description": "Operation mode of pinEn\n0 - `pinEn` is active high\n1 - `pinEn` is active low\n2 - transistor-on-EN setup, where flt and en are connected at limiter\n3 - EN should be pulsed at 50Hz (10ms on, 10ms off) to enable the limiter",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinEn": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pinFault": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Always active low."
+                },
+                "pinLedPulse": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Additional power LED to pulse."
+                },
+                "pinPulse": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Active-low pin for pulsing battery banks."
+                },
+                "pinUsbDetect": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin that is high when we are connected to USB or similar power source."
+                },
+                "service": {
+                    "enum": [
+                        "power"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "faultIgnoreMs",
+                "mode",
+                "name",
+                "pinEn",
+                "pinFault",
+                "service"
+            ],
+            "type": "object"
+        },
+        "Record<string,0|1>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "Record<string,string>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "ReflectedLightConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:reflectedLight"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "RelayConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "initalActive": {
+                    "description": "Whether to activate the relay upon boot.",
+                    "type": "boolean"
+                },
+                "ledActiveLow": {
+                    "description": "Which way to drive the `pinLed`",
+                    "type": "boolean"
+                },
+                "maxCurrent": {
+                    "description": "Maximum switching current in mA.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The driving pin."
+                },
+                "pinFeedback": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Active-high pin that indicates the actual state of the relay."
+                },
+                "pinLed": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "This pin will be driven when relay is active."
+                },
+                "service": {
+                    "enum": [
+                        "relay"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "RotaryEncoderConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "clicksPerTurn": {
+                    "default": 12,
+                    "description": "How many clicks for full 360 turn.",
+                    "type": "integer"
+                },
+                "dense": {
+                    "description": "Encoder supports \"half-clicks\".",
+                    "type": "boolean"
+                },
+                "inverted": {
+                    "description": "Invert direction.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin0": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "pin1": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "service": {
+                    "enum": [
+                        "rotaryEncoder"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin0",
+                "pin1",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ServiceConfig": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/RotaryEncoderConfig"
+                },
+                {
+                    "$ref": "#/definitions/ButtonConfig"
+                },
+                {
+                    "$ref": "#/definitions/SwitchConfig"
+                },
+                {
+                    "$ref": "#/definitions/FlexConfig"
+                },
+                {
+                    "$ref": "#/definitions/RelayConfig"
+                },
+                {
+                    "$ref": "#/definitions/PowerConfig"
+                },
+                {
+                    "$ref": "#/definitions/MotionConfig"
+                },
+                {
+                    "$ref": "#/definitions/MotorConfig"
+                },
+                {
+                    "$ref": "#/definitions/LightBulbConfig"
+                },
+                {
+                    "$ref": "#/definitions/BuzzerConfig"
+                },
+                {
+                    "$ref": "#/definitions/ServoConfig"
+                },
+                {
+                    "$ref": "#/definitions/LightLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/ReflectedLightConfig"
+                },
+                {
+                    "$ref": "#/definitions/WaterLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoundLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoilMoistureConfig"
+                },
+                {
+                    "$ref": "#/definitions/PotentiometerConfig"
+                },
+                {
+                    "$ref": "#/definitions/AccelerometerConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidJoystickConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidKeyboardConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidMouseConfig"
+                },
+                {
+                    "$ref": "#/definitions/GamepadConfig"
+                }
+            ]
+        },
+        "ServoConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "fixed": {
+                    "description": "When set, the min/maxAngle/Pulse can't be changed by the user.",
+                    "type": "boolean"
+                },
+                "maxAngle": {
+                    "default": 90,
+                    "description": "Maximum angle supported by the servo in degrees.\nAlways minAngle < maxAngle",
+                    "type": "integer"
+                },
+                "maxPulse": {
+                    "default": 600,
+                    "description": "Pulse value to use to reach maxAngle in us.\nTypically minPulse > maxPulse",
+                    "type": "integer"
+                },
+                "minAngle": {
+                    "default": -90,
+                    "description": "Minimum angle supported by the servo in degrees.\nAlways minAngle < maxAngle",
+                    "type": "integer"
+                },
+                "minPulse": {
+                    "default": 2500,
+                    "description": "Pulse value to use to reach minAngle in us.\nTypically minPulse > maxPulse",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The driving (PWM) pin."
+                },
+                "powerPin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "The pin to set low when servo is used. Floating otherwise."
+                },
+                "service": {
+                    "enum": [
+                        "servo"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "SoilMoistureConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soilMoisture"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "SoundLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soundLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "SwitchConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin"
+                },
+                "service": {
+                    "enum": [
+                        "switch"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "WaterLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to analog read."
+                },
+                "pinHigh": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull high before analog read and release afterwards."
+                },
+                "pinLow": {
+                    "$ref": "#/definitions/Pin",
+                    "description": "Pin to pull low before analog read and release afterwards."
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:waterLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "#": {
+            "description": "All fields starting with '#' arg ignored",
+            "type": "string"
+        },
+        "$description": {
+            "description": "Short description of the board.",
+            "type": "string"
+        },
+        "$pins": {
+            "$ref": "#/definitions/Record<string,string>",
+            "description": "Labels to expose pins in `@dsboard/foo` modules\nIf pin X (`pins.X`) is to be exposed as Y, then `$pins.Y == X`."
+        },
+        "$schema": {
+            "type": "string"
+        },
+        "$services": {
+            "description": "Services to expose via `startXYZ()` API. Each starts with { \"service\": \"...\" }",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
+        "@name": {
+            "description": "Name of the program, derived from package.json. Exposed as `program_name` register.",
+            "type": "string"
+        },
+        "@version": {
+            "description": "Version number of the program, derived from package.json and git. Exposed as `program_version` register.",
+            "type": "string"
+        },
+        "archId": {
+            "description": "Architecture for the board.\nThis is auto-populated from arch.json file.",
+            "examples": [
+                "esp32c3",
+                "rp2040w"
+            ],
+            "type": "string"
+        },
+        "devName": {
+            "description": "Name of the device.",
+            "examples": [
+                "Acme Corp. SuperIoT v1.3"
+            ],
+            "type": "string"
+        },
+        "devNetwork": {
+            "description": "Don't start internal cloud adapter service (including the WiFi adapter) and instead use one running\non the computer connected via USB.",
+            "type": "boolean"
+        },
+        "flashPageSize": {
+            "description": "Size of a flash page, typically 4096.",
+            "type": "integer"
+        },
+        "fstorOffset": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Offset where FSTOR sits in total flash space."
+        },
+        "fstorPages": {
+            "description": "Total number of pages in FSTOR.\nOften 32 (for 128k) or 64 (for 256k).",
+            "type": "integer"
+        },
+        "i2c": {
+            "$ref": "#/definitions/I2CConfig"
+        },
+        "jacdac": {
+            "$ref": "#/definitions/JacdacConfig"
+        },
+        "led": {
+            "$ref": "#/definitions/LedConfig"
+        },
+        "log": {
+            "$ref": "#/definitions/LogConfig"
+        },
+        "pins": {
+            "$ref": "#/definitions/PinLabels"
+        },
+        "productId": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Identifier for a particular firmware running on a particular device, typically given as a hex number starting with 0x3.",
+            "examples": [
+                "0x379ea214"
+            ]
+        },
+        "sPin": {
+            "$ref": "#/definitions/Record<string,0|1>",
+            "description": "Initial values for pins."
+        },
+        "scanI2C": {
+            "description": "Enable legacy auto-scan for I2C devices.",
+            "type": "boolean"
+        },
+        "services": {
+            "description": "Services to mount. Each starts with { \"service\": \"...\" }\nThis should not be present in .board.json files.",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
+        "url": {
+            "description": "Where to buy/read more.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "devName",
+        "productId"
+    ],
+    "type": "object"
+}
+

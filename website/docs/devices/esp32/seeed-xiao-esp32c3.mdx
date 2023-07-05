@@ -11,6 +11,7 @@ A tiny ESP32-C3 board.
 
 ## Features
 
+-  Serial logging on pin TX_D6 at 115200 8N1
 -  Service: buttonBOOT (button)
 
 ## Stores
@@ -21,16 +22,17 @@ A tiny ESP32-C3 board.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
-| **D0** |  GPIO2 |  analogIn,  boot,  io |
-| **D1** |  GPIO3 |  analogIn,  io |
-| **D10** |  GPIO10 |  io |
-| **D2** |  GPIO4 |  analogIn,  debug,  io |
-| **D3** |  GPIO5 |  debug,  io |
-| **D4** |  GPIO6 |  debug,  io |
-| **D5** |  GPIO7 |  debug,  io |
-| **D7** |  GPIO20 |  bootUart,  io |
-| **D8** |  GPIO8 |  boot,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
+| **A0_D0** |  GPIO2 |  analogIn,  boot,  io |
+| **A1_D1** |  GPIO3 |  analogIn,  io |
+| **A2_D2** |  GPIO4 |  analogIn,  debug,  io |
+| **A3_D3** |  GPIO5 |  debug,  io |
+| **MISO_D9** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **MOSI_D10** |  GPIO10 |  io |
+| **RX_D7** |  GPIO20 |  bootUart,  io |
+| **SCK_D8** |  GPIO8 |  boot,  io |
+| **SCL_D5** |  GPIO7 |  debug,  io |
+| **SDA_D4** |  GPIO6 |  debug,  io |
+| **TX_D6** |  GPIO21 |  log.pinTX,  bootUart,  io |
 
 
 
@@ -62,22 +64,25 @@ devicescript flash --board seeed_xiao_esp32c3
     "$services": [
         {
             "name": "buttonBOOT",
-            "pin": 9,
+            "pin": "MISO_D9",
             "service": "button"
         }
     ],
-    "pins": {
-        "@D9": 9,
-        "D0": 2,
-        "D1": 3,
-        "D10": 10,
-        "D2": 4,
-        "D3": 5,
-        "D4": 6,
-        "D5": 7,
-        "D7": 20,
-        "D8": 8
+    "log": {
+        "pinTX": "TX_D6"
     },
-    "uartLog": true
+    "pins": {
+        "A0_D0": 2,
+        "A1_D1": 3,
+        "A2_D2": 4,
+        "A3_D3": 5,
+        "MISO_D9": 9,
+        "MOSI_D10": 10,
+        "RX_D7": 20,
+        "SCK_D8": 8,
+        "SCL_D5": 7,
+        "SDA_D4": 6,
+        "TX_D6": 21
+    }
 }
 ```

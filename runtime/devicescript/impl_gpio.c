@@ -9,7 +9,11 @@
 // #define VLOGGING 1
 #include "devs_logging.h"
 
-static uint8_t usedpins[128 / 8];
+#ifndef JD_MAX_PIN_NUM
+#define JD_MAX_PIN_NUM 64
+#endif
+
+static uint8_t usedpins[JD_MAX_PIN_NUM / 8];
 #define MAX_PIN (sizeof(usedpins) * 8 - 1)
 
 static void init_used(void) {
@@ -27,6 +31,7 @@ static void init_used(void) {
             }
         }
     }
+    LOG("init used done");
 }
 
 static bool is_pin_used(int gpio) {
@@ -43,7 +48,31 @@ static bool valid_pin(const char *name) {
 }
 
 void devs_gpio_init_dcfg(devs_ctx_t *ctx) {
-    init_used();
+    if (ctx != NULL) {
+        if (ctx->pin_state)
+            return;
+
+        init_used();
+
+        unsigned num_pins = 0;
+        const dcfg_entry_t *info = NULL;
+        for (;;) {
+            info = dcfg_get_next_entry("pins.", info);
+            if (info == NULL)
+                break;
+            if (valid_pin(info->key))
+                num_pins++;
+        }
+
+        LOG("init: %d pins", num_pins);
+        ctx->pin_state = devs_try_alloc(ctx, num_pins * sizeof(devs_pin_state_t));
+        if (!ctx->pin_state)
+            return;
+        ctx->num_pins = num_pins;
+
+    } else {
+        init_used();
+    }
 
     unsigned idx = 0;
     const dcfg_entry_t *info = NULL;
@@ -101,49 +130,36 @@ void devs_gpio_init_dcfg(devs_ctx_t *ctx) {
 
         idx++;
     }
-}
 
-static void init_pin_state(devs_ctx_t *ctx) {
-    if (ctx->pin_state)
+    if (ctx == NULL)
         return;
 
-    init_used();
-
-    unsigned num_pins = 0;
-    const dcfg_entry_t *info = NULL;
-    for (;;) {
-        info = dcfg_get_next_entry("pins.", info);
-        if (info == NULL)
-            break;
-        if (valid_pin(info->key))
-            num_pins++;
+    devs_map_t *map = (devs_map_t *)devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_GPIO);
+    JD_ASSERT(devs_is_map(map));
+    for (idx = 0; idx < ctx->num_pins; ++idx) {
+        devs_pin_state_t *p = &ctx->pin_state[idx];
+        p->obj = devs_value_from_gc_obj(
+            ctx, devs_map_try_alloc(
+                     ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE)));
+        // set fields for nicer debug output
+        devs_any_set(ctx, p->obj, devs_builtin_string(DEVS_BUILTIN_STRING_GPIO),
+                     devs_value_from_int(p->gpio));
+        value_t lbl = devs_value_from_gc_obj(
+            ctx, devs_string_try_alloc_init(ctx, p->label, strlen(p->label)));
+        devs_value_pin(ctx, lbl);
+        devs_any_set(ctx, p->obj, devs_builtin_string(DEVS_BUILTIN_STRING_LABEL), lbl);
+        // store it in GPIO object
+        devs_map_set(ctx, map, lbl, p->obj);
+        devs_value_unpin(ctx, lbl);
     }
-
-    LOG("init: %d pins", num_pins);
-    ctx->pin_state = devs_try_alloc(ctx, num_pins * sizeof(devs_pin_state_t));
-    if (!ctx->pin_state)
-        return;
-    ctx->num_pins = num_pins;
-
-    devs_gpio_init_dcfg(ctx);
 }
 
 static devs_pin_state_t *get_pin(devs_ctx_t *ctx, value_t self) {
-    init_pin_state(ctx);
     for (unsigned i = 0; i < ctx->num_pins; ++i) {
         if (ctx->pin_state[i].obj.u64 == self.u64)
             return &ctx->pin_state[i];
     }
     devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_GPIO, self);
-    return NULL;
-}
-
-static devs_pin_state_t *get_pin_by_gpio(devs_ctx_t *ctx, int gpio) {
-    init_pin_state(ctx);
-    for (unsigned i = 0; i < ctx->num_pins; ++i) {
-        if (ctx->pin_state[i].gpio == gpio)
-            return &ctx->pin_state[i];
-    }
     return NULL;
 }
 
@@ -233,34 +249,4 @@ void meth1_GPIO_setMode(devs_ctx_t *ctx) {
         return;
     }
     p->mode = m;
-}
-
-void fun1_DeviceScript_gpio(devs_ctx_t *ctx) {
-    int gpio = devs_arg_int_defl(ctx, 0, -1);
-    devs_pin_state_t *p = get_pin_by_gpio(ctx, gpio);
-    if (!p) {
-        if (gpio == 0xdeadf00) {
-            devs_ret(ctx, devs_builtin_object_value(ctx, DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE));
-        } else {
-            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_GPIO, devs_arg(ctx, 0));
-        }
-        return;
-    }
-
-    if (devs_is_undefined(p->obj)) {
-        p->obj = devs_value_from_gc_obj(
-            ctx, devs_map_try_alloc(
-                     ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE)));
-
-        // set fields for nicer debug output
-        devs_any_set(ctx, p->obj, devs_builtin_string(DEVS_BUILTIN_STRING_GPIO),
-                     devs_value_from_int(gpio));
-        value_t lbl = devs_value_from_gc_obj(
-            ctx, devs_string_try_alloc_init(ctx, p->label, strlen(p->label)));
-        devs_value_pin(ctx, lbl);
-        devs_any_set(ctx, p->obj, devs_builtin_string(DEVS_BUILTIN_STRING_LABEL), lbl);
-        devs_value_unpin(ctx, lbl);
-    }
-
-    devs_ret(ctx, p->obj);
 }
