@@ -987,18 +987,20 @@ devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *
     if (buf_sz > 1024)
         buf_sz = 1024;
     int colors = 1 << img->bpp;
+
+    state = devs_try_alloc(ctx, sizeof(devs_gimage_xfer_state_t) + colors * 2 + buf_sz);
+    if (!state)
+        return NULL;
+    state->image = img;
+    state->flags = flags;
+    state->buffer_size = buf_sz;
+    state->buffer_offset = colors * 2;
+
     if (mode == DEVS_GIMAGE_XFER_MODE_565 && img->bpp == 4) {
         unsigned palsize;
         const uint8_t *paldata = devs_bufferish_data(ctx, palette, &palsize);
         if ((int)palsize != 3 * colors)
             devs_throw_range_error(ctx, "invalid palette");
-        state = devs_try_alloc(ctx, sizeof(devs_gimage_xfer_state_t) + colors * 2 + buf_sz);
-        if (!state)
-            return NULL;
-        state->image = img;
-        state->flags = flags;
-        state->buffer_size = buf_sz;
-        state->buffer_offset = colors * 2;
         uint16_t *pal = (uint16_t *)(state->data);
         for (int i = 0; i < colors; ++i) {
             uint8_t r = paldata[3 * i + 0];
@@ -1009,10 +1011,24 @@ devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *
             pal[i] = (pal[i] >> 8) | (pal[i] << 8); // swap bytes - little endian
         }
         return state;
+    } else if ((mode == DEVS_GIMAGE_XFER_MODE_MONO_REV || mode == DEVS_GIMAGE_XFER_MODE_MONO) &&
+               img->bpp == 1) {
+        // ignore palette
+        return state;
     } else {
+        devs_free(ctx, state);
         devs_throw_range_error(ctx, "mode/bpp not supported");
         return NULL;
     }
+}
+
+static const uint8_t swap_mask[16] = {
+    0b0000, 0b1000, 0b0100, 0b1100, 0b0010, 0b1010, 0b0110, 0b1110,
+    0b0001, 0b1001, 0b0101, 0b1101, 0b0011, 0b1011, 0b0111, 0b1111,
+};
+
+static inline uint8_t swap_bits(uint8_t v) {
+    return (swap_mask[v & 15] << 4) | (swap_mask[v >> 4]);
 }
 
 int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
@@ -1020,16 +1036,19 @@ int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
     unsigned order = state->flags & DEVS_GIMAGE_XFER_ORDER_MASK;
     devs_gimage_t *img = state->image;
 
+    int x = state->x;
+    int y = state->y;
+    int height = img->height;
+    int width = img->width;
+    unsigned stride = img->stride;
+
     if (mode == DEVS_GIMAGE_XFER_MODE_565 && img->bpp == 4) {
         uint16_t *dp = (uint16_t *)(state->data + state->buffer_offset);
         uint16_t *pal = (uint16_t *)(state->data);
-        int x = state->x;
-        int y = state->y;
-        int height = img->height;
-        int width = img->width;
         int len = state->buffer_size / 2;
+        JD_ASSERT((height & 1) == 0);
+
         if (order == DEVS_GIMAGE_XFER_BY_COL) {
-            JD_ASSERT((height & 1) == 0);
             JD_ASSERT(y == 0);
             int cols = width - x;
             if (cols == 0)
@@ -1049,7 +1068,6 @@ int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
             state->x = x;
             return cols * height * 2;
         } else {
-            JD_ASSERT((height & 1) == 0);
             JD_ASSERT(x == 0);
             int rows = height - y;
             if (rows == 0)
@@ -1059,7 +1077,6 @@ int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
             rows &= ~1;
             JD_ASSERT(rows > 0);
 
-            unsigned stride = img->stride;
             for (int i = 0; i < rows; i += 2) {
                 const uint8_t *sp = pix_ptr(img, 0, y++);
                 for (int j = 0; j < width; j++) {
@@ -1074,6 +1091,83 @@ int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
             }
             state->y = y;
             return rows * width * 2;
+        }
+    } else if ((mode == DEVS_GIMAGE_XFER_MODE_MONO || mode == DEVS_GIMAGE_XFER_MODE_MONO_REV) &&
+               img->bpp == 1) {
+        uint8_t *dp = state->data + state->buffer_offset;
+        int len = state->buffer_size;
+
+        if (order == DEVS_GIMAGE_XFER_BY_COL) {
+            JD_ASSERT(y == 0);
+            int cols = width - x;
+            if (cols == 0)
+                return 0;
+            if (cols * stride > len)
+                cols = len / stride;
+            JD_ASSERT(cols > 0);
+
+            uint8_t *sp = pix_ptr(img, x, 0);
+            int n = cols * stride;
+
+            if (mode == DEVS_GIMAGE_XFER_MODE_MONO_REV)
+                while (n--)
+                    *dp++ = swap_bits(*sp++);
+            else
+                memcpy(dp, sp, n);
+
+            state->x = x + cols;
+            return cols * stride;
+        } else {
+            JD_ASSERT(x == 0);
+            int rows = height - y;
+            if (rows == 0)
+                return 0;
+            JD_ASSERT((width & 7) == 0);
+            int row_size = width >> 3;
+            if (rows * row_size > len)
+                rows = len / row_size;
+            JD_ASSERT(rows > 0);
+
+            for (int i = 0; i < rows; i++) {
+                int shift = y & 7;
+                const uint8_t *sp = pix_ptr(img, 0, y++);
+                if (mode == DEVS_GIMAGE_XFER_MODE_MONO_REV)
+                    for (int j = 0; j < row_size; j++) {
+                        uint8_t v = 0;
+#define STEP(q)                                                                                    \
+    v |= ((*sp >> shift) & 1) << (7 - q);                                                          \
+    sp += stride
+                        STEP(0);
+                        STEP(1);
+                        STEP(2);
+                        STEP(3);
+                        STEP(4);
+                        STEP(5);
+                        STEP(6);
+                        STEP(7);
+#undef STEP
+                        *dp++ = v;
+                    }
+                else
+                    for (int j = 0; j < row_size; j++) {
+                        uint8_t v = 0;
+#define STEP(q)                                                                                    \
+    v |= ((*sp >> shift) & 1) << q;                                                                \
+    sp += stride
+                        STEP(0);
+                        STEP(1);
+                        STEP(2);
+                        STEP(3);
+                        STEP(4);
+                        STEP(5);
+                        STEP(6);
+                        STEP(7);
+#undef STEP
+                        *dp++ = v;
+                    }
+            }
+            state->y = y;
+            return rows * row_size;
         }
     }
 

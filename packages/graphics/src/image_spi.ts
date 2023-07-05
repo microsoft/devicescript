@@ -8,6 +8,7 @@ export enum SpiImageFlags {
     MODE_MASK = 0x000f,
     MODE_MONO = 0x0000,
     MODE_565 = 0x0001,
+    MODE_MONO_REV = 0x0002,
     ORDER_MASK = 0x10000,
     BY_COL = 0x00000,
     BY_ROW = 0x10000,
@@ -34,7 +35,9 @@ export interface SpiImageOptions {
     palette: Palette
 
     /**
-     * Currently only MODE_565 is supported (in both BY_COL and BY_ROW modes)
+     * Currently modes (in both BY_COL and BY_ROW modes):
+     * - MODE_565 with bpp=4
+     * - MODE_MONO and MODE_MONO_REV with bpp=1
      */
     flags: SpiImageFlags
 }
