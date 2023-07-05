@@ -48,7 +48,7 @@ const MADCTL_RGB = 0x00
 const MADCTL_BGR = 0x08
 const MADCTL_MH = 0x04
 
-export interface STLikeDisplayOptions {
+export interface FourWireOptions {
     /**
      * SPI CS pin
      */
@@ -60,16 +60,17 @@ export interface STLikeDisplayOptions {
     dc: OutputPin
 
     /**
-     * Pin for resetting the display.
-     * TODO use this
-     */
-    reset?: OutputPin
-
-    /**
      * SPI bus instance to use
      */
     spi?: SPI
 
+    /**
+     * Pin for resetting the display.
+     */
+    reset?: OutputPin
+}
+
+export interface STLikeDisplayOptions extends FourWireOptions {
     /**
      * Flip the display 180 deg.
      * Without flipping, the connector ribbon of the screen should be on the top or left.
@@ -98,24 +99,8 @@ export interface STLikeDisplayOptions {
     offY?: number
 }
 
-export class STLikeDisplayDriver implements Display {
-    public readonly palette: Palette
-    private rot = 0
-
-    constructor(
-        public image: Image,
-        public options: STLikeDisplayOptions,
-        protected initSeq: Buffer
-    ) {
-        assert(image.bpp === 4)
-        this.options = Object.assign({}, this.options)
-        if (this.options.frmctr1 == undefined) this.options.frmctr1 = 0x000603
-        if (this.options.spi == undefined) this.options.spi = spi
-
-        this.palette = Palette.arcade()
-        if (image.width > image.height) this.rot = 1
-        if (this.options.flip) this.rot |= 2
-    }
+export class FourWireDriver<OPT extends FourWireOptions> {
+    constructor(public options: OPT) {}
 
     protected async sendSeq(seq: Buffer) {
         let i = 0
@@ -134,7 +119,7 @@ export class STLikeDisplayDriver implements Display {
         }
     }
 
-    private async cmdPrep(cmd: number) {
+    protected async cmdPrep(cmd: number) {
         const { spi, cs, dc } = this.options
         dc.write(0)
         cs.write(0)
@@ -142,12 +127,56 @@ export class STLikeDisplayDriver implements Display {
         dc.write(1)
     }
 
-    private async sendCmd(cmd: number, ...args: number[]) {
+    protected async cmdFinish() {
+        const { cs } = this.options
+        cs.write(1)
+    }
+
+    protected async sendCmd(cmd: number, ...args: number[]) {
         if (isSimulator()) return
         const { spi, cs } = this.options
         await this.cmdPrep(cmd)
         if (args.length) await spi.write(Buffer.from(args))
-        cs.write(1)
+        await this.cmdFinish()
+    }
+
+    protected async initPins() {
+        if (isSimulator()) return
+        const { cs, dc, reset } = this.options
+
+        if (reset) {
+            reset.setMode(GPIOMode.OutputLow)
+            await delay(20)
+            reset.setMode(GPIOMode.OutputHigh)
+            await delay(20)
+        }
+
+        dc.setMode(GPIOMode.OutputHigh)
+        cs.setMode(GPIOMode.OutputHigh)
+    }
+}
+
+export class STLikeDisplayDriver
+    extends FourWireDriver<STLikeDisplayOptions>
+    implements Display
+{
+    public readonly palette: Palette
+    private rot = 0
+
+    constructor(
+        public image: Image,
+        options: STLikeDisplayOptions,
+        protected initSeq: Buffer
+    ) {
+        super(options)
+        assert(image.bpp === 4)
+        this.options = Object.assign({}, this.options)
+        if (this.options.frmctr1 == undefined) this.options.frmctr1 = 0x000603
+        if (this.options.spi == undefined) this.options.spi = spi
+
+        this.palette = Palette.arcade()
+        if (image.width > image.height) this.rot = 1
+        if (this.options.flip) this.rot |= 2
     }
 
     private async setAddrWindow(x: number, y: number, w: number, h: number) {
@@ -158,20 +187,7 @@ export class STLikeDisplayDriver implements Display {
     }
 
     private async doInit() {
-        if (!isSimulator()) {
-            const { cs, dc, reset } = this.options
-
-            if (reset) {
-                reset.setMode(GPIOMode.OutputLow)
-                await delay(20)
-                reset.setMode(GPIOMode.OutputHigh)
-                await delay(20)
-            }
-
-            dc.setMode(GPIOMode.OutputHigh)
-            cs.setMode(GPIOMode.OutputHigh)
-        }
-
+        await this.initPins()
         await this.sendSeq(this.initSeq)
 
         await this.sendCmd(ST7735_MADCTL, hex`00 40 C0 80`[this.rot])
@@ -224,7 +240,7 @@ export class STLikeDisplayDriver implements Display {
             flags,
         })
 
-        cs.write(1)
+        await this.cmdFinish()
     }
 }
 
