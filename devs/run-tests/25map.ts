@@ -29,5 +29,4 @@ function testMap() {
     msg("Map tests completed.")
 }
 
-// Run the map tests
 testMap()
