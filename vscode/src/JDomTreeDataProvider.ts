@@ -953,7 +953,6 @@ class JDomRoleManagerTreeItem extends JDomCustomTreeItem {
 
     protected createChildrenTreeItems(): JDomTreeItem[] {
         const roles = this._client?.roles || []
-        console.log({ roles })
         const nodes = roles.map(
             role => new JDomRoleTreeItem(this, this.service, role, this.props)
         )
