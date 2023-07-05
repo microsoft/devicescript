@@ -33,8 +33,10 @@ static void stmt0_alloc_map(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static void stmt1_alloc_array(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t sz = devs_vm_pop_arg_u32(ctx);
-    set_alloc(frame, ctx, devs_array_try_alloc(ctx, sz),
-              sizeof(devs_array_t) + sz * sizeof(value_t));
+    devs_array_t *arr = devs_array_try_alloc(ctx, sz);
+    set_alloc(frame, ctx, arr, sizeof(devs_array_t) + sz * sizeof(value_t));
+    if (arr)
+        arr->length = 0; // size is only suggestion
 }
 
 static void stmt1_alloc_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {

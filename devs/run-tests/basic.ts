@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { _panic } from "@devicescript/core"
+import { assert, _panic } from "@devicescript/core"
 
 function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
@@ -1142,6 +1142,40 @@ function testQQ() {
         ds.assert((v ?? fail()) === v)
     }
 }
+function testArgCaching() {
+    let x = 1
+
+    const incrX = () => {
+        x++
+        return 7
+    }
+
+    const show2 = (x: number, y: number, z: number) => {
+        assert(x === 1)
+        assert(y === 7)
+        assert(z === 2)
+    }
+
+    show2(x, incrX(), x)
+    assert(x === 2)
+}
+
+function testArraySpread() {
+    const a = [1, 2]
+    const b: number[] = []
+    const c = [7, 8, 9]
+    assert(JSON.stringify([...a]) === "[1,2]")
+    assert(JSON.stringify([...a, ...c]) === "[1,2,7,8,9]")
+    assert(JSON.stringify([0, ...a, ...c]) === "[0,1,2,7,8,9]")
+    assert(JSON.stringify([0, ...a, 11, ...c]) === "[0,1,2,11,7,8,9]")
+    assert(JSON.stringify([0, ...a, ...b, 11, ...c]) === "[0,1,2,11,7,8,9]")
+    assert(
+        JSON.stringify([...b, 0, ...a, ...b, 11, ...c]) === "[0,1,2,11,7,8,9]"
+    )
+}
+
+testArgCaching()
+testArraySpread()
 
 testFlow()
 if (x !== 42) _panic(10)
@@ -1188,5 +1222,7 @@ testStringMethods()
 testObjArrayCtor()
 testForIn()
 testQQ()
+testArgCaching()
+testArraySpread()
 
 console.log("all OK")
