@@ -37,7 +37,10 @@ declare global {
 declare module "@devicescript/core" {
     // ds._jsx is hardcoded as equivalent of React _jsx() function
     function _jsx<Props extends JSX.BaseProps>(
-        element: string | JSX.FunctionComponent<Props>,
+        element:
+            | string
+            | JSX.FunctionComponent<Props>
+            | (new (props: Props) => JSX.Element),
         props: Props
     ): JSX.Element
 }

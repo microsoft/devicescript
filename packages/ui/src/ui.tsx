@@ -1,16 +1,6 @@
 import * as ds from "@devicescript/core"
 import { Image, ImageContext } from "@devicescript/graphics"
 
-export function renderChildren(props: JSX.BaseProps, ctx: ImageContext) {
-    if (!props.children) return
-    if (Array.isArray(props.children))
-        for (const ch of props.children)
-            ch.render(ctx)
-    else
-        props.children.render(ctx)
-
-}
-
 export abstract class BaseElement<T> implements JSX.Element {
     constructor(props: T) {
         Object.assign(this, props)
@@ -20,6 +10,7 @@ export abstract class BaseElement<T> implements JSX.Element {
 
 export abstract class ParentElement<T> extends BaseElement<T> {
     children?: JSX.Element | JSX.Element[]
+
     renderChildren(ctx: ImageContext) {
         if (!this.children) return
         if (Array.isArray(this.children))
@@ -44,6 +35,7 @@ export class Translate extends ParentElement<{ x: number, y: number } & JSX.Base
 
 export class Text extends BaseElement<{ children: string }> {
     children: string
+
     render(ctx: ImageContext): void {
         ctx.fillText(this.children, 0, 0)
     }
@@ -52,6 +44,7 @@ export class Text extends BaseElement<{ children: string }> {
 export class Rect extends BaseElement<{ w: number, h: number }> {
     w: number
     h: number
+
     render(ctx: ImageContext): void {
         ctx.strokeRect(0, 0, this.w, this.h)
     }
@@ -60,6 +53,12 @@ export class Rect extends BaseElement<{ w: number, h: number }> {
 export class FillRect extends Rect {
     override render(ctx: ImageContext): void {
         ctx.fillRect(0, 0, this.w, this.h)
+    }
+}
+
+export class Fragment extends ParentElement<JSX.BaseProps> {
+    render(ctx: ImageContext): void {
+        this.renderChildren(ctx)
     }
 }
 
@@ -87,15 +86,13 @@ export function PercHorizontalGauge(props: { w: number, h: number, used: number 
 
 (ds as typeof ds)._jsx = (element, props) => {
     if (element === "")
-        return {
-            render: ctx => {
-                renderChildren(props, ctx)
-            }
-        }
-    else if (typeof element === "string")
+        element = Fragment
+
+    if (typeof element === "string")
         throw new Error(`invalid ${element}`)
     else
-        return element(props)
+        // in DeviceScript class ctors can be called with or without new
+        return (element as JSX.FunctionComponent<JSX.BaseProps>)(props)
 }
 
 
