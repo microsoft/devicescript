@@ -2,6 +2,15 @@ export class Map<K, V> {
     private keys: K[] = []
     private values: V[] = []
 
+    constructor(entries?: Array<readonly [K, V]> | null) {
+        if (entries) {
+            for (let i = 0; i < entries.length; i++) {
+                const [key, value] = entries[i]
+                this.set(key, value)
+            }
+        }
+    }
+
     size(): number {
         return this.keys.length
     }
@@ -34,7 +43,7 @@ export class Map<K, V> {
         }
         return false
     }
-    
+
     clear(): void {
         this.keys = []
         this.values = []

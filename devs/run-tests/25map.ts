@@ -7,6 +7,7 @@ function msg(m: string) {
 
 function testMap() {
     msg("Running map tests...")
+    
     let map = new Map()
     map.set("one", 1)
     map.set("two", 2)
@@ -25,8 +26,19 @@ function testMap() {
     msg("map test clear")
     map.clear()
     assert(map.size() === 0)
+}
+
+function testMapConstructor() {
+    msg("map test constructor")
+    const map = new Map<string, number>([
+        ["one", 1],
+        ["two", 2],
+        ["three", 3],
+    ])
+    assert(map.size() === 3)
 
     msg("Map tests completed.")
 }
 
 testMap()
+testMapConstructor()
