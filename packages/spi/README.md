@@ -2,7 +2,7 @@
 
 [DeviceScript](https://microsoft.github.io/devicescript/) SPI master support.
 
--   [Read documentation](https://microsoft.github.io/devicescript/developer/servers/spi)
+-   [Read documentation](https://microsoft.github.io/devicescript/developer/drivers/spi)
 
 ## Contributing
 

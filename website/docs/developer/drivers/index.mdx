@@ -1,17 +1,16 @@
 ---
-title: Servers
+title: Drivers
 sidebar_position: 2.5
 ---
 
-# Servers
+# Drivers
 
 In DeviceScript, any hardware component is accessed through a service **client**.
-Therefore, you need to start service **servers** on top of your
-low level hardware components to program them using DeviceScript.
+A **driver** implement one or more service **servers** for a given hardware peripherical.
 
--   Learn more about the [available servers](/api/servers)
+The [drivers builtin package](/developer/packages) exposes drivers for a number of periphericals.
 
-## [Analog](/developer/servers/analog) (builtin) servers
+## [Analog](/developer/drivers/analog) (builtin)
 
 DeviceScript provides helper functions to mount a variety of servers out of the box
 in the `@devicescript/servers` module.
@@ -27,38 +26,60 @@ import { startButton } from "@devicescript/servers"
 const buttonA = startButton({
     pin: gpio(2),
 })
+buttonA.up.subscribe(() => {
+    console.log("up!")
+})
 ```
 
 Once you've added this code to your script, you can interact with pin `2`
 (hardware specific identifier) through the `buttonA` client. The variable name is
 automatically used as the **role** and **instance** name.
 
-```ts no-run
-import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+## [Digital IO](/developer/drivers/digital-io)
 
-const buttonA = startButton({
-    pin: gpio(2),
-})
-buttonA.up.subscribe(() => {
-    console.log("up!")
-})
+Drivers can be implemented using digital IO
+and are either built-in from C or authored in DeviceScript directly.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
+
+const p0 = gpio(0)
+await p0.setMode(GPIOMode.Output)
+await p0.write(true)
 ```
 
-## [Digital IO](/developer/digital-io)
+## [I2C](/developer/drivers/i2c)
 
-Servers can be implemented using digital IO
+Drivers can be implemented using I2C
 and are either built-in from C or authored in DeviceScript directly.
 
-## [I2C](/developer/servers/i2c)
+```ts skip
+import { i2c } from "@devicescript/i2c"
 
-Servers can be implemented using I2C
+...
+await i2c.writeReg(address, register, value)
+```
+
+## [SPI](/developer/drivers/spi)
+
+Drivers can be implemented using SPI
 and are either built-in from C or authored in DeviceScript directly.
 
-## [SPI](/developer/servers/spi)
+```ts skip
+import { spi } from "@devicescript/spi"
 
-Servers can be implemented using SPI
-and are either built-in from C or authored in DeviceScript directly.
+...
+await spi.write(hex`abcd`)
+```
+
+## What about missing drivers?
+
+So the driver you need isn't here? There are a few options:
+
+-   [Search on npm](https://www.npmjs.com/search?q=devicescript) where a community member may have already published a driver.
+-   [Check if a request is already open](https://github.com/microsoft/devicescript/labels/driver%20request)
+-   [Create a Driver Request](https://github.com/microsoft/devicescript/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=) to request a new driver. We can't guarantee that we'll have time to implement it, but we maybe someone in the community will!
 
 ## Jacdac modules
 
