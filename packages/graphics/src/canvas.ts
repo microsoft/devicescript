@@ -59,7 +59,13 @@ export class ImageContext {
         this.image.fillRect(tx, ty, w, h, c)
     }
     strokeRect(x: number, y: number, w: number, h: number): void {
-        this.image.drawRect(x, y, w, h, this.strokeColor)
+        this.image.drawRect(
+            this.transformX + x,
+            this.transformY + y,
+            w,
+            h,
+            this.strokeColor
+        )
     }
 
     restore(): void {
