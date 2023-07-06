@@ -11,43 +11,58 @@ export function renderChildren(props: JSX.BaseProps, ctx: ImageContext) {
 
 }
 
-export function Translate(props: { x: number, y: number } & JSX.BaseProps): JSX.Element {
-    return {
-        render: ctx => {
-            const { x, y } = props
-            ctx.save()
-            ctx.translate(x, y)
-            renderChildren(props, ctx)
-            ctx.restore()
-        }
+export abstract class BaseElement<T> implements JSX.Element {
+    constructor(props: T) {
+        Object.assign(this, props)
+    }
+    abstract render(ctx: ImageContext): void
+}
+
+export abstract class ParentElement<T> extends BaseElement<T> {
+    children?: JSX.Element | JSX.Element[]
+    renderChildren(ctx: ImageContext) {
+        if (!this.children) return
+        if (Array.isArray(this.children))
+            for (const ch of this.children)
+                ch.render(ctx)
+        else
+            this.children.render(ctx)
     }
 }
 
-export function Text(props: { children: string }): JSX.Element {
-    return {
-        render: ctx => {
-            ctx.fillText(props.children, 0, 0)
-        }
+export class Translate extends ParentElement<{ x: number, y: number } & JSX.BaseProps> {
+    x: number
+    y: number
+
+    render(ctx: ImageContext): void {
+        ctx.save()
+        ctx.translate(this.x, this.y)
+        this.renderChildren(ctx)
+        ctx.restore()
     }
 }
 
-export function Rect(props: { w: number, h: number }): JSX.Element {
-    return {
-        render: ctx => {
-            const { w, h } = props
-            ctx.strokeRect(0, 0, w, h)
-        }
+export class Text extends BaseElement<{ children: string }> {
+    children: string
+    render(ctx: ImageContext): void {
+        ctx.fillText(this.children, 0, 0)
     }
 }
 
-export function FillRect(props: { w: number, h: number }): JSX.Element {
-    return {
-        render: ctx => {
-            const { w, h } = props
-            ctx.fillRect(0, 0, w, h)
-        }
+export class Rect extends BaseElement<{ w: number, h: number }> {
+    w: number
+    h: number
+    render(ctx: ImageContext): void {
+        ctx.strokeRect(0, 0, this.w, this.h)
     }
 }
+
+export class FillRect extends Rect {
+    override render(ctx: ImageContext): void {
+        ctx.fillRect(0, 0, this.w, this.h)
+    }
+}
+
 
 export function HorizontalGauge(props: { w: number, h: number, used: number }): JSX.Element {
     const { w, h, used } = props

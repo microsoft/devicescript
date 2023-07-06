@@ -21,12 +21,10 @@ declare global {
         }
 
         interface Element {
-            render: (ctx: ImageContext) => void
+            render(ctx: ImageContext): void
         }
 
-        interface ElementAttributesProperty {
-            props: {} // specify the property name to use
-        }
+        // do not define ElementAttributesProperty - use ctor type
         interface ElementChildrenAttribute {
             children: {} // specify children name to use
         }

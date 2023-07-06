@@ -15,6 +15,7 @@
         "isolatedModules": true,
         "noImplicitAny": true,
         "moduleDetection": "force",
+        "noImplicitOverride": true,
         "jsx": "preserve",
         "types": []
     },
