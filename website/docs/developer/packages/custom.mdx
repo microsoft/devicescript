@@ -53,6 +53,18 @@ npm install --save user/repo@version
 
 :::
 
+## TypeDoc
+
+The package templates also adds a script `build:docs` to generate an API documentation
+site using [TypeDoc](https://typedoc.org/).
+The [devicescript-pico-bricks](https://pelikhan.github.io/devicescript-pico-bricks) is an example of this web site.
+
+```bash npm2yarn
+npm run build:docs
+```
+
+You can configure GitHub pages to use the generated site under `./docs`.
+
 ## Development notes
 
 Note that regular DeviceScript applications typically use `src/main.ts` (or `src/mainSomething.ts`)

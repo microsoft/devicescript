@@ -111,6 +111,14 @@ export const TSDOC_START = "devsStart"
 export const TSDOC_WHEN_USED = "devsWhenUsed"
 export const TSDOC_NATIVE = "devsNative"
 
+export const TSDOC_TAGS = [
+    TSDOC_PART,
+    TSDOC_SERVICES,
+    TSDOC_START,
+    TSDOC_WHEN_USED,
+    TSDOC_NATIVE,
+]
+
 const coreModule = "@devicescript/core"
 
 const globalFunctions = [
