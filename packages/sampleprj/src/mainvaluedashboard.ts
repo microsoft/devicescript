@@ -6,7 +6,7 @@ const humidity = new Humidity()
 const screen = new CharacterScreen()
 const dashboard = new ValueDashboard(screen, {
     temp: { digits: 1, unit: "C" },
-    humi: { digits: 1, unit: "%" },
+    humi: { digits: 0, unit: "%" },
 })
 setInterval(async () => {
     dashboard.values["temp"] = await temperature.reading.read()
