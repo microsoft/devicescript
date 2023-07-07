@@ -31,6 +31,7 @@ import type {
 import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
 import { MIN_NODE_VERSION } from "@devicescript/interop"
+import { TSDOC_TAGS } from "@devicescript/compiler"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -68,8 +69,23 @@ const npmFiles: FileSet = {
         },
         files: ["src/*.ts", "devsconfig.json"],
         keywords: ["devicescript"],
+        scripts: {
+            "build:docs":
+                "npx typedoc ./src/index.ts --tsconfig ./src/tsconfig.json",
+        },
     },
     "src/index.ts": `${IMPORT_PREFIX}\n\n`,
+    "src/tsdoc.json": {
+        [IS_PATCH]: true,
+        $schema:
+            "https://developer.microsoft.com/en-us/json-schemas/tsdoc/v0/tsdoc.schema.json",
+        extends: ["typedoc/tsdoc.json"],
+        noStandardTags: false,
+        tagDefinitions: TSDOC_TAGS.map(tag => ({
+            tagName: `@${tag}`,
+            syntaxKind: "modifier",
+        })),
+    },
     ".github/workflows/build.yml": `name: Build
 
 on:
@@ -88,7 +104,7 @@ jobs:
                   node-version: ${MIN_NODE_VERSION}
             - run: npm ci
             - run: npm run build
-            - run: npm test    
+            - run: npm test
 `,
 }
 

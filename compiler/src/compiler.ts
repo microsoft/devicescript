@@ -111,6 +111,14 @@ export const TSDOC_START = "devsStart"
 export const TSDOC_WHEN_USED = "devsWhenUsed"
 export const TSDOC_NATIVE = "devsNative"
 
+export const TSDOC_TAGS = [
+    TSDOC_PART,
+    TSDOC_SERVICES,
+    TSDOC_START,
+    TSDOC_WHEN_USED,
+    TSDOC_NATIVE,
+]
+
 const coreModule = "@devicescript/core"
 
 const globalFunctions = [
@@ -2269,20 +2277,7 @@ class Program implements TopOpWriter {
     private emitGenericCall(args: Expr[], fn: Value) {
         const wr = this.writer
         if (args.some(ts.isSpreadElement)) {
-            wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(0))
-            const arr = wr.cacheValue(this.retVal())
-            for (const a of args) {
-                let expr: Value
-                let meth = "push"
-                if (ts.isSpreadElement(a)) {
-                    expr = this.emitExpr(a.expression)
-                    meth = "pushRange"
-                } else {
-                    expr = this.emitExpr(a)
-                }
-                wr.emitCall(wr.emitIndex(arr.emit(), wr.emitString(meth)), expr)
-            }
-            wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, arr.finalEmit())
+            wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, this.emitArray(args))
             this.onCall()
         } else {
             wr.emitCall(fn, ...this.emitArgs(args))
@@ -3169,6 +3164,87 @@ class Program implements TopOpWriter {
         return false
     }
 
+    private emitJsxElement(
+        expr: ts.Node,
+        openingElement: ts.JsxSelfClosingElement | ts.JsxOpeningElement,
+        children?: ts.NodeArray<ts.JsxChild>
+    ): Value {
+        const wr = this.writer
+
+        let fn: Value
+        if (!openingElement) fn = wr.emitString("")
+        else {
+            const tag = idName(openingElement.tagName)
+            if (tag && tag[0].toLowerCase() == tag[0]) fn = wr.emitString(tag)
+            else fn = this.emitExpr(openingElement.tagName)
+        }
+
+        wr.emitStmt(Op.STMT0_ALLOC_MAP)
+        const opts = wr.cacheValue(this.retVal())
+
+        for (const attr of openingElement?.attributes.properties ?? []) {
+            if (ts.isJsxSpreadAttribute(attr)) {
+                wr.emitCall(
+                    wr.objectMember(BuiltInString.ASSIGN),
+                    opts.emit(),
+                    this.emitExpr(attr.expression)
+                )
+            } else {
+                const fld = this.forceName(attr.name)
+                const init = attr.initializer
+                    ? this.emitExpr(attr.initializer)
+                    : literal(true)
+                wr.emitStmt(
+                    Op.STMT3_INDEX_SET,
+                    opts.emit(),
+                    wr.emitString(fld),
+                    init
+                )
+            }
+        }
+
+        const semanticChildren = !children
+            ? []
+            : children.filter(i => {
+                  switch (i.kind) {
+                      case SK.JsxExpression:
+                          return !!i.expression
+                      case SK.JsxText:
+                          return !i.containsOnlyTriviaWhiteSpaces
+                      default:
+                          return true
+                  }
+              })
+
+        const singleChild =
+            semanticChildren.length == 1 &&
+            !(
+                ts.isJsxExpression(semanticChildren[0]) &&
+                semanticChildren[0].dotDotDotToken
+            )
+
+        if (semanticChildren.length > 0) {
+            const children = singleChild
+                ? this.emitExpr(semanticChildren[0])
+                : this.emitArray(semanticChildren)
+            wr.emitStmt(
+                Op.STMT3_INDEX_SET,
+                opts.emit(),
+                wr.emitString("children"),
+                children
+            )
+        }
+
+        this.markMethodUsed("#ds._jsx")
+
+        const jsxFn = wr.emitIndex(
+            wr.emitBuiltInObject(BuiltInObject.DEVICESCRIPT),
+            wr.emitString("_jsx")
+        )
+        wr.emitCall(jsxFn, fn, opts.finalEmit())
+        return this.retVal()
+    }
+
     private emitBinaryExpression(expr: ts.BinaryExpression): Value {
         const simpleOps: SMap<Op> = {
             [SK.PlusToken]: Op.EXPR2_ADD,
@@ -3348,22 +3424,57 @@ class Program implements TopOpWriter {
         return wr.emitExpr(op, this.emitExpr(arg))
     }
 
-    private emitArrayExpression(expr: ts.ArrayLiteralExpression): Value {
+    private emitArray(elements: ReadonlyArray<Expr>): Value {
         const wr = this.writer
-        const sz = expr.elements.length
-        wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(sz))
-        const arr = wr.emitExpr(Op.EXPR0_RET_VAL)
-        if (sz == 0) return arr
-        const ref = wr.cacheValue(arr)
-        for (let i = 0; i < sz; ++i) {
-            wr.emitStmt(
-                Op.STMT3_INDEX_SET,
-                ref.emit(),
-                literal(i),
-                this.emitExpr(expr.elements[i])
-            )
+        const sz = elements.length
+        const spreadInner = (e: Expr) => {
+            if (ts.isSpreadElement(e)) return e.expression
+            if (ts.isJsxExpression(e) && e.dotDotDotToken) return e.expression
+            return undefined
         }
-        return ref.finalEmit()
+        const numSpread = elements.filter(
+            e => spreadInner(e) != undefined
+        ).length
+
+        // since 2.15.0 all runtimes should treat size arg to ALLOC_ARRAY as hint
+        const allocSz = BinFmt.IMG_VERSION >= 0x20f0000 ? sz - numSpread : 0
+        wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(allocSz))
+        const chunk = 8 // max. args to .push()
+
+        if (elements.length == 0) return this.retVal()
+
+        const arr = wr.cacheValue(this.retVal())
+        let curr: Value[] = []
+
+        const flushCurr = () => {
+            if (!curr.length) return
+            wr.emitCall(
+                wr.emitIndex(arr.emit(), wr.emitString("push")),
+                ...curr
+            )
+            curr = []
+        }
+
+        for (const elt of elements) {
+            const spr = spreadInner(elt)
+            if (spr) {
+                flushCurr()
+                wr.emitCall(
+                    wr.emitIndex(arr.emit(), wr.emitString("pushRange")),
+                    this.emitExpr(spr)
+                )
+            } else {
+                curr.push(this.emitExpr(elt))
+            }
+            if (curr.length >= chunk) flushCurr()
+        }
+        flushCurr()
+
+        return arr.finalEmit()
+    }
+
+    private emitArrayExpression(expr: ts.ArrayLiteralExpression): Value {
+        return this.emitArray(expr.elements)
     }
 
     private markMethodUsed(meth: string) {
@@ -3721,6 +3832,26 @@ class Program implements TopOpWriter {
                 return this.emitConditionalExpression(
                     expr as ts.ConditionalExpression
                 )
+            case SK.JsxElement:
+                return this.emitJsxElement(
+                    expr,
+                    (expr as ts.JsxElement).openingElement,
+                    (expr as ts.JsxElement).children
+                )
+            case SK.JsxSelfClosingElement:
+                return this.emitJsxElement(
+                    expr,
+                    expr as ts.JsxSelfClosingElement
+                )
+            case SK.JsxFragment:
+                return this.emitJsxElement(
+                    expr,
+                    null,
+                    (expr as ts.JsxFragment).children
+                )
+            case SK.JsxExpression:
+                assert(!(expr as ts.JsxExpression).dotDotDotToken)
+                return this.emitExpr((expr as ts.JsxExpression).expression)
             default:
                 // console.log(expr)
                 return throwError(expr, "unhandled expr: " + SK[expr.kind])
