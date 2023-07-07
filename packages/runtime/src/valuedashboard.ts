@@ -21,7 +21,7 @@ export interface ValueDomain {
 /**
  * Renders a set of name, values on a character display
  */
-export class ValueDashboard<T extends Record<string, ValueDomain>> {
+export class ValueDashboard {
     /**
      * Map of name, values
      */
@@ -39,7 +39,7 @@ export class ValueDashboard<T extends Record<string, ValueDomain>> {
 
     constructor(
         readonly screen: CharacterScreen,
-        domains: Record<string, ValueDomain>
+        domains?: Record<string, ValueDomain>
     ) {
         this.domains = domains || {}
     }
