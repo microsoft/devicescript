@@ -14,8 +14,18 @@ function roundWithPrecision(x: number, digits: number): number {
 }
 
 export interface ValueDomain {
+    /**
+     * Unit of measurement of the value
+     */
     unit?: string
+    /**
+     * Number of significant digits to display
+     */
     digits?: number
+    /**
+     * Prescaling before displaing
+     */
+    scale?: number
 }
 
 /**
@@ -46,6 +56,7 @@ export class ValueDashboard {
 
     private renderNumber(name: string, value: number) {
         const domain = this.domains[name] || {}
+        if (domain.scale) value = value * domain.scale
         if (domain.digits !== undefined)
             value = roundWithPrecision(value, domain.digits)
         let r = value + ""
