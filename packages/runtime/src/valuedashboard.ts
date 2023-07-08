@@ -44,7 +44,7 @@ export class ValueDashboard<T extends Record<string, ValueDomain>> {
     /**
      * Map of name to number domains
      */
-    domains: T
+    readonly domains: T
 
     /**
      * Line offset value
