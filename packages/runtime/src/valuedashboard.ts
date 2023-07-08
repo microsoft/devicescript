@@ -1,12 +1,16 @@
 import { CharacterScreen } from "@devicescript/core"
 
-function roundWithPrecision(x: number, digits: number): number {
+function roundWithPrecision(
+    x: number,
+    digits: number,
+    maxDigits: number
+): number {
     const EPSILON = 2.220446049250313e-16
     digits = digits | 0
     if (digits <= 0) return Math.round(x)
     if (x === 0) return 0
     let r = 0
-    while (r === 0 && digits < 21) {
+    while (r === 0 && digits < maxDigits) {
         const d = Math.pow(10, digits++)
         r = Math.round(x * d + EPSILON) / d
     }
@@ -51,11 +55,11 @@ export class ValueDashboard<T extends Record<string, ValueDomain>> {
         this.domains = domains
     }
 
-    private renderNumber(name: string, value: number) {
+    private renderNumber(name: string, value: number, maxDigits: number) {
         const domain = this.domains[name] || {}
         if (domain.scale) value = value * domain.scale
         if (domain.digits !== undefined)
-            value = roundWithPrecision(value, domain.digits)
+            value = roundWithPrecision(value, domain.digits, maxDigits)
         let r = value + ""
         if (domain.unit) r += domain.unit
         return r
@@ -78,7 +82,7 @@ export class ValueDashboard<T extends Record<string, ValueDomain>> {
                 typeof value === "string"
                     ? value
                     : typeof value === "number"
-                    ? this.renderNumber(name, value)
+                    ? this.renderNumber(name, value, columns - 5)
                     : typeof value === "boolean"
                     ? value
                         ? "v"
