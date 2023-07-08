@@ -29,29 +29,26 @@ export interface ValueDomain {
 }
 
 /**
- * Renders a set of name, values on a character display
+ * Renders a set of name, values on a character display.
  */
-export class ValueDashboard {
+export class ValueDashboard<T extends Record<string, ValueDomain>> {
     /**
      * Map of name, values
      */
-    values: Record<string, string | number | boolean> = {}
+    values: Partial<Record<keyof T, string | number | boolean>> = {}
 
     /**
      * Map of name to number domains
      */
-    domains: Record<string, ValueDomain> = {}
+    domains: T
 
     /**
      * Line offset value
      */
     public offset = 0
 
-    constructor(
-        readonly screen: CharacterScreen,
-        domains?: Record<string, ValueDomain>
-    ) {
-        this.domains = domains || {}
+    constructor(readonly screen: CharacterScreen, domains: T) {
+        this.domains = domains
     }
 
     private renderNumber(name: string, value: number) {
@@ -71,14 +68,12 @@ export class ValueDashboard {
         const rows = await this.screen.rows.read()
         const columns = await this.screen.columns.read()
 
-        const names = Object.keys(this.values)
+        const names = Object.keys(this.domains)
         let lines: string[] = []
         for (let i = 0; i < rows; ++i) {
             const name = names[i + this.offset]
             if (!name) break
-            const value = this.values[name]
-            if (value === undefined) break
-            // render value
+            const value = this.values[name] ?? ""
             const sv =
                 typeof value === "string"
                     ? value
