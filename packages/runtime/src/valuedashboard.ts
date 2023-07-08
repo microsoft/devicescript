@@ -78,8 +78,7 @@ export class ValueDashboard {
             if (!name) break
             const value = this.values[name]
             if (value === undefined) break
-            // max value length
-            const mvl = columns - name.length - 1
+            // render value
             const sv =
                 typeof value === "string"
                     ? value
@@ -90,10 +89,13 @@ export class ValueDashboard {
                         ? "v"
                         : "x"
                     : value + ""
-            const msv = sv.slice(0, mvl)
-            let line = name
-            while (line.length + msv.length + 1 <= columns) line += " "
-            line += msv
+            // start with name and trim as neede
+            let line = name.slice(
+                0,
+                Math.min(name.length, Math.max(4, columns - sv.length - 1))
+            )
+            while (line.length + sv.length + 1 <= columns) line += " "
+            line += sv
             lines.push(line)
         }
         const msg = lines.join("\n")
