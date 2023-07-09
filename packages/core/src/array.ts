@@ -39,6 +39,15 @@ Array.prototype.findIndex = function (f) {
     return -1
 }
 
+Array.prototype.findLast = function (f) {
+    const length = this.length;
+    for (let i = length - 1; i >= 0; i--) {
+        if (f(this[i], i, this)) return this[i]
+    }
+    return undefined;
+}
+
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length

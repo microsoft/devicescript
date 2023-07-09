@@ -68,6 +68,12 @@ function testArrayFind() {
     assert(str.find(x => x === 2) === 2, "sometrue")
     assert(str.find(x => x < 0) === undefined, "somefalse")
 }
+
+function testArrayFindLast() {
+    let str = [0, 1, 2, 3]
+    assert(str.findLast(x => x < 3) === 2, "findLastTrue")
+    assert(str.findLast(x => x < 0) === undefined, "findLastFalse")
+}
 function testArrayFindIndex() {
     let str = ["a", "b", "c", "d"]
     assert(str.findIndex(x => x === "c") === 2, "sometrue")
@@ -134,6 +140,7 @@ testArrayIndexOf()
 testArrayForEach()
 testArrayMap()
 testArrayFind()
+testArrayFindLast()
 testArrayFindIndex()
 testGenerics()
 testArrayIncludes()
