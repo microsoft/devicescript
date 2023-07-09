@@ -47,6 +47,13 @@ Array.prototype.findLast = function (f) {
     return undefined;
 }
 
+Array.prototype.findLastIndex = function (f) {
+    const length = this.length
+    for (let i = length - 1; i >= 0; i--) {
+        if (f(this[i], i, this)) return i
+    }
+    return -1
+}
 
 Array.prototype.filter = function (f) {
     const res: any[] = []
