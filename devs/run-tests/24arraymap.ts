@@ -45,6 +45,18 @@ function testArrayEvery() {
         "everytrue"
     )
 }
+
+function testArrayFill() {
+    assert([1, 2, 3].fill(4).join() === '4,4,4')
+    assert([1, 2, 3].fill(4, 1).join() === '1,4,4')
+    assert([1, 2, 3].fill(4, 1, 2).join() === '1,4,3')
+    assert([1, 2, 3].fill(4, 1, 1).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, 3, 3).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, -3, -2).join() === '4,2,3')
+    assert([1, 2, 3].fill(4, NaN, NaN).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, 3, 5).join() === '1,2,3')
+    assert(Array(3).fill(4).join() === '4,4,4')
+}
 function testArrayIndexOf() {
     let str = [1, 2, 2, 3]
     assert(str.indexOf(2) === 1, "indexOf")
@@ -130,6 +142,7 @@ function testArrayAt() {
 
 testArraySome()
 testArrayEvery()
+testArrayFill()
 testArrayIndexOf()
 testArrayForEach()
 testArrayMap()
