@@ -32,13 +32,12 @@
         "pin": 7,
         "isMono": true
     },
-    "noScanI2C": true,
     "i2c": {
         "pinSCL": 5,
         "pinSDA": 4,
         "kHz": 200
     },
-    "services": [
+    "$services": [
         {
             "service": "buzzer",
             "pin": 20,
