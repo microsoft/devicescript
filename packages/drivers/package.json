@@ -2,9 +2,8 @@
     "name": "@devicescript/drivers",
     "version": "2.13.10",
     "private": true,
-    "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*"
+        "@devicescript/cli": "^2.14.0"
     },
     "repository": {
         "type": "git",
