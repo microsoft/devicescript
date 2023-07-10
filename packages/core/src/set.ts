@@ -1,31 +1,36 @@
-Set.prototype.add = function (value) {
-    if (!this.elements.includes(value)) {
-        this.elements.push(value)
+export class Set<T> {
+    private elements: T[] = []
+
+    constructor(elements?: readonly T[] | null) {
+        if (elements) {
+            this.elements = elements
+        }
     }
-    return this
-}
 
-Set.prototype.clear = function () {
-    this.elements = []
-}
-
-Set.prototype.delete = function (value) {
-    if (this.elements.includes(value)) {
-        this.elements = this.elements.filter(e => e !== value)
-        return true;
+    size(): number {
+        return this.elements.length
     }
-    return false;
+
+    add(value: T): this {
+        if (!this.elements.includes(value)) {
+            this.elements.push(value)
+        }
+        return this
+    }
+
+    clear(): void {
+        this.elements = []
+    }
+
+    delete(value: T): boolean {
+        if (this.elements.includes(value)) {
+            this.elements = this.elements.filter(e => e !== value)
+            return true;
+        }
+        return false;
+    }
+
+    has(value: T): boolean {
+        return this.elements.includes(value)
+    }
 }
-
-
-Set.prototype.forEach = function (f, thisArg?) {
-    this.elements.forEach((element) => {
-        // TODO: set "this" to be thisArg
-        f(element, element, this)
-    })
-}
-
-Set.prototype.has = function (value) {
-    return this.elements.includes(value);
-}
-
