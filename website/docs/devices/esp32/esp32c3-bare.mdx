@@ -9,6 +9,7 @@ A bare ESP32-C3 board without any pin functions.
 
 ## Features
 
+-  Serial logging on pin P21 at 115200 8N1
 -  Service: buttonBOOT (button)
 
 ## Stores
@@ -24,13 +25,14 @@ A bare ESP32-C3 board without any pin functions.
 | **P10** |  GPIO10 |  io |
 | **P2** |  GPIO2 |  analogIn,  boot,  io |
 | **P20** |  GPIO20 |  bootUart,  io |
+| **P21** |  GPIO21 |  log.pinTX,  bootUart,  io |
 | **P3** |  GPIO3 |  analogIn,  io |
 | **P4** |  GPIO4 |  analogIn,  debug,  io |
 | **P5** |  GPIO5 |  debug,  io |
 | **P6** |  GPIO6 |  debug,  io |
 | **P7** |  GPIO7 |  debug,  io |
 | **P8** |  GPIO8 |  boot,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
+| **P9** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
 
 
 
@@ -62,24 +64,27 @@ devicescript flash --board esp32c3_bare
     "$services": [
         {
             "name": "buttonBOOT",
-            "pin": 9,
+            "pin": "P9",
             "service": "button"
         }
     ],
+    "log": {
+        "pinTX": "P21"
+    },
     "pins": {
-        "@P21": 21,
         "P0": 0,
         "P1": 1,
         "P10": 10,
         "P2": 2,
         "P20": 20,
+        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
         "P6": 6,
         "P7": 7,
-        "P8": 8
-    },
-    "uartLog": true
+        "P8": 8,
+        "P9": 9
+    }
 }
 ```

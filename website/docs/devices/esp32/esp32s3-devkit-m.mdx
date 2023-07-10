@@ -11,7 +11,8 @@ ESP32-S3 DevKitM development board. Should also work for DevKitC.
 
 ## Features
 
--  WS2812B RGB LED on 48  (use [setStatusLight](/developer/status-light) to control)
+-  WS2812B RGB LED on pin P48  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin P43 at 115200 8N1
 
 ## Stores
 
@@ -43,15 +44,16 @@ ESP32-S3 DevKitM development board. Should also work for DevKitC.
 | **P40** |  GPIO40 |  debug,  io |
 | **P41** |  GPIO41 |  debug,  io |
 | **P42** |  GPIO42 |  debug,  io |
+| **P43** |  GPIO43 |  log.pinTX,  io |
 | **P45** |  GPIO45 |  boot,  io |
 | **P46** |  GPIO46 |  boot,  input |
 | **P47** |  GPIO47 |  io |
+| **P48** |  GPIO48 |  led.pin,  io |
 | **P5** |  GPIO5 |  analogIn,  io |
 | **P6** |  GPIO6 |  analogIn,  io |
 | **P7** |  GPIO7 |  analogIn,  io |
 | **P8** |  GPIO8 |  analogIn,  io |
 | **P9** |  GPIO9 |  analogIn,  io |
-| **led.pin** |  GPIO48 |  io |
 
 
 
@@ -81,8 +83,11 @@ devicescript flash --board esp32s3_devkit_m
     "archId": "esp32s3",
     "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html",
     "led": {
-        "pin": 48,
+        "pin": "P48",
         "type": 1
+    },
+    "log": {
+        "pinTX": "P43"
     },
     "pins": {
         "P0": 0,
@@ -107,15 +112,16 @@ devicescript flash --board esp32s3_devkit_m
         "P40": 40,
         "P41": 41,
         "P42": 42,
+        "P43": 43,
         "P45": 45,
         "P46": 46,
         "P47": 47,
+        "P48": 48,
         "P5": 5,
         "P6": 6,
         "P7": 7,
         "P8": 8,
         "P9": 9
-    },
-    "uartLog": true
+    }
 }
 ```

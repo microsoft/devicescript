@@ -11,7 +11,7 @@ RP2040 board from Raspberry Pi.
 
 ## Features
 
--  LED on pin 25  (use [setStatusLight](/developer/status-light) to control)
+-  custom LED  (use [setStatusLight](/developer/status-light) to control)
 
 ## Stores
 
@@ -22,33 +22,33 @@ RP2040 board from Raspberry Pi.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
-| **P0** |  GPIO0 |  io |
-| **P1** |  GPIO1 |  io |
-| **P10** |  GPIO10 |  io |
-| **P11** |  GPIO11 |  io |
-| **P12** |  GPIO12 |  io |
-| **P13** |  GPIO13 |  io |
-| **P14** |  GPIO14 |  io |
-| **P15** |  GPIO15 |  io |
-| **P16** |  GPIO16 |  io |
-| **P17** |  GPIO17 |  io |
-| **P18** |  GPIO18 |  io |
-| **P19** |  GPIO19 |  io |
-| **P2** |  GPIO2 |  io |
-| **P20** |  GPIO20 |  io |
-| **P21** |  GPIO21 |  io |
-| **P22** |  GPIO22 |  io |
-| **P26** |  GPIO26 |  analogIn,  io |
-| **P27** |  GPIO27 |  analogIn,  io |
-| **P28** |  GPIO28 |  analogIn,  io |
-| **P3** |  GPIO3 |  io |
-| **P4** |  GPIO4 |  io |
-| **P5** |  GPIO5 |  io |
-| **P6** |  GPIO6 |  io |
-| **P7** |  GPIO7 |  io |
-| **P8** |  GPIO8 |  io |
-| **P9** |  GPIO9 |  io |
-| **led.pin** |  GPIO25 |  io |
+| **GP0** |  GPIO0 |  io |
+| **GP1** |  GPIO1 |  io |
+| **GP10** |  GPIO10 |  io |
+| **GP11** |  GPIO11 |  io |
+| **GP12** |  GPIO12 |  io |
+| **GP13** |  GPIO13 |  io |
+| **GP14** |  GPIO14 |  io |
+| **GP15** |  GPIO15 |  io |
+| **GP16** |  GPIO16 |  io |
+| **GP17** |  GPIO17 |  io |
+| **GP18** |  GPIO18 |  io |
+| **GP19** |  GPIO19 |  io |
+| **GP2** |  GPIO2 |  io |
+| **GP20** |  GPIO20 |  io |
+| **GP21** |  GPIO21 |  io |
+| **GP22** |  GPIO22 |  io |
+| **GP26** |  GPIO26 |  analogIn,  io |
+| **GP27** |  GPIO27 |  analogIn,  io |
+| **GP28** |  GPIO28 |  analogIn,  io |
+| **GP3** |  GPIO3 |  io |
+| **GP4** |  GPIO4 |  io |
+| **GP5** |  GPIO5 |  io |
+| **GP6** |  GPIO6 |  io |
+| **GP7** |  GPIO7 |  io |
+| **GP8** |  GPIO8 |  io |
+| **GP9** |  GPIO9 |  io |
+| **led.pin** |  GPIO25 |  led.pin,  io |
 
 
 
@@ -78,35 +78,37 @@ devicescript flash --board pico
     "archId": "rp2040",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
     "led": {
-        "pin": 25
+        "#": "type=100 - special handling for Pico LED",
+        "pin": 25,
+        "type": 100
     },
     "pins": {
-        "P0": 0,
-        "P1": 1,
-        "P10": 10,
-        "P11": 11,
-        "P12": 12,
-        "P13": 13,
-        "P14": 14,
-        "P15": 15,
-        "P16": 16,
-        "P17": 17,
-        "P18": 18,
-        "P19": 19,
-        "P2": 2,
-        "P20": 20,
-        "P21": 21,
-        "P22": 22,
-        "P26": 26,
-        "P27": 27,
-        "P28": 28,
-        "P3": 3,
-        "P4": 4,
-        "P5": 5,
-        "P6": 6,
-        "P7": 7,
-        "P8": 8,
-        "P9": 9
+        "GP0": 0,
+        "GP1": 1,
+        "GP10": 10,
+        "GP11": 11,
+        "GP12": 12,
+        "GP13": 13,
+        "GP14": 14,
+        "GP15": 15,
+        "GP16": 16,
+        "GP17": 17,
+        "GP18": 18,
+        "GP19": 19,
+        "GP2": 2,
+        "GP20": 20,
+        "GP21": 21,
+        "GP22": 22,
+        "GP26": 26,
+        "GP27": 27,
+        "GP28": 28,
+        "GP3": 3,
+        "GP4": 4,
+        "GP5": 5,
+        "GP6": 6,
+        "GP7": 7,
+        "GP8": 8,
+        "GP9": 9
     }
 }
 ```

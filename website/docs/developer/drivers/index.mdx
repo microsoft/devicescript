@@ -1,0 +1,97 @@
+---
+title: Drivers
+sidebar_position: 2.5
+---
+
+# Drivers
+
+In DeviceScript, any hardware component is accessed through a service **client**.
+A **driver** implement one or more service **servers** for a given hardware peripherical.
+
+The [drivers builtin package](/developer/packages) exposes drivers for a number of periphericals.
+
+## [Analog](/developer/drivers/analog) (builtin)
+
+DeviceScript provides helper functions to mount a variety of servers out of the box
+in the `@devicescript/servers` module.
+
+For example, the [startButton](/api/servers/button) function allows your script
+to mount a [button server](https://microsoft.github.io/jacdac-docs/services/button)
+over a pin and returns the [client](/api/clients/button) for it.
+
+```ts no-run
+import { gpio } from "@devicescript/core"
+import { startButton } from "@devicescript/servers"
+
+const buttonA = startButton({
+    pin: gpio(2),
+})
+buttonA.up.subscribe(() => {
+    console.log("up!")
+})
+```
+
+Once you've added this code to your script, you can interact with pin `2`
+(hardware specific identifier) through the `buttonA` client. The variable name is
+automatically used as the **role** and **instance** name.
+
+## [Digital IO](/developer/drivers/digital-io)
+
+Drivers can be implemented using digital IO
+and are either built-in from C or authored in DeviceScript directly.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
+
+const p0 = gpio(0)
+await p0.setMode(GPIOMode.Output)
+await p0.write(true)
+```
+
+## [I2C](/developer/drivers/i2c)
+
+Drivers can be implemented using I2C
+and are either built-in from C or authored in DeviceScript directly.
+
+```ts skip
+import { i2c } from "@devicescript/i2c"
+
+...
+await i2c.writeReg(address, register, value)
+```
+
+## [SPI](/developer/drivers/spi)
+
+Drivers can be implemented using SPI
+and are either built-in from C or authored in DeviceScript directly.
+
+```ts skip
+import { spi } from "@devicescript/spi"
+
+...
+await spi.write(hex`abcd`)
+```
+
+## What about missing drivers?
+
+So the driver you need isn't here? There are a few options:
+
+-   [Search on npm](https://www.npmjs.com/search?q=devicescript) where a community member may have already published a driver.
+-   [Check if a request is already open](https://github.com/microsoft/devicescript/labels/driver%20request)
+-   [Create a Driver Request](https://github.com/microsoft/devicescript/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=) to request a new driver. We can't guarantee that we'll have time to implement it, but we maybe someone in the community will!
+
+## Jacdac modules
+
+If you connect a [Jacdac module](https://aka.ms/jacdac), it will automatically run as a service server and
+you will be able to bind a role to that module.
+
+For example, the KittenBot KeyCap button will surface as a **button server** when connected.
+
+[![A KittenBot KeyCap button](https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/keycapbuttonv10.list.jpg "KittenBot KeyCap button")](https://microsoft.github.io/jacdac-docs/devices/kittenbot/keycapbuttonv10/)
+
+## Serial, PWM
+
+Serial, PWM are not supported yet at the DeviceScript level,
+however specific PWM uses (such as servos, buzzers, light bulbs, motors)
+are supported through `@devicescript/servers`.

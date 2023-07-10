@@ -15,10 +15,12 @@
         "isolatedModules": true,
         "noImplicitAny": true,
         "moduleDetection": "force",
+        "jsx": "preserve",
         "types": []
     },
     "include": [
         "**/*.ts",
+        "**/*.tsx",
         "../packages/core/src/*.d.ts"
     ]
 }

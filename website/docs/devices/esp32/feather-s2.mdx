@@ -11,8 +11,9 @@ ESP32-S2 based development board in a Feather format.
 
 ## Features
 
--  I2C on SDA/SCL: 8/9 using Qwiic connector
+-  I2C on SDA/SCL using Qwiic connector
 -  LED on pin 40  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin TX_D1 at 115200 8N1
 -  Service: buttonBOOT (button)
 -  Service: ambientLight (analog:lightLevel)
 
@@ -24,31 +25,32 @@ ESP32-S2 based development board in a Feather format.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
-| **LED0** |  GPIO13 |  io |
-| **LED_PWR** |  GPIO21 |  io |
-| **MISO** |  GPIO37 |  io |
-| **MOSI** |  GPIO35 |  io |
-| **P1** |  GPIO1 |  analogIn,  io |
-| **P10** |  GPIO10 |  analogIn,  io |
-| **P11** |  GPIO11 |  io |
-| **P12** |  GPIO12 |  io |
-| **P14** |  GPIO14 |  io |
 | **P17** |  GPIO17 |  analogOut,  io |
 | **P18** |  GPIO18 |  analogOut,  io |
+| **P14** |  GPIO14 |  io |
+| **P12** |  GPIO12 |  io |
+| **P6** |  GPIO6 |  analogIn,  io |
+| **P5** |  GPIO5 |  analogIn,  io |
 | **P3** |  GPIO3 |  analogIn,  io |
+| **P7** |  GPIO7 |  analogIn,  io |
+| **P10** |  GPIO10 |  analogIn,  io |
+| **P11** |  GPIO11 |  io |
 | **P33** |  GPIO33 |  io |
 | **P38** |  GPIO38 |  io |
-| **P5** |  GPIO5 |  analogIn,  io |
-| **P6** |  GPIO6 |  analogIn,  io |
-| **P7** |  GPIO7 |  analogIn,  io |
-| **RX** |  GPIO44 |  io |
+| **P1** |  GPIO1 |  analogIn,  io |
+| **LED0** |  GPIO13 |  io |
+| **LED_PWR** |  GPIO21 |  io |
+| **SDI** |  GPIO37 |  io |
+| **SDO** |  GPIO35 |  io |
+| **RX_D0** |  GPIO44 |  io |
 | **SCK** |  GPIO36 |  io |
-| **$services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
-| **$services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
-| **i2c.pinSCL** |  GPIO9 |  analogIn,  io |
-| **i2c.pinSDA** |  GPIO8 |  analogIn,  io |
-| **led.pin** |  GPIO40 |  debug,  io |
-| **led.pinCLK** |  GPIO45 |  boot,  io |
+| **SCL** |  GPIO9 |  i2c.pinSCL,  analogIn,  io |
+| **SDA** |  GPIO8 |  i2c.pinSDA,  analogIn,  io |
+| **TX_D1** |  GPIO43 |  log.pinTX,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO0 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **$services.ambientLight[1].pin** |  GPIO4 |  $services.ambientLight[1].pin,  analogIn,  io |
+| **led.pin** |  GPIO40 |  led.pin,  debug,  io |
+| **led.pinCLK** |  GPIO45 |  led.pinCLK,  boot,  io |
 
 
 
@@ -77,6 +79,23 @@ devicescript flash --board feather_s2
     "$description": "ESP32-S2 based development board in a Feather format.",
     "archId": "esp32s2",
     "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
+    "$pins": {
+        "P1": "D9",
+        "P10": "D12",
+        "P11": "D13",
+        "P12": "A3",
+        "P14": "A2",
+        "P17": "A0",
+        "P18": "A1",
+        "P3": "D10",
+        "P33": "D5",
+        "P38": "D6",
+        "P5": "A5_D25",
+        "P6": "A4_D24",
+        "P7": "D11",
+        "SDI": "MISO",
+        "SDO": "MOSI"
+    },
     "$services": [
         {
             "name": "buttonBOOT",
@@ -91,39 +110,43 @@ devicescript flash --board feather_s2
     ],
     "i2c": {
         "$connector": "Qwiic",
-        "pinSCL": 9,
-        "pinSDA": 8
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
     },
     "led": {
         "pin": 40,
         "pinCLK": 45,
         "type": 2
     },
+    "log": {
+        "pinTX": "TX_D1"
+    },
     "pins": {
-        "@TX": 43,
+        "A0": 17,
+        "A1": 18,
+        "A2": 14,
+        "A3": 12,
+        "A4_D24": 6,
+        "A5_D25": 5,
+        "D10": 3,
+        "D11": 7,
+        "D12": 10,
+        "D13": 11,
+        "D5": 33,
+        "D6": 38,
+        "D9": 1,
         "LED0": 13,
         "LED_PWR": 21,
         "MISO": 37,
         "MOSI": 35,
-        "P1": 1,
-        "P10": 10,
-        "P11": 11,
-        "P12": 12,
-        "P14": 14,
-        "P17": 17,
-        "P18": 18,
-        "P3": 3,
-        "P33": 33,
-        "P38": 38,
-        "P5": 5,
-        "P6": 6,
-        "P7": 7,
-        "RX": 44,
-        "SCK": 36
+        "RX_D0": 44,
+        "SCK": 36,
+        "SCL": 9,
+        "SDA": 8,
+        "TX_D1": 43
     },
     "sPin": {
         "LED_PWR": 1
-    },
-    "uartLog": true
+    }
 }
 ```
