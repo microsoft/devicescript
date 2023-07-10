@@ -2,6 +2,7 @@
     "name": "@devicescript/drivers",
     "version": "2.13.10",
     "private": true,
+    "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
     },
