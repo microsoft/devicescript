@@ -3,7 +3,7 @@ import { startServo } from "@devicescript/servers"
 import { schedule } from "@devicescript/runtime"
 
 const servo = startServo({
-    pin: pins.P27,
+    pin: pins.GP27,
 })
 
 schedule(
