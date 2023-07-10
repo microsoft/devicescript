@@ -2,9 +2,6 @@
     "name": "@devicescript/drivers",
     "version": "2.13.10",
     "private": true,
-    "devDependencies": {
-        "@devicescript/cli": "^2.14.0"
-    },
     "repository": {
         "type": "git",
         "url": "https://github.com/microsoft/devicescript.git",
