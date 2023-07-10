@@ -128,10 +128,10 @@ Once you have it all:
 
 Open the Debug view in VSCode and run the `VSCode Extension` configuration. This will launch a new VSCode instance with the extension loaded. A build is automatically triggered before launch VSCode.
 
-### Builting packages
+### Building packages
 
 Similar to working on the Visual Studio Code extension, lunch the `VSCode Extension` debugger configuration. This will launch a new VSCode instance with the extension loaded.
-It should also open the `packages` folder which will allow you to work on the builtin packages.
+It should also open the `packages` folder which will allow you to work on the built-in packages.
 
 ### Documentation
 
@@ -139,7 +139,7 @@ Run ``yarn docs` and edit any markdown file in the `website/docs` folder. The ch
 
 ## Release process
 
-Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
+Run `yarn bump` (or `make bump`). Alternatively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
 
 The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.
 
