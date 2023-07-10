@@ -73,3 +73,14 @@ Math.constrain = function constrain(x, low, high) {
     await fn()
     return await ds.suspend<ds.Packet>()
 }
+
+/**
+ * @devsNative GPIO
+ */
+declare var GPIO: any
+;(ds as typeof ds).gpio = (gpio: number) => {
+    for (const p of Object.values(GPIO)) {
+        if ((p as ds.PinBase).gpio === gpio) return p as any
+    }
+    throw new Error(`pin ${gpio} not exposed; available: ${Object.keys(GPIO)}`)
+}

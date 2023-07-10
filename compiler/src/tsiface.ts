@@ -70,7 +70,7 @@ class TsHost implements ts.CompilerHost {
     }
     readFile(fileName: string): string {
         let text = ""
-        if (fileName.endsWith(".tsx")) return undefined
+        // if (fileName.endsWith(".tsx")) return undefined
         if (this.fileCache.hasOwnProperty(fileName)) {
             text = this.fileCache[fileName]
         } else {
@@ -168,6 +168,7 @@ export function buildAST(
         typeRoots: [],
         types: [],
         noDtsResolution: true,
+        jsx: ts.JsxEmit.Preserve,
         // types?: string[];
     }
     const rootNames = Object.keys(prelude).filter(

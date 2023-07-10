@@ -30,6 +30,7 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
     devs_jd_reset_packet(ctx);
 
     devs_jd_init_roles(ctx);
+    devs_gpio_init_dcfg(ctx);
 
     if (ctx->error_code)
         return;

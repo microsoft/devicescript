@@ -7,21 +7,24 @@
     "devName": "Adafruit Feather ESP32-S2",
     "i2c": {
       "$connector": "Qwiic",
-      "pinSCL": 4,
-      "pinSDA": 3
+      "pinSCL": "SCL",
+      "pinSDA": "SDA"
     },
     "id": "adafruit_feather_esp32_s2",
     "led": {
       "pin": 33,
       "type": 1
     },
+    "log": {
+      "pinTX": 43
+    },
     "pins": {
       "A0": 18,
       "A1": 17,
       "A2": 16,
       "A3": 15,
-      "A4": 14,
-      "A5": 8,
+      "A4_D24": 14,
+      "A5_D25": 8,
       "D10": 10,
       "D11": 11,
       "D12": 12,
@@ -33,16 +36,17 @@
       "MISO": 37,
       "MOSI": 35,
       "PWR": 7,
-      "RX": 38,
+      "RX_D0": 38,
       "SCK": 36,
-      "TX": 39
+      "SCL": 4,
+      "SDA": 3,
+      "TX_D1": 39
     },
     "productId": "0x3c2ed99e",
     "sPin": {
       "LED_PWR": 1,
       "PWR": 1
     },
-    "uartLog": true,
     "url": "https://www.adafruit.com/product/5000"
   },
   "adafruit_qt_py_c3": {
@@ -60,27 +64,31 @@
     "devName": "Adafruit QT Py ESP32-C3 WiFi",
     "i2c": {
       "$connector": "Qwiic",
-      "pinSCL": 6,
-      "pinSDA": 5
+      "pinSCL": "SCL_D5",
+      "pinSDA": "SDA_D4"
     },
     "id": "adafruit_qt_py_c3",
     "led": {
       "pin": 2,
       "type": 1
     },
+    "log": {
+      "pinTX": "TX_D6"
+    },
     "pins": {
-      "@TX": 21,
-      "A0": 4,
-      "A1": 3,
-      "A2": 1,
-      "A3": 0,
-      "MISO": 8,
-      "MOSI": 7,
-      "RX": 20,
-      "SCK": 10
+      "A0_D0": 4,
+      "A1_D1": 3,
+      "A2_D2": 1,
+      "A3_D3": 0,
+      "MISO_D9": 8,
+      "MOSI_D10": 7,
+      "RX_D7": 20,
+      "SCK_D8": 10,
+      "SCL_D5": 6,
+      "SDA_D4": 5,
+      "TX_D6": 21
     },
     "productId": "0x3693d40b",
-    "uartLog": true,
     "url": "https://www.adafruit.com/product/5405",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg"
   },
@@ -160,29 +168,32 @@
     "$services": [
       {
         "name": "buttonBOOT",
-        "pin": 9,
+        "pin": "P9",
         "service": "button"
       }
     ],
     "archId": "esp32c3",
     "devName": "Espressif ESP32-C3 (bare)",
     "id": "esp32c3_bare",
+    "log": {
+      "pinTX": "P21"
+    },
     "pins": {
-      "@P21": 21,
       "P0": 0,
       "P1": 1,
       "P10": 10,
       "P2": 2,
       "P20": 20,
+      "P21": 21,
       "P3": 3,
       "P4": 4,
       "P5": 5,
       "P6": 6,
       "P7": 7,
-      "P8": 8
+      "P8": 8,
+      "P9": 9
     },
     "productId": "0x3a1d89be",
-    "uartLog": true,
     "url": "https://www.espressif.com/en/products/socs/esp32-c3"
   },
   "esp32c3_rust_devkit": {
@@ -192,7 +203,7 @@
     "$services": [
       {
         "name": "buttonBOOT",
-        "pin": 9,
+        "pin": "P9",
         "service": "button"
       }
     ],
@@ -208,19 +219,22 @@
       "pin": 2,
       "type": 1
     },
+    "log": {
+      "pinTX": "P21"
+    },
     "pins": {
-      "@LED": 7,
-      "@P21": 21,
+      "LED": 7,
       "P0": 0,
       "P1": 1,
       "P20": 20,
+      "P21": 21,
       "P3": 3,
       "P4": 4,
       "P5": 5,
-      "P6": 6
+      "P6": 6,
+      "P9": 9
     },
     "productId": "0x33f29c59",
-    "uartLog": true,
     "url": "https://github.com/esp-rs/esp-rust-board",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg"
   },
@@ -231,8 +245,10 @@
     "archId": "esp32s2",
     "devName": "Espressif ESP32-S2 (bare)",
     "id": "esp32s2_bare",
+    "log": {
+      "pinTX": "P43"
+    },
     "pins": {
-      "@P43": 43,
       "P0": 0,
       "P1": 1,
       "P10": 10,
@@ -258,6 +274,7 @@
       "P40": 40,
       "P41": 41,
       "P42": 42,
+      "P43": 43,
       "P44": 44,
       "P45": 45,
       "P46": 46,
@@ -268,7 +285,6 @@
       "P9": 9
     },
     "productId": "0x3f140dcc",
-    "uartLog": true,
     "url": "https://www.espressif.com/en/products/socs/esp32-s2"
   },
   "esp32s3_bare": {
@@ -278,11 +294,13 @@
     "archId": "esp32s3",
     "devName": "Espressif ESP32-S3 (bare)",
     "id": "esp32s3_bare",
+    "log": {
+      "pinTX": "P43"
+    },
     "pins": {
       "#P35": 35,
       "#P36": 36,
       "#P37": 37,
-      "@P43": 43,
       "P0": 0,
       "P1": 1,
       "P10": 10,
@@ -305,6 +323,7 @@
       "P40": 40,
       "P41": 41,
       "P42": 42,
+      "P43": 43,
       "P44": 44,
       "P45": 45,
       "P46": 46,
@@ -317,7 +336,6 @@
       "P9": 9
     },
     "productId": "0x3e121501",
-    "uartLog": true,
     "url": "https://www.espressif.com/en/products/socs/esp32-s3"
   },
   "esp32s3_devkit_m": {
@@ -328,8 +346,11 @@
     "devName": "Espressif ESP32-S3 DevKitM",
     "id": "esp32s3_devkit_m",
     "led": {
-      "pin": 48,
+      "pin": "P48",
       "type": 1
+    },
+    "log": {
+      "pinTX": "P43"
     },
     "pins": {
       "P0": 0,
@@ -354,9 +375,11 @@
       "P40": 40,
       "P41": 41,
       "P42": 42,
+      "P43": 43,
       "P45": 45,
       "P46": 46,
       "P47": 47,
+      "P48": 48,
       "P5": 5,
       "P6": 6,
       "P7": 7,
@@ -364,13 +387,29 @@
       "P9": 9
     },
     "productId": "0x3574d277",
-    "uartLog": true,
     "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32s3devkitmv10.catalog.jpg"
   },
   "feather_s2": {
     "$description": "ESP32-S2 based development board in a Feather format.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
+    "$pins": {
+      "P1": "D9",
+      "P10": "D12",
+      "P11": "D13",
+      "P12": "A3",
+      "P14": "A2",
+      "P17": "A0",
+      "P18": "A1",
+      "P3": "D10",
+      "P33": "D5",
+      "P38": "D6",
+      "P5": "A5_D25",
+      "P6": "A4_D24",
+      "P7": "D11",
+      "SDI": "MISO",
+      "SDO": "MOSI"
+    },
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
     "$services": [
       {
@@ -388,8 +427,8 @@
     "devName": "Unexpected Maker FeatherS2 ESP32-S2",
     "i2c": {
       "$connector": "Qwiic",
-      "pinSCL": 9,
-      "pinSDA": 8
+      "pinSCL": "SCL",
+      "pinSDA": "SDA"
     },
     "id": "feather_s2",
     "led": {
@@ -397,33 +436,37 @@
       "pinCLK": 45,
       "type": 2
     },
+    "log": {
+      "pinTX": "TX_D1"
+    },
     "pins": {
-      "@TX": 43,
+      "A0": 17,
+      "A1": 18,
+      "A2": 14,
+      "A3": 12,
+      "A4_D24": 6,
+      "A5_D25": 5,
+      "D10": 3,
+      "D11": 7,
+      "D12": 10,
+      "D13": 11,
+      "D5": 33,
+      "D6": 38,
+      "D9": 1,
       "LED0": 13,
       "LED_PWR": 21,
       "MISO": 37,
       "MOSI": 35,
-      "P1": 1,
-      "P10": 10,
-      "P11": 11,
-      "P12": 12,
-      "P14": 14,
-      "P17": 17,
-      "P18": 18,
-      "P3": 3,
-      "P33": 33,
-      "P38": 38,
-      "P5": 5,
-      "P6": 6,
-      "P7": 7,
-      "RX": 44,
-      "SCK": 36
+      "RX_D0": 44,
+      "SCK": 36,
+      "SCL": 9,
+      "SDA": 8,
+      "TX_D1": 43
     },
     "productId": "0x3126f707",
     "sPin": {
       "LED_PWR": 1
     },
-    "uartLog": true,
     "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/unexpected-maker/feathers2esp32s2v20.catalog.jpg"
   },
@@ -520,6 +563,9 @@
         }
       ]
     },
+    "log": {
+      "pinTX": 43
+    },
     "pins": {
       "P33": 33,
       "P34": 34
@@ -540,8 +586,7 @@
         "pinFault": 13,
         "service": "power"
       }
-    ],
-    "uartLog": true
+    ]
   },
   "msr207_v43": {
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
@@ -569,6 +614,9 @@
         }
       ]
     },
+    "log": {
+      "pinTX": 43
+    },
     "pins": {
       "P33": 33,
       "P34": 34
@@ -589,8 +637,7 @@
         "pinFault": 13,
         "service": "power"
       }
-    ],
-    "uartLog": true
+    ]
   },
   "msr48": {
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
@@ -623,6 +670,9 @@
         }
       ]
     },
+    "log": {
+      "pinTX": 43
+    },
     "pins": {
       "P33": 33,
       "P34": 34,
@@ -642,7 +692,6 @@
         "service": "power"
       }
     ],
-    "uartLog": true,
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg"
   },
   "msr59": {
@@ -705,35 +754,37 @@
     "devName": "Raspberry Pi Pico",
     "id": "pico",
     "led": {
-      "pin": 25
+      "#": "type=100 - special handling for Pico LED",
+      "pin": 25,
+      "type": 100
     },
     "pins": {
-      "P0": 0,
-      "P1": 1,
-      "P10": 10,
-      "P11": 11,
-      "P12": 12,
-      "P13": 13,
-      "P14": 14,
-      "P15": 15,
-      "P16": 16,
-      "P17": 17,
-      "P18": 18,
-      "P19": 19,
-      "P2": 2,
-      "P20": 20,
-      "P21": 21,
-      "P22": 22,
-      "P26": 26,
-      "P27": 27,
-      "P28": 28,
-      "P3": 3,
-      "P4": 4,
-      "P5": 5,
-      "P6": 6,
-      "P7": 7,
-      "P8": 8,
-      "P9": 9
+      "GP0": 0,
+      "GP1": 1,
+      "GP10": 10,
+      "GP11": 11,
+      "GP12": 12,
+      "GP13": 13,
+      "GP14": 14,
+      "GP15": 15,
+      "GP16": 16,
+      "GP17": 17,
+      "GP18": 18,
+      "GP19": 19,
+      "GP2": 2,
+      "GP20": 20,
+      "GP21": 21,
+      "GP22": 22,
+      "GP26": 26,
+      "GP27": 27,
+      "GP28": 28,
+      "GP3": 3,
+      "GP4": 4,
+      "GP5": 5,
+      "GP6": 6,
+      "GP7": 7,
+      "GP8": 8,
+      "GP9": 9
     },
     "productId": "0x3f6e1f0c",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
@@ -746,33 +797,38 @@
     "archId": "rp2040w",
     "devName": "Raspberry Pi Pico W",
     "id": "pico_w",
+    "led": {
+      "#": "type=100 - special handling for Pico LED",
+      "pin": 25,
+      "type": 100
+    },
     "pins": {
-      "P0": 0,
-      "P1": 1,
-      "P10": 10,
-      "P11": 11,
-      "P12": 12,
-      "P13": 13,
-      "P14": 14,
-      "P15": 15,
-      "P16": 16,
-      "P17": 17,
-      "P18": 18,
-      "P19": 19,
-      "P2": 2,
-      "P20": 20,
-      "P21": 21,
-      "P22": 22,
-      "P26": 26,
-      "P27": 27,
-      "P28": 28,
-      "P3": 3,
-      "P4": 4,
-      "P5": 5,
-      "P6": 6,
-      "P7": 7,
-      "P8": 8,
-      "P9": 9
+      "GP0": 0,
+      "GP1": 1,
+      "GP10": 10,
+      "GP11": 11,
+      "GP12": 12,
+      "GP13": 13,
+      "GP14": 14,
+      "GP15": 15,
+      "GP16": 16,
+      "GP17": 17,
+      "GP18": 18,
+      "GP19": 19,
+      "GP2": 2,
+      "GP20": 20,
+      "GP21": 21,
+      "GP22": 22,
+      "GP26": 26,
+      "GP27": 27,
+      "GP28": 28,
+      "GP3": 3,
+      "GP4": 4,
+      "GP5": 5,
+      "GP6": 6,
+      "GP7": 7,
+      "GP8": 8,
+      "GP9": 9
     },
     "productId": "0x3a513204",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
@@ -785,27 +841,30 @@
     "$services": [
       {
         "name": "buttonBOOT",
-        "pin": 9,
+        "pin": "MISO_D9",
         "service": "button"
       }
     ],
     "archId": "esp32c3",
     "devName": "Seeed Studio XIAO ESP32C3",
     "id": "seeed_xiao_esp32c3",
+    "log": {
+      "pinTX": "TX_D6"
+    },
     "pins": {
-      "@D9": 9,
-      "D0": 2,
-      "D1": 3,
-      "D10": 10,
-      "D2": 4,
-      "D3": 5,
-      "D4": 6,
-      "D5": 7,
-      "D7": 20,
-      "D8": 8
+      "A0_D0": 2,
+      "A1_D1": 3,
+      "A2_D2": 4,
+      "A3_D3": 5,
+      "MISO_D9": 9,
+      "MOSI_D10": 10,
+      "RX_D7": 20,
+      "SCK_D8": 8,
+      "SCL_D5": 7,
+      "SDA_D4": 6,
+      "TX_D6": 21
     },
     "productId": "0x3eff6b51",
-    "uartLog": true,
     "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3v00.catalog.jpg"
   },
@@ -818,36 +877,38 @@
     "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
     "i2c": {
       "$connector": "Qwiic",
-      "pinSCL": 7,
-      "pinSDA": 6
+      "pinSCL": "SCL",
+      "pinSDA": "SDA"
     },
     "id": "seeed_xiao_esp32c3_msr218",
     "jacdac": {
       "$connector": "Jacdac",
-      "pin": 5
+      "pin": "JD"
     },
     "led": {
-      "pin": 10,
+      "pin": "LED",
       "type": 1
     },
+    "log": {
+      "pinTX": "TX"
+    },
     "pins": {
-      "@JD": 5,
-      "@LED": 10,
-      "@SCL": 7,
-      "@SDA": 6,
-      "@TX": 21,
       "A0": 2,
       "A1": 3,
       "A2": 4,
       "D9": 9,
+      "JD": 5,
+      "LED": 10,
       "LED_PWR": 8,
-      "RX": 20
+      "RX": 20,
+      "SCL": 7,
+      "SDA": 6,
+      "TX": 21
     },
     "productId": "0x36b64827",
     "sPin": {
       "LED_PWR": 1
     },
-    "uartLog": true,
     "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3withmsr218base218v46.catalog.jpg"
   }
