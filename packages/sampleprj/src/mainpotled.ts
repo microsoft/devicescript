@@ -6,6 +6,7 @@ const slider = startPotentiometer({
 })
 const led = startLightBulb({
     pin: pins.GP2,
+    dimmable: true,
 })
 slider.reading.subscribe(async level => {
     await led.intensity.write(level)
