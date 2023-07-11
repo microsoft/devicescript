@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { pixelBuffer, rgb, schedule, setStatusLight, uptime } from "."
+import { pixelBuffer, rgb, schedule, setStatusLight, uptime, Map } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -88,4 +88,44 @@ describe("schedule", () => {
         console.log({ called })
         expect(called === 2).toBe(true)
     })
+})
+
+describe('Test Es Map Class', () => {
+    function msg(m: string) {
+        console.log(m)
+    }
+
+    test("map+methods", () => {
+        let map = new Map()
+        map.set("one", 1)
+        map.set("two", 2)
+        map.set("three", 3)
+
+        msg("map test set")
+        expect(map.size() === 3).toBe(true)
+
+        msg("map test get")
+        expect(map.get("one") === 1).toBe(true)
+        map.delete("two")
+
+        msg("map test delete")
+        expect(map.size() === 2).toBe(true)
+
+        map.clear()
+
+        msg("map test clear")
+        expect(map.size() === 0).toBe(true)
+    })
+
+    test("map+constructor", () => {
+        const map = new Map<string, number>([
+            ["one", 1],
+            ["two", 2],
+            ["three", 3],
+        ])
+        msg("map test constructor")
+        expect(map.size() === 3).toBe(true)
+
+    })
+    msg("Map tests completed")
 })
