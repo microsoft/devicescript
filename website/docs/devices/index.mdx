@@ -10,15 +10,17 @@ For sensors and other peripherals, see [servers](/api/servers).
 
 ## Implementation status
 
-| Device       | USB | TCP | TLS | I2C | SPI | GPIO | Jacdac |
-| ------------ | --- | --- | --- | --- | --- | ---- | ------ |
-| **WASM Sim** | N/A | ✓   | ✓   | ❌  | ❌  | ❌   | ✓      |
-| **ESP32**    | ⚠️  | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
-| **ESP32-C3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
-| **ESP32-S2** | ✓   | ✓   | ❌  | ✓   | ✓   | ✓    | ✓      |
-| **ESP32-S3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
-| **RP2040**   | ✓   | ❌  | ❌  | ✓   | ✓   | ✓    | ✓      |
-| **RP2040-W** | ✓   | ✓   | ❌  | ✓   | ✓   | ✓    | ✓      |
+| Device       | USB | TCP | TLS | I2C | SPI | GPIO | PWM | Jacdac |
+| ------------ | --- | --- | --- | --- | --- | ---- | --- | ------ |
+| **WASM Sim** | N/A | ✓   | ✓   | ❌  | ❌  | ❌   | ❌  | ✓      |
+| **ESP32**    | ⚠️  | ✓   | ✓   | ✓   | ✓   | ✓    | ✓   | ✓      |
+| **ESP32-C3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓   | ✓      |
+| **ESP32-S2** | ✓   | ✓   | ❌  | ✓   | ✓   | ✓    | ✓   | ✓      |
+| **ESP32-S3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓   | ✓      |
+| **RP2040**   | ✓   | ❌  | ❌  | ✓   | ✓   | ✓    | ✓   | ✓      |
+| **RP2040-W** | ✓   | ✓   | ❌  | ✓   | ✓   | ✓    | ✓   | ✓      |
+
+The PWM is currently only supported through servo, light bulb, buzzer and similar drivers.
 
 **The ESP32-C3 boards are best supported.**
 The regular ESP32 (without -C3 or -S2) currently have issues with the USB connection

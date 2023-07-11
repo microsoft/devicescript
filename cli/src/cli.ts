@@ -56,8 +56,10 @@ export async function mainCli() {
                 "-F, --flag <compiler-flag>",
                 "set compiler flag",
                 (val, prev: Record<string, boolean>) => {
-                    if (!compileFlagHelp[val])
+                    if (!compileFlagHelp[val]) {
+                        showCompilerFlags()
                         throw new Error(`invalid compiler flag: '${val}'`)
+                    }
                     prev[val] = true
                     return prev
                 },
@@ -88,15 +90,17 @@ export async function mainCli() {
     program
         .command("flags")
         .description("show description of compiler flags")
-        .action(() => {
-            function pad(s: string, n: number) {
-                while (s.length < n) s += " "
-                return s
-            }
-            for (const k of Object.keys(compileFlagHelp)) {
-                console.log(`    -F ${pad(k, 20)} ${compileFlagHelp[k]}`)
-            }
-        })
+        .action(showCompilerFlags)
+
+    function showCompilerFlags() {
+        function pad(s: string, n: number) {
+            while (s.length < n) s += " "
+            return s
+        }
+        for (const k of Object.keys(compileFlagHelp)) {
+            console.log(`    -F ${pad(k, 20)} ${compileFlagHelp[k]}`)
+        }
+    }
 
     buildCommand("bundle")
         .description("bundle program, settings, and runtime")

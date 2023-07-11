@@ -39,6 +39,15 @@ Array.prototype.findIndex = function (f) {
     return -1
 }
 
+Array.prototype.findLast = function (f) {
+    const length = this.length;
+    for (let i = length - 1; i >= 0; i--) {
+        if (f(this[i], i, this)) return this[i]
+    }
+    return undefined;
+}
+
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length
@@ -54,6 +63,38 @@ Array.prototype.every = function (f) {
         if (!f(this[i], i, this)) return false
     }
     return true
+}
+
+Array.prototype.fill = function (value, start, end) {
+    const length = this.length
+    let startIndex = start ?? 0
+    if (startIndex < -length) {
+        startIndex = 0
+    }
+
+    if (startIndex < 0) {
+        startIndex = startIndex + length
+    }
+
+    let endIndex = end ?? length
+    if (endIndex >= length ) {
+        endIndex = length
+    }
+
+    if (endIndex < 0) {
+        endIndex = endIndex + length
+    }
+
+    if (endIndex < -length) {
+        endIndex = 0
+    }
+
+    for (let i = startIndex; i < endIndex; ++i) {
+
+        this[i] = value;
+    }
+
+    return this;
 }
 
 Array.prototype.some = function (f) {

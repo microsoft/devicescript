@@ -3,7 +3,7 @@
 A [DeviceScript](https://microsoft.github.io/devicescript/) library
 to implement Jacdac servers in DeviceScript (as opposed to C).
 
-- [Read documentation](https://microsoft.github.io/devicescript/developer/server)
+- [Read documentation](https://microsoft.github.io/devicescript/developer/drivers)
 
 
 ## Contributing

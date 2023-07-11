@@ -37,7 +37,7 @@ import { trackEvent } from "@devicescript/cloud"
 const thermometer = new Temperature()
 const t_ref = 68 // degree F
 const relay = startRelay({
-    pin: pins.A0,
+    pin: pins.A0_D0,
 })
 
 thermometer.reading
@@ -79,7 +79,7 @@ import { environment } from "@devicescript/cloud"
 
 const thermometer = new Temperature()
 const relay = startRelay({
-    pin: pins.A0,
+    pin: pins.A0_D0,
 })
 // highlight-start
 const env = await environment<{ t_ref: number }>({ t_ref: 68 })
@@ -124,7 +124,7 @@ import { environment } from "@devicescript/cloud"
 
 const thermometer = new ds.Temperature()
 const relay = startRelay({
-    pin: pins.A0,
+    pin: pins.A0_D0,
 })
 const env = await environment<{ t_ref: number }>({ t_ref: 68 })
 let sub: Subscription
