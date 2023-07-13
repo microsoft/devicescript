@@ -74,14 +74,14 @@ function isWhiteSpace(code: number) {
     Other letters (K, M, N, P, W, S) represent integers, with their default values if omitted
 
     Examples:
-        lightEncode("setall #000000", []) - turn off all lights
-        lightEncode("setall #", [0]) - the same
-        lightEncode("fade # #", [0xff0000, 0x0000ff]) - set first pixel to red, last to blue, and interpolate the ones in between
-        lightEncode("fade #", [[0xff0000, 0x0000ff]]) - the same; note double [[]]
-        lightEncode("range 2 5 setall #ffffff", []) - set pixels 2-7 to white
-        lightEncode("range % % setall #", [2, 5, 0xffffff]) - the same
+        ledStripEncode("setall #000000", []) - turn off all lights
+        ledStripEncode("setall #", [0]) - the same
+        ledStripEncode("fade # #", [0xff0000, 0x0000ff]) - set first pixel to red, last to blue, and interpolate the ones in between
+        ledStripEncode("fade #", [[0xff0000, 0x0000ff]]) - the same; note double [[]]
+        ledStripEncode("range 2 5 setall #ffffff", []) - set pixels 2-7 to white
+        ledStripEncode("range % % setall #", [2, 5, 0xffffff]) - the same
 */
-export function lightEncode(format: string, args: (number | number[])[]) {
+export function ledStripEncode(format: string, args: (number | number[])[]) {
     const outarr: number[] = []
     let colors: number[] = []
     let pos = 0
@@ -183,6 +183,6 @@ ds.LedStrip.prototype.runEncoded = async function (
     program: string,
     ...args: (number | number[])[]
 ) {
-    const buf = lightEncode(program, args)
+    const buf = ledStripEncode(program, args)
     await this.run(buf)
 }
