@@ -56,7 +56,7 @@ function cmdCode(cmd: string) {
 }
 
 function isWhiteSpace(code: number) {
-    return code == 32 || code == 13 || code == 10 || code == 9
+    return code === 32 || code === 13 || code === 10 || code === 9
 }
 
 /*
@@ -100,7 +100,7 @@ export function ledStripEncode(format: string, args: (number | number[])[]) {
     let currcmd = 0
 
     function pushNumber(n: number) {
-        if (n == null || (n | 0) != n || n < 0 || n >= 16383)
+        if (n === null || (n | 0) !== n || n < 0 || n >= 16383)
             throw new RangeError("number out of range: " + n)
         if (n < 128) outarr.push(n)
         else {
@@ -110,11 +110,11 @@ export function ledStripEncode(format: string, args: (number | number[])[]) {
     }
 
     function flush() {
-        if (currcmd == 0xcf) {
-            if (colors.length != 1)
+        if (currcmd === 0xcf) {
+            if (colors.length !== 1)
                 throw new RangeError("setone requires 1 color")
         } else {
-            if (colors.length == 0) return
+            if (colors.length === 0) return
             if (colors.length <= 3) outarr.push(0xc0 | colors.length)
             else {
                 outarr.push(0xc0)
@@ -144,9 +144,9 @@ export function ledStripEncode(format: string, args: (number | number[])[]) {
             // a-z
             flush()
             currcmd = cmdCode(token)
-            if (currcmd == undefined)
+            if (currcmd === undefined)
                 throw new RangeError("Unknown light command: " + token)
-            if (currcmd == 0x100) {
+            if (currcmd === 0x100) {
                 const f = parseFloat(nextToken())
                 if (isNaN(f) || f < 0 || f > 2) throw "expecting scale"
                 outarr.push(0xd8) // tmpmode
@@ -163,21 +163,21 @@ export function ledStripEncode(format: string, args: (number | number[])[]) {
         } else if (48 <= t0 && t0 <= 57) {
             // 0-9
             pushNumber(parseInt(token))
-        } else if (t0 == 37) {
+        } else if (t0 === 37) {
             // %
-            if (args.length == 0) throw new RangeError("Out of args, %")
+            if (args.length === 0) throw new RangeError("Out of args, %")
             const v = args.shift()
-            if (typeof v != "number") throw new RangeError("Expecting number")
+            if (typeof v !== "number") throw new RangeError("Expecting number")
             pushNumber(v)
-        } else if (t0 == 35) {
+        } else if (t0 === 35) {
             // #
-            if (token.length == 1) {
-                if (args.length == 0) throw new RangeError("Out of args, #")
+            if (token.length === 1) {
+                if (args.length === 0) throw new RangeError("Out of args, #")
                 const v = args.shift()
-                if (typeof v == "number") colors.push(v)
+                if (typeof v === "number") colors.push(v)
                 else for (let vv of v) colors.push(vv)
             } else {
-                if (token.length == 7) {
+                if (token.length === 7) {
                     const b = Buffer.from("00" + token.slice(1), "hex")
                     colors.push(b.readUInt32BE(0))
                 } else {
