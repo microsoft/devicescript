@@ -1,21 +1,26 @@
 ---
-sidebar_position: 4
+sidebar_position: 3.79
 description: Learn how to create a weather display using a temperature and humidity sensor and a basic character display.
 keywords:
-  - temperature sensor
-  - humidity sensor
-  - character screen
-  - weather display
-  - devicescript
+    - temperature sensor
+    - humidity sensor
+    - character screen
+    - weather display
+    - devicescript
 ---
 
 # Weather Display
 
 A simple weather display that gets new values every 5 seconds from a temperature and humidity sensor and displays them in a character display with a ascii symbol based on the humidity.
 
+## Configuring the hardware
+
+Make sure to configure your program for your
+hardware board so that the I2C pins are [configured correctly](/getting-started/vscode/board-configuration).
+
 ## Logging sensor data
 
-Let's start by mounting a `sensor` client and logging each sensor reading to the display using several functions. 
+Let's start by mounting a `sensor` client and logging each sensor reading to the display using several functions.
 
 ```tsx
 import { startSHT30 } from "@devicescript/drivers"
@@ -76,10 +81,9 @@ setInterval(async () => {
 }, 5000)
 ```
 
-### Example Photo using Devicescript simulator
+![Example Photo using Devicescript simulator](./weather-display/simulator-example.png)
 
-![Image Description](./weather-display/simulator-example.png)
+## See also
 
-### Troubleshooting
-
-Make sure your board configuration has correct i2C pins defined.
+The [value dashboard](./weather-dashboard) simplifies the display of sensor data
+on a character screen.

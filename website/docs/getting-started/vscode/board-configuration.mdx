@@ -1,0 +1,33 @@
+---
+title: Board Configuration
+sidebar_position: 2.9
+---
+
+# Board Configuration
+
+To target a specific hardware board or peripherical,
+you need to configure the pins, I2C, SPI, etc... This is done by loading the
+board configuration package for your specific hardware.
+
+On the file menu, click on the **wand** icon and select the board configuration.
+If your board is already connectd, DeviceScript will automatically detect it and
+load the correct board configuration.
+
+The inserted board configuration exposes a `pins` object that you can use to
+configure drivers.
+
+```ts
+// highlight-next-line
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { startLightBulb } from "@devicescript/servers"
+
+const lightBulb = startLightBulb({
+    // highlight-next-line
+    pin: pins.A0_D0,
+})
+```
+
+## Available Boards
+
+You can find the list of supported devices and configuration in
+the [devices](/devices) catalog.
