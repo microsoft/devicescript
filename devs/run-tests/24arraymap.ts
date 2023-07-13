@@ -91,6 +91,12 @@ function testArrayFindIndex() {
     assert(str.findIndex(x => x === "c") === 2, "sometrue")
     assert(str.findIndex(x => x === "z") === -1, "somefalse")
 }
+
+function testArrayFindLastIndex() {
+    let str = ["a", "b", "c", "cee", "d"]
+    assert(str.findLastIndex(x => x.startsWith("c")) === 3, "findLastIndexTrue")
+    assert(str.findLastIndex(x => x === "z") === -1, "findLastIndexFalse")
+}
 function swap<T>(arr: T[], i: number, j: number): void {
     let temp: T = arr[i]
     arr[i] = arr[j]
@@ -155,6 +161,7 @@ testArrayMap()
 testArrayFind()
 testArrayFindLast()
 testArrayFindIndex()
+testArrayFindLastIndex()
 testGenerics()
 testArrayIncludes()
 testArrayAt()
