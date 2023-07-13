@@ -11,12 +11,6 @@ declare module "@devicescript/core" {
         ): Promise<void>
 
         /**
-         * Set a single of the pixels on the strip to one RGB color.
-         * @param rgb RGB color of the LED
-         */
-        setPixel(index: number, rgb: number): Promise<void>
-
-        /**
          * Set all of the pixels on the strip to one RGB color.
          * @param rgb RGB color of the LED
          */
@@ -197,13 +191,6 @@ ds.LedStrip.prototype.runEncoded = async function (
 ) {
     const buf = ledStripEncode(program, args)
     await this.run(buf)
-}
-
-ds.LedStrip.prototype.setPixel = async function setPixel(
-    index: number,
-    rgb: number
-) {
-    await this.runEncoded("setone % # wait 1", index, rgb)
 }
 
 ds.LedStrip.prototype.setAll = async function setAll(rgb: number) {
