@@ -203,9 +203,9 @@ ds.LedStrip.prototype.setPixel = async function setPixel(
     index: number,
     rgb: number
 ) {
-    this.runEncoded("setone % # wait 1", index, rgb)
+    await this.runEncoded("setone % # wait 1", index, rgb)
 }
 
 ds.LedStrip.prototype.setAll = async function setAll(rgb: number) {
-    this.runEncoded("fade # wait 1", rgb)
+    await this.runEncoded("fade # wait 1", rgb)
 }
