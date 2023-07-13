@@ -179,7 +179,7 @@ export function lightEncode(format: string, args: (number | number[])[]) {
     return Buffer.from(outarr)
 }
 
-ds.LedStrip.prototype.runProgram = async function (
+ds.LedStrip.prototype.runEncoded = async function (
     program: string,
     ...args: (number | number[])[]
 ) {

@@ -29,15 +29,20 @@ The input is split at spaces. The following tokens are supported:
 
 ### Examples
 
-````ts skip
-await led.runEncoded("setall #000000") // turn off all lights
-await led.runEncoded("setall #", 0) // the same
+```ts
+import { LedStrip } from "@devicescript-core"
+const led = new LedStrip()
+
+// turn off all lights
+await led.runEncoded("setall #000000")
+// the same
+await led.runEncoded("setall #", 0)
 // set first pixel to red, last to blue, and interpolate the ones in between
 await led.runEncoded("fade # #", 0xff0000, 0x0000ff)
-// the same; note double [[]]
+// the same; note the usage of an array []
 await led.runEncoded("fade #", [0xff0000, 0x0000ff])
 // set pixels 2-7 to white
 await led.runEncoded("range 2 5 setall #ffffff")
 // the same
-await led.runProgramlightEncode("range % % setall #", 2, 5, 0xffffff) ```
-````
+await led.runEncoded("range % % setall #", 2, 5, 0xffffff)
+```
