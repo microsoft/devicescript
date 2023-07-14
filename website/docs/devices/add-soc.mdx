@@ -40,4 +40,12 @@ which sits in the main [DeviceScript repo](https://github.com/microsoft/devicesc
 It's best to start by forking an existing port, we suggest the `rp2040` one, and implement functions one by one.
 Start by looking at `jd_user_config.h` file and disable things.
 
-Also, make sure your SoC [has enough memory](/language/runtime#memory).
+Note that the STM32 port borrows heavily from [Jacdac firmware for STM32G0-based modules](https://github.com/microsoft/jacdac-msr-modules),
+so parts of the source are not necessary for DeviceScript.
+If you want to use STM32 as a base, it's likely better to use `rp2040` or `esp32` as the skeleton,
+and copy code from the STM32 as needed.
+
+As for SoC requirements:
+
+-   make sure your SoC [has enough memory](/language/runtime#memory)
+-   it's highly recommended to use SoCs with built-in USB peripheral; we do have some support for using external USB-UART chips (as in ESP32 classic port) but it's rather buggy
