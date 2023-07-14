@@ -196,7 +196,7 @@ interface StringConstructor {
  */
 declare var String: StringConstructor
 
-interface Boolean { }
+interface Boolean {}
 interface Number {}
 
 interface RegExpExecArray extends Array<string> {
