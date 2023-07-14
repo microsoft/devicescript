@@ -199,21 +199,7 @@ declare var String: StringConstructor
 interface Boolean {}
 interface Number {}
 
-interface RegExpExecArray extends Array<string> {
-    index?: number
-    input?: string
-}
-
-interface RegExp {
-    source: string
-    global: boolean
-    ignoreCase: boolean
-    multiline: boolean
-    lastIndex: number
-    exec(str: string): RegExpExecArray | null
-    test(str: string): boolean
-}
-
+interface RegExp {}
 interface IterableIterator<T> {}
 
 interface SymbolConstructor {
