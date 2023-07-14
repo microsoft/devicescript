@@ -790,6 +790,3 @@ type Uncapitalize<S extends string> = intrinsic
 interface EncodeURIComponent {
     encodeURIComponent(str: string): string
 }
-interface EncodeNonASCIIChar {
-    encodeNonASCIIChar(char: string): string
-}
