@@ -196,10 +196,24 @@ interface StringConstructor {
  */
 declare var String: StringConstructor
 
-interface Boolean {}
+interface Boolean { }
 interface Number {}
 
-interface RegExp {}
+interface RegExpExecArray extends Array<string> {
+    index?: number
+    input?: string
+}
+
+interface RegExp {
+    source: string
+    global: boolean
+    ignoreCase: boolean
+    multiline: boolean
+    lastIndex: number
+    exec(str: string): RegExpExecArray | null
+    test(str: string): boolean
+}
+
 interface IterableIterator<T> {}
 
 interface SymbolConstructor {
@@ -771,3 +785,11 @@ type Capitalize<S extends string> = intrinsic
  * Convert first character of string literal type to lowercase
  */
 type Uncapitalize<S extends string> = intrinsic
+
+
+interface EncodeURIComponent {
+    encodeURIComponent(str: string): string
+}
+interface EncodeNonASCIIChar {
+    encodeNonASCIIChar(char: string): string
+}
