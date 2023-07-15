@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { encodeURIComponent, pixelBuffer, rgb, schedule, setStatusLight, uptime, Map } from "."
+import { encodeURIComponent, pixelBuffer, rgb, schedule, setStatusLight, uptime, Map, Set } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -107,6 +107,8 @@ describe("encodeURIComponent tests", () => {
         let encoded = encodeURIComponent("😀")
         expect(encoded === "%E0%9F%98%80").toBe(true)
     })
+})
+
 describe('Test Es Map Class', () => {
     function msg(m: string) {
         console.log(m)
@@ -145,4 +147,65 @@ describe('Test Es Map Class', () => {
 
     })
     msg("Map tests completed")
+})
+
+describe('Test Es Set Class', () => {
+
+    test("add", () => {
+        let elements = new Set<number>();
+        expect(elements === elements.add(1)).toBe(true)
+        expect(elements.size === 1).toBe(true)
+
+        expect(elements === elements.add(2)).toBe(true)
+        expect(elements.size === 2).toBe(true)
+
+        expect(elements === elements.add(1)).toBe(true)
+        expect(elements === elements.add(2)).toBe(true)
+
+        expect(elements === elements.add(3)).toBe(true)
+        expect(elements.size === 3).toBe(true)
+    })
+
+
+    test("clear", () => {
+        let elements = new Set<number>();
+        [1, 3, 1, 4, 5, 3].forEach(element => {
+            elements.add(element)
+        })
+        expect(elements.size === 4).toBe(true)
+
+        elements.clear();
+        expect(elements.size === 0).toBe(true)
+    })
+
+    test("delete", () => {
+        let elements = new Set<string>();
+        ["a", "b", "e", "b", "d", "c", "a"].forEach(element => {
+            elements.add(element)
+        })
+
+        expect(elements.size === 5).toBe(true)
+
+        expect(!elements.delete("f")).toBe(true)
+        expect(elements.size === 5).toBe(true)
+
+        expect(elements.delete("a")).toBe(true)
+        expect(elements.size === 4).toBe(true)
+
+        expect(!elements.delete("a")).toBe(true)
+        expect(elements.size === 4).toBe(true)
+    })
+
+
+    test("has", () => {
+        let elements = new Set<string>();
+        ["a", "d", "f", "d", "d", "a", "g"].forEach(element => {
+            elements.add(element)
+        })
+
+        expect(elements.has("g")).toBe(true)
+        expect(elements.has("d")).toBe(true)
+        expect(elements.has("f")).toBe(true)
+        expect(!elements.has("e")).toBe(true)
+    })
 })
