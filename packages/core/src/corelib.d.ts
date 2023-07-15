@@ -771,8 +771,3 @@ type Capitalize<S extends string> = intrinsic
  * Convert first character of string literal type to lowercase
  */
 type Uncapitalize<S extends string> = intrinsic
-
-
-interface EncodeURIComponent {
-    encodeURIComponent(str: string): string
-}

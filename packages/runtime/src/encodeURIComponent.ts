@@ -60,6 +60,5 @@ export function encodeURIComponent(str: string) {
         }
     }
 
-    // Join the encoded characters to form the final encoded string
     return encodedChars.join("")
 }
