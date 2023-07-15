@@ -44,7 +44,7 @@ export async function uptime() {
 
 /**
  * Reads the onboard temperature sensor if any.
- * @returns temperature in celcius (°C); undefined if sensor is not available.
+ * @returns temperature in Celsius (°C); undefined if sensor is not available.
  */
 export async function mcuTemperature() {
     if (isSimulator()) return 21
