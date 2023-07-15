@@ -135,16 +135,16 @@ describe('Test Es Set Class', () => {
     test("add", () => {
         let elements = new Set<number>();
         expect(elements === elements.add(1)).toBe(true)
-        expect(elements.size() === 1).toBe(true)
+        expect(elements.size === 1).toBe(true)
 
         expect(elements === elements.add(2)).toBe(true)
-        expect(elements.size() === 2).toBe(true)
+        expect(elements.size === 2).toBe(true)
 
         expect(elements === elements.add(1)).toBe(true)
         expect(elements === elements.add(2)).toBe(true)
 
         expect(elements === elements.add(3)).toBe(true)
-        expect(elements.size() === 3).toBe(true)
+        expect(elements.size === 3).toBe(true)
     })
 
 
@@ -153,10 +153,10 @@ describe('Test Es Set Class', () => {
         [1, 3, 1, 4, 5, 3].forEach(element => {
             elements.add(element)
         })
-        expect(elements.size() === 4).toBe(true)
+        expect(elements.size === 4).toBe(true)
 
         elements.clear();
-        expect(elements.size() === 0).toBe(true)
+        expect(elements.size === 0).toBe(true)
     })
 
     test("delete", () => {
@@ -165,16 +165,16 @@ describe('Test Es Set Class', () => {
             elements.add(element)
         })
 
-        expect(elements.size() === 5).toBe(true)
+        expect(elements.size === 5).toBe(true)
 
         expect(!elements.delete("f")).toBe(true)
-        expect(elements.size() === 5).toBe(true)
+        expect(elements.size === 5).toBe(true)
 
         expect(elements.delete("a")).toBe(true)
-        expect(elements.size() === 4).toBe(true)
+        expect(elements.size === 4).toBe(true)
 
         expect(!elements.delete("a")).toBe(true)
-        expect(elements.size() === 4).toBe(true)
+        expect(elements.size === 4).toBe(true)
     })
 
 

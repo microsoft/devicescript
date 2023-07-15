@@ -6,17 +6,16 @@
 export class Set<T> {
     private elements: T[] = []
 
+    /**
+     * The number of (unique) elements in Set.
+     */
+    public size: number;
+
     constructor(elements?: readonly T[] | null) {
         if (elements) {
             this.elements = elements
         }
-    }
-
-    /**
-     * @returns the number of (unique) elements in Set.
-     */
-    size(): number {
-        return this.elements.length
+        this.size = this.elements.length;
     }
 
     /**
@@ -25,12 +24,14 @@ export class Set<T> {
     add(value: T): this {
         if (!this.elements.includes(value)) {
             this.elements.push(value)
+            this.size++;
         }
         return this
     }
 
     clear(): void {
         this.elements = []
+        this.size = 0;
     }
 
     /**
@@ -40,6 +41,7 @@ export class Set<T> {
     delete(value: T): boolean {
         if (this.elements.includes(value)) {
             this.elements = this.elements.filter(e => e !== value)
+            this.size = this.elements.length;
             return true;
         }
         return false;
