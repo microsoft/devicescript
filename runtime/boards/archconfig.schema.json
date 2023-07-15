@@ -1,0 +1,150 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "HexInt": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        }
+    },
+    "properties": {
+        "#": {
+            "description": "All fields starting with '#' arg ignored",
+            "type": "string"
+        },
+        "$schema": {
+            "type": "string"
+        },
+        "bareUrl": {
+            "description": "Where to find a UF2 or BIN file with minimal DCFG.\nCan be auto-populated.",
+            "type": "string"
+        },
+        "binFlashOffset": {
+            "$ref": "#/definitions/HexInt",
+            "description": "If specified, will be used as part of output file name."
+        },
+        "binGenericFlashOffset": {
+            "$ref": "#/definitions/HexInt",
+            "description": "If specified, this shows where the generic part of BIN file starts."
+        },
+        "dcfgOffset": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Where should DCFG be embedded in generic file."
+        },
+        "flashPageSize": {
+            "description": "Size of a flash page, typically 4096.",
+            "type": "integer"
+        },
+        "fstorOffset": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Offset where FSTOR sits in total flash space."
+        },
+        "fstorPages": {
+            "description": "Total number of pages in FSTOR.\nOften 32 (for 128k) or 64 (for 256k).",
+            "type": "integer"
+        },
+        "genericUrl": {
+            "description": "Where to find a generic (without DCFG) UF2 or BIN file.",
+            "type": "string"
+        },
+        "id": {
+            "description": "Short identification of architecture.",
+            "examples": [
+                "rp2040",
+                "rp2040w",
+                "esp32c3"
+            ],
+            "type": "string"
+        },
+        "name": {
+            "description": "Full name of architecture.",
+            "examples": [
+                "RP2040 + CYW43 WiFi",
+                "ESP32-C3"
+            ],
+            "type": "string"
+        },
+        "pins": {
+            "additionalProperties": false,
+            "description": "Defines a mapping from a pin function",
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "analogIn": {
+                    "description": "Pins capable of analog input (ADC).",
+                    "type": "string"
+                },
+                "analogOut": {
+                    "description": "Pins capable of true analog output (DAC, not PWM).",
+                    "type": "string"
+                },
+                "boot": {
+                    "description": "Pins used in boot process.",
+                    "type": "string"
+                },
+                "bootUart": {
+                    "description": "Pins used by hardware UART during boot.",
+                    "type": "string"
+                },
+                "debug": {
+                    "description": "Pins used by JTAG or SWD debugger interface.",
+                    "type": "string"
+                },
+                "flash": {
+                    "description": "Pins used by the SPI flash interface.",
+                    "type": "string"
+                },
+                "input": {
+                    "description": "Pins capable of general purpose input.\n`io` pins are automatically added here.",
+                    "type": "string"
+                },
+                "io": {
+                    "description": "Pins with both input and output capability.",
+                    "type": "string"
+                },
+                "output": {
+                    "description": "Pins capable of general purpose output.\n`io` pins are automatically added here.",
+                    "type": "string"
+                },
+                "psram": {
+                    "description": "Pins used by PSRAM interface.",
+                    "type": "string"
+                },
+                "touch": {
+                    "description": "Pins capable of touch input.",
+                    "type": "string"
+                },
+                "usb": {
+                    "description": "Pins used by USB interface.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "io"
+            ],
+            "type": "object"
+        },
+        "repoUrl": {
+            "description": "Source repo, boards are assumed to sit in `boards/<arch-id>/<board-id>.board.json`\nAuto-populated.",
+            "type": "string"
+        },
+        "uf2Align": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Force alignment of the last page in the patched UF2 file.\nSet to 4096 on RP2040 because of RP2040-E14."
+        }
+    },
+    "required": [
+        "dcfgOffset",
+        "flashPageSize",
+        "fstorOffset",
+        "fstorPages",
+        "id",
+        "name"
+    ],
+    "type": "object"
+}
+

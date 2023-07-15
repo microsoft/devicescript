@@ -9,8 +9,9 @@ A S2 Feather from Adafruit. (untested)
 
 ## Features
 
--  I2C on SDA/SCL: 3/4 using Qwiic connector
--  WS2812B RGB LED on 33  (use [setStatusLight](/developer/status-light) to control)
+-  I2C on SDA/SCL using Qwiic connector
+-  WS2812B RGB LED on pin 33  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin 43 at 115200 8N1
 
 ## Stores
 
@@ -24,8 +25,8 @@ A S2 Feather from Adafruit. (untested)
 | **A1** |  GPIO17 |  analogOut,  io |
 | **A2** |  GPIO16 |  io |
 | **A3** |  GPIO15 |  io |
-| **A4** |  GPIO14 |  io |
-| **A5** |  GPIO8 |  analogIn,  io |
+| **A4_D24** |  GPIO14 |  io |
+| **A5_D25** |  GPIO8 |  analogIn,  io |
 | **D10** |  GPIO10 |  analogIn,  io |
 | **D11** |  GPIO11 |  io |
 | **D12** |  GPIO12 |  io |
@@ -37,12 +38,13 @@ A S2 Feather from Adafruit. (untested)
 | **MISO** |  GPIO37 |  io |
 | **MOSI** |  GPIO35 |  io |
 | **PWR** |  GPIO7 |  analogIn,  io |
-| **RX** |  GPIO38 |  io |
+| **RX_D0** |  GPIO38 |  io |
 | **SCK** |  GPIO36 |  io |
-| **TX** |  GPIO39 |  debug,  io |
-| **i2c.pinSCL** |  GPIO4 |  analogIn,  io |
-| **i2c.pinSDA** |  GPIO3 |  analogIn,  io |
-| **led.pin** |  GPIO33 |  io |
+| **SCL** |  GPIO4 |  i2c.pinSCL,  analogIn,  io |
+| **SDA** |  GPIO3 |  i2c.pinSDA,  analogIn,  io |
+| **TX_D1** |  GPIO39 |  debug,  io |
+| **led.pin** |  GPIO33 |  led.pin,  io |
+| **log.pinTX** |  GPIO43 |  log.pinTX,  io |
 
 
 
@@ -73,20 +75,23 @@ devicescript flash --board adafruit_feather_esp32_s2
     "url": "https://www.adafruit.com/product/5000",
     "i2c": {
         "$connector": "Qwiic",
-        "pinSCL": 4,
-        "pinSDA": 3
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
     },
     "led": {
         "pin": 33,
         "type": 1
+    },
+    "log": {
+        "pinTX": 43
     },
     "pins": {
         "A0": 18,
         "A1": 17,
         "A2": 16,
         "A3": 15,
-        "A4": 14,
-        "A5": 8,
+        "A4_D24": 14,
+        "A5_D25": 8,
         "D10": 10,
         "D11": 11,
         "D12": 12,
@@ -98,14 +103,15 @@ devicescript flash --board adafruit_feather_esp32_s2
         "MISO": 37,
         "MOSI": 35,
         "PWR": 7,
-        "RX": 38,
+        "RX_D0": 38,
         "SCK": 36,
-        "TX": 39
+        "SCL": 4,
+        "SDA": 3,
+        "TX_D1": 39
     },
     "sPin": {
         "LED_PWR": 1,
         "PWR": 1
-    },
-    "uartLog": true
+    }
 }
 ```

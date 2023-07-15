@@ -459,10 +459,11 @@ void devsmgr_init(void) {
     state->read_program_ptr = -1;
     state->autostart = 1;
 
-    // first start 1.5s after brain boot up - allow devices to enumerate
-    // state->next_restart = now + SECONDS(1.5);
-    // in case the program causes a crash, give the command line some time to connect
-    state->next_restart = now + SECONDS(5);
+    // first start 1.1s after brain boot up - allow devices to enumerate
+    // we used to have 5s delay here, in case the user program causes a crash in the runtime
+    // to give time to connect USB but this is generally not very reliable and now we have
+    // a way of erasing device flash
+    state->next_restart = now + SECONDS(1.1);
 
     JD_ASSERT(devs_verify(devs_empty_program, sizeof(devs_empty_program)) == 0);
 

@@ -24,7 +24,12 @@ declare module "@devicescript/core" {
     }
 }
 
-;(ds.gpio(0xdeadf00) as ds.OutputPin).write = function (this: ds.OutputPin, v) {
+/**
+ * @devsNative GPIO.prototype
+ */
+declare var GPIOproto: ds.IOPin
+
+GPIOproto.write = function (this: ds.OutputPin, v) {
     if ((this.mode & ds.GPIOMode.BaseModeMask) !== ds.GPIOMode.Output)
         throw new RangeError("pin not in output mode")
     this.setMode(v ? ds.GPIOMode.OutputHigh : ds.GPIOMode.OutputLow)
@@ -47,10 +52,7 @@ function changeHandler() {
 }
 
 // TODO move this to C
-;(ds.gpio(0xdeadf00) as ds.InputPin).subscribe = function (
-    this: MyInputPin,
-    h
-) {
+GPIOproto.subscribe = function (this: MyInputPin, h) {
     if (!this._change) {
         this._change = ds.emitter()
         if (!changePins) {

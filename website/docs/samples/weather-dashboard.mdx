@@ -1,0 +1,48 @@
+---
+sidebar_position: 3.9
+---
+
+# Weather Dashboard
+
+This sample uses a `ValueDashboard` to render temperature, humidity readings
+on a character screen. A character screen could be a LCD screen or a OLED/TFT display.
+
+The `ValueDashboard` is a helper class that renders the value. It is generic
+and takes the list of data row to display in the constructor to provide a better
+completion experience.
+
+```ts
+import { CharacterScreen } from "@devicescript/core"
+// higlight-next-line
+import { ValueDashboard } from "@devicescript/runtime"
+
+const screen = new CharacterScreen()
+// higlight-start
+const dashboard = new ValueDashboard(screen, {
+    temperature: { digits: 1, unit: "C" },
+    humi: { digits: 0, unit: "%" },
+})
+// higlight-end
+```
+
+Once the dashboard is setup, you can update the `values` record and call `show` to render again.
+
+```ts
+import { CharacterScreen, Humidity, Temperature } from "@devicescript/core"
+import { ValueDashboard } from "@devicescript/runtime"
+
+const temperature = new Temperature()
+const humidity = new Humidity()
+const screen = new CharacterScreen()
+const dashboard = new ValueDashboard(screen, {
+    temperature: { digits: 1, unit: "C" },
+    humi: { digits: 0, unit: "%" },
+})
+setInterval(async () => {
+    // highlight-start
+    dashboard.values.temperature = await temperature.reading.read()
+    dashboard.values.humi = await humidity.reading.read()
+    await dashboard.show()
+    // highlight-end
+}, 1000)
+```

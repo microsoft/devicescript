@@ -1,0 +1,18 @@
+{
+    "$schema": "../deviceconfig.schema.json",
+    "devName": "Generic XIAO/QT-Py board",
+    "productId": "0x36c3b7d6",
+    "pins": {
+        "A0_D0": 70,
+        "A1_D1": 71,
+        "A2_D2": 72,
+        "A3_D3": 73,
+        "SDA_D4": 74,
+        "SCL_D5": 75,
+        "TX_D6": 76,
+        "RX_D7": 77,
+        "SCK_D8": 78,
+        "MISO_D9": 79,
+        "MOSI_D10": 80
+    }
+}

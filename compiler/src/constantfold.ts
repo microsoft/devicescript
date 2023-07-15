@@ -130,8 +130,9 @@ export function constantFold(
 
 export function isTemplateOrStringLiteral(
     node: ts.Node
-): node is ts.LiteralExpression {
+): node is ts.LiteralLikeNode {
     switch (node.kind) {
+        case SK.JsxText:
         case SK.TemplateHead:
         case SK.TemplateMiddle:
         case SK.TemplateTail:

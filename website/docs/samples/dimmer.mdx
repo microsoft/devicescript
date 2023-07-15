@@ -1,0 +1,30 @@
+---
+sidebar_position: 3.2
+title: Dimmer
+---
+
+# Dimmer
+
+A potentiometer (slider or rotary) is used to control the brightness (intensity register)
+of a light bulb. This example uses a [Raspberry Pi pico](/devices/rp2040/pico) but could be redone using [other devices](/devices).
+
+```ts
+import { pins } from "@dsboard/pico"
+import { startLightBulb, startPotentiometer } from "@devicescript/servers"
+
+// starting a potentiometer driver on GP26
+// pinout https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html#pinout-and-design-files
+const slider = startPotentiometer({
+    pin: pins.GP26,
+})
+// starting a dimmieable light on pin GP2
+const led = startLightBulb({
+    pin: pins.GP7,
+    dimmable: true,
+})
+
+// subscribing to the slider readings and sending them to the intensity register
+slider.reading.subscribe(async level => {
+    await led.intensity.write(level)
+})
+```

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.10](https://github.com/microsoft/devicescript/compare/v2.13.9...v2.13.10)
+
+> 1 July 2023
+
+- add support for ST7789 screen [`f9292ef`](https://github.com/microsoft/devicescript/commit/f9292eff96bb7a8a93254018288485797f87f594)
+- add support for ?? operator [`b03d062`](https://github.com/microsoft/devicescript/commit/b03d062b4241073bc29d45a9ced026774b7b356d)
+- allow comments in hex literals [`ef179c2`](https://github.com/microsoft/devicescript/commit/ef179c26210bd84550d93000116be142b9b9d001)
+
 #### [v2.13.9](https://github.com/microsoft/devicescript/compare/v2.13.8...v2.13.9)
 
 > 1 July 2023

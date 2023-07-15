@@ -1,41 +1,67 @@
 ---
-sidebar_position: 2
+sidebar_position: 4.1
 ---
 
 # Temperature + MQTT
 
 This sample uses an ESP32-C3 board [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
 and a [SHTC3 sensor](https://www.adafruit.com/product/4636) to publish a temperature reading to
-the [HiveMQ public MQTT broker](https://www.mqtt-dashboard.com/) every minute.
+the [Adafruit.io MQTT APIs](https://www.mqtt-dashboard.com/) every minute.
+
+To make this work, you will to get an account with https://io.adafruit.com
+and store your username and password in the [settings](/developer/settings)
+as the `IO_USERNAME` and `IO_KEY` keys (make sure your key is in `env.local`).
+Also create a feed and update the feed key in the example below.
 
 ```ts
+// hardware configuration and drivers
 import "@dsboard/adafruit_qt_py_c3"
-import { deviceIdentifier } from "@devicescript/core"
-import { startMQTTClient } from "@devicescript/net"
 import { startSHTC3 } from "@devicescript/drivers"
+import { startMQTTClient } from "@devicescript/net"
+// extra APIs
+import { readSetting } from "@devicescript/settings"
 import { schedule } from "@devicescript/runtime"
 
-// mqtt settings
-const mqtt = await startMQTTClient({
-    host: "broker.hivemq.com",
-    proto: "tcp",
-    port: 1883,
-})
-const topic = `devs/temp/${deviceIdentifier("self")}`
-console.log({ topic })
-
-// sensors
+// mounting a temperature server for the SHTC3 sensor
 const { temperature } = await startSHTC3()
-// pushing temperature every minute
-schedule(async () => {
-    const t = await temperature.reading.read()
-    console.data({ t })
-    await mqtt.publish(topic, { t })
+
+// update feed key
+const feed = "temperature"
+const username = await readSetting("IO_USERNAME")
+// this secret is stored in the .env.local and uploaded to the device settings
+const password = await readSetting("IO_KEY")
+
+const mqtt = await startMQTTClient({
+    host: `io.adafruit.com`,
+    proto: "tls",
+    port: 8883,
+    username,
+    password,
 })
+// https://io.adafruit.com/api/docs/mqtt.html#feed-topic-format
+const topic = `${username}/feeds/${feed}/json`
+
+schedule(
+    async () => {
+        // read data from temperature sensor
+        const value = await temperature.reading.read()
+        // publish to feed topic
+        await mqtt.publish(topic, { value })
+    },
+    { timeout: 1000, interval: 60000 }
+)
 ```
 
-:::warning
+## Filtering data
 
-This is a public MQTT broker, anyone can listen to the messages.
+You could use [observables](/developer/observables) to smooth the sensor
+data. For example, apply an exponentially moving average
+on the feed of temperature readings.
 
-:::
+```ts skip
+import { ewma, auditTime } from "@devicescript/observables"
+...
+temperature.reading
+    .pipe(ewma(0.5), auditTime(60000))
+    .subscribe(async value => await mqtt.publish(topic, { value }))
+```
