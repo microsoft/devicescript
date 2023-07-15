@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { pixelBuffer, rgb, schedule, setStatusLight, uptime, Map, Set } from "."
+import { encodeURIComponent, pixelBuffer, rgb, schedule, setStatusLight, uptime, Map, Set } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -87,6 +87,25 @@ describe("schedule", () => {
         await delay(100)
         console.log({ called })
         expect(called === 2).toBe(true)
+    })
+})
+
+describe("encodeURIComponent tests", () => {
+    test("Basic Encoding Test", async () => {
+        let encoded = encodeURIComponent("Hello World")
+        expect(encoded === "Hello World").toBe(true)
+    })
+    test("Encoding Already Encoded Characters", async () => {
+        let encoded = encodeURIComponent("Hello%20World")
+        expect(encoded === "Hello%20World").toBe(true)
+    })
+    test("Encoding Slash", async () => {
+        let encoded = encodeURIComponent("/path/to/resource")
+        expect(encoded === "/path/to/resource").toBe(true)
+    })
+    test("Encoding Non-ASCII Character", async () => {
+        let encoded = encodeURIComponent("😀")
+        expect(encoded === "%E0%9F%98%80").toBe(true)
     })
 })
 
