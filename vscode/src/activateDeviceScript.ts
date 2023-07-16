@@ -15,6 +15,7 @@ import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 import { JDDevice } from "jacdac-ts"
 import { resolvePythonEnvironment } from "./python"
+import { MARKETPLACE_EXTENSION_ID } from "@devicescript/interop"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -250,7 +251,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 await vscode.commands.executeCommand(
                     "workbench.action.openIssueReporter",
                     {
-                        extensionId: "devicescript.devicescript-vscode",
+                        extensionId: MARKETPLACE_EXTENSION_ID,
                         issueBody: issueBody.join("\n"),
                     }
                 )
