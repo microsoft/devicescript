@@ -255,11 +255,6 @@ const optionalFiles: FileSet = {
         recommendations: [
             "devicescript.devicescript-vscode",
             "esbenp.prettier-vscode",
-            "ms-toolsai.jupyter",
-            "ms-toolsai.jupyter-renderers",
-            "ms-python.python",
-            "ms-python.vscode-pylance",
-            "mechatroner.rainbow-csv",
         ],
     },
     ".vscode/launch.json": {
