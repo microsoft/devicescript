@@ -221,7 +221,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             "extension.devicescript.openIssueReporter",
             async () => {
                 const issueBody: string[] = [
-                    `## Describe the program`,
+                    `## Describe the issue`,
+                    `A clear and concise description of what the bug is.`,
+                    ``,
+                    `## To Reproduce`,
+                    `Steps to reproduce the behavior`,
+                    ``,
+                    `## Expected behavior`,
+                    `A clear and concise description of what you expected to happen.`,
                     ``,
                     `## Environment`,
                     ``,
@@ -245,7 +252,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     )
                 issueBody.push(
                     ``,
-                    `## Bus`,
+                    `## Devices`,
                     bus.describe({ ignoreSimulators: true, physical: true })
                 )
                 await vscode.commands.executeCommand(
