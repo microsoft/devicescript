@@ -61,6 +61,11 @@ devs init --force
 
 Do not run `npm` or `yarn ` install after dropping the files.
 
+### --board board-id
+
+Specify the device identifier to use for the project.
+The generate will patch `./src/main.ts` and insert the board import statement.
+
 ## devs add ...
 
 The generated project by `init` is barebone by design. The `add` command can be used to
