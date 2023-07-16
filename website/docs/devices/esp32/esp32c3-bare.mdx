@@ -12,6 +12,13 @@ A bare ESP32-C3 board without any pin functions.
 -  Serial logging on pin P21 at 115200 8N1
 -  Service: buttonBOOT (button)
 
+:::warning
+
+I2C pins are not [configured](/developer/board-configuration).
+
+:::
+
+
 ## Stores
 
 -  [https://www.espressif.com/en/products/socs/esp32-c3](https://www.espressif.com/en/products/socs/esp32-c3)
@@ -36,9 +43,23 @@ A bare ESP32-C3 board without any pin functions.
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Espressif ESP32-C3 (bare)".
+
+```ts
+import { pins, board } from "@dsboard/esp32c3_bare"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

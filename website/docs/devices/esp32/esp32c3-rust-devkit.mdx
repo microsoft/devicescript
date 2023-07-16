@@ -40,9 +40,23 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Espressif ESP32-C3-RUST-DevKit".
+
+```ts
+import { pins, board } from "@dsboard/esp32c3_rust_devkit"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

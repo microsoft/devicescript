@@ -13,6 +13,13 @@ RP2040 board from Raspberry Pi with a WiFi chip.
 
 -  custom LED  (use [setStatusLight](/developer/status-light) to control)
 
+:::warning
+
+I2C pins are not [configured](/developer/board-configuration).
+
+:::
+
+
 ## Stores
 
 -  [https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
@@ -52,9 +59,23 @@ RP2040 board from Raspberry Pi with a WiFi chip.
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Raspberry Pi Pico W".
+
+```ts
+import { pins, board } from "@dsboard/pico_w"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.
