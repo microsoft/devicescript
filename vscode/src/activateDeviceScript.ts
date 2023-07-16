@@ -16,6 +16,8 @@ import { activateTelemetry } from "./telemetry"
 import { JDDevice } from "jacdac-ts"
 import { resolvePythonEnvironment } from "./python"
 import { MARKETPLACE_EXTENSION_ID } from "@devicescript/interop"
+import { showConfirmBox } from "./pickers"
+import { readFileText } from "./fs"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -220,6 +222,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.openIssueReporter",
             async () => {
+                const projectFolder = extensionState.projectFolder
+                const includeProject =
+                    projectFolder &&
+                    (await showConfirmBox(
+                        `Include '${vscode.workspace.asRelativePath(
+                            projectFolder
+                        )}' sources in the GitHub issue?`
+                    ))
                 const issueBody: string[] = [
                     `## Describe the issue`,
                     `A clear and concise description of what the bug is.`,
@@ -250,6 +260,43 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     issueBody.push(
                         `python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
                     )
+
+                if (includeProject) {
+                    const files = [
+                        ...(await vscode.workspace.findFiles(
+                            new vscode.RelativePattern(
+                                projectFolder,
+                                "src/*.{ts,tsx}"
+                            )
+                        )),
+                        ...(await vscode.workspace.findFiles(
+                            new vscode.RelativePattern(
+                                projectFolder,
+                                "boards/*.json"
+                            )
+                        )),
+                        ...(await vscode.workspace.findFiles(
+                            new vscode.RelativePattern(
+                                projectFolder,
+                                "services/*.md"
+                            )
+                        )),
+                    ]
+                    issueBody.push(``, `## Sources`)
+                    for (const file of files) {
+                        const src = await readFileText(file)
+                        const fn = vscode.workspace.asRelativePath(file)
+                        issueBody.push(
+                            `-  ${fn}}`,
+                            `\`\`\`${Utils.extname(file).slice(
+                                1
+                            )} title="${fn}"`,
+                            src,
+                            "```"
+                        )
+                    }
+                }
+
                 issueBody.push(
                     ``,
                     `## Devices`,
