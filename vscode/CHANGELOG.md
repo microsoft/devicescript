@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.1](https://github.com/microsoft/devicescript/compare/v2.14.0...v2.14.1)
+
+> 16 July 2023
+
+- more docs on i2c issues [`#560`](https://github.com/microsoft/devicescript/pull/560)
+- added encodeURIComponent function interface and tests [`#558`](https://github.com/microsoft/devicescript/pull/558)
+- Implement es Set class #496 [`#556`](https://github.com/microsoft/devicescript/pull/556)
+- Implement es Map class #497 [`#538`](https://github.com/microsoft/devicescript/pull/538)
+- led strip encoder [`#557`](https://github.com/microsoft/devicescript/pull/557)
+- Sample weather display #525 [`#555`](https://github.com/microsoft/devicescript/pull/555)
+- Added findLastIndex [`#550`](https://github.com/microsoft/devicescript/pull/550)
+- button led / potentiometer led samples [`#541`](https://github.com/microsoft/devicescript/pull/541)
+- array findLast [`#549`](https://github.com/microsoft/devicescript/pull/549)
+- added array fill [`#548`](https://github.com/microsoft/devicescript/pull/548)
+- value dashboard rendering [`#540`](https://github.com/microsoft/devicescript/pull/540)
+- Organize servers docs into drivers [`#546`](https://github.com/microsoft/devicescript/pull/546)
+- reduce deps of cli (200M-&gt;38M) [`#531`](https://github.com/microsoft/devicescript/pull/531)
+- support for typedoc ready projects [`#545`](https://github.com/microsoft/devicescript/pull/545)
+- Support for JSX/TSX [`#542`](https://github.com/microsoft/devicescript/pull/542)
+- added add-board docs [`8644ddd`](https://github.com/microsoft/devicescript/commit/8644ddd78f1a8a13aec82fa6abf0fdbb8028c870)
+- add docs on adding new SoCs [`169f37b`](https://github.com/microsoft/devicescript/commit/169f37b513d4a4176c0427fb457ec807f8f5c3b4)
+- updated admonitions [`250328d`](https://github.com/microsoft/devicescript/commit/250328dfa914ea01c1346de4703bfacd6af7a4e8)
+
 #### [v2.14.0](https://github.com/microsoft/devicescript/compare/v2.13.10...v2.14.0)
 
 > 5 July 2023
