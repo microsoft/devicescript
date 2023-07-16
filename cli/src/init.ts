@@ -30,7 +30,10 @@ import type {
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
-import { MIN_NODE_VERSION } from "@devicescript/interop"
+import {
+    MIN_NODE_VERSION,
+    MARKETPLACE_EXTENSION_ID,
+} from "@devicescript/interop"
 import { TSDOC_TAGS } from "@devicescript/compiler"
 
 const MAIN = "src/main.ts"
@@ -252,10 +255,7 @@ const optionalFiles: FileSet = {
         tabWidth: 4,
     },
     ".vscode/extensions.json": {
-        recommendations: [
-            "devicescript.devicescript-vscode",
-            "esbenp.prettier-vscode",
-        ],
+        recommendations: [MARKETPLACE_EXTENSION_ID, "esbenp.prettier-vscode"],
     },
     ".vscode/launch.json": {
         version: "0.2.0",

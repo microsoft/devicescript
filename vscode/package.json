@@ -542,6 +542,9 @@
                     "command": "extension.devicescript.project.new"
                 },
                 {
+                    "command": "extension.devicescript.project.upgrade"
+                },
+                {
                     "command": "extension.devicescript.openIssueReporter"
                 }
             ],
@@ -556,6 +559,11 @@
             {
                 "command": "extension.devicescript.project.new",
                 "title": "Create New Project...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.project.upgrade",
+                "title": "Upgrade Tools...",
                 "category": "DeviceScript"
             },
             {

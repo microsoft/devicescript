@@ -109,6 +109,10 @@ export class DeveloperToolsManager extends JDEventSource {
             vscode.commands.registerCommand(
                 "extension.devicescript.terminal.show",
                 () => this.show()
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.projet.upgrade",
+                async () => await this.upgradeTools()
             )
         )
 
@@ -171,21 +175,26 @@ export class DeveloperToolsManager extends JDEventSource {
                 const yes = await showConfirmBox(
                     `DeviceScript - @devicescript/cli is outdated (${devsVersion}), upgrade to latest (${extv}+) ?`
                 )
-                if (yes) {
-                    await this.kill()
-                    const t = vscode.window.createTerminal({
-                        isTransient: true,
-                        name: "@devicescript/cli upgrade",
-                        cwd: projectFolder,
-                    })
-                    const cmd = await this.resolvePackageTool(projectFolder)
-                    t.sendText(`${cmd} upgrade @devicescript/cli`)
-                    t.show()
-                }
+                if (yes) await this.upgradeTools()
                 throwError("Dependencies outdated", { cancel: true })
             }
         }
         this.updateBuildConfig(buildConfig)
+    }
+
+    async upgradeTools() {
+        const { projectFolder } = this
+        if (!projectFolder) return
+
+        await this.kill()
+        const t = vscode.window.createTerminal({
+            isTransient: true,
+            name: "@devicescript/cli upgrade",
+            cwd: projectFolder,
+        })
+        const cmd = await this.resolvePackageTool(projectFolder)
+        t.sendText(`${cmd} upgrade @devicescript/cli`)
+        t.show()
     }
 
     updateBuildConfig(data: ResolvedBuildConfig) {
