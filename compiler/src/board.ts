@@ -156,7 +156,7 @@ description: ${devName}
         ...info.services.map(f => `-  Service: ${f}`),
         !boardJson.i2c &&
             `
-:::warning
+:::caution
 
 I2C pins are not [configured](/developer/board-configuration).
 
