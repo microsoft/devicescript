@@ -1,7 +1,4 @@
-import type { DeviceConfig } from "@devicescript/interop"
 import * as vscode from "vscode"
-import { Utils } from "vscode-uri"
-import { openDocUri } from "./commands"
 
 export type TaggedQuickPickItem<T> = vscode.QuickPickItem & { data?: T }
 

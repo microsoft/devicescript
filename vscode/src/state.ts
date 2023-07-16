@@ -356,7 +356,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 matchOnDescription: true,
             }
         )
-        if (!res) return // user escaped
+        if (!res) return undefined // user escaped
 
         if (!res.data?.board) {
             openDocUri("devices")
