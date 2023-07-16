@@ -1,0 +1,60 @@
+---
+title: Board Configuration
+sidebar_position: 2.9
+---
+
+# Board Configuration
+
+**To target a specific hardware board or peripherical,
+you need to configure the pins, I2C, SPI, etc...** This is done by loading the
+board configuration package for your specific hardware.
+
+The inserted board configuration exposes a `pins` object that you can use to
+configure drivers.
+
+```ts
+// highlight-next-line
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { startLightBulb } from "@devicescript/servers"
+
+const lightBulb = startLightBulb({
+    // highlight-next-line
+    pin: pins.A0_D0,
+})
+```
+
+:::tip
+
+In Visual Studio Code, on the file menu, click on the **wand** icon and select the board configuration.
+If your board is already connectd, DeviceScript will automatically detect it and
+load the correct board configuration.
+
+:::
+
+## Available Boards
+
+You can find the list of supported devices and configuration in
+the [devices](/devices) catalog.
+
+## Configuration by Code
+
+You can also configure the board by code using the `configureHardware` function.
+
+Some board configuration are generic and the I2C pins are not configured by default.
+For example, the [pico-w](/devices/rp2040/pico-w) board configuration does not configure
+the I2C pins and the code below configure them by code.
+
+```ts
+// highlight-next-line
+import { configureHardware } from "@devicescript/servers"
+import { pins } from "@dsboard/pico_w"
+
+// highlight-start
+configureHardware({
+    i2c: {
+        pinSDA: pins.GP4,
+        pinSCL: pins.GP5,
+    },
+})
+// highlight-end
+```

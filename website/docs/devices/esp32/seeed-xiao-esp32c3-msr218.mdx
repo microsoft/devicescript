@@ -38,9 +38,23 @@ A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Seeed Studio XIAO ESP32C3 with MSR218 base".
+
+```ts
+import { pins, board } from "@dsboard/seeed_xiao_esp32c3_msr218"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.
