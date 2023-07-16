@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.0](https://github.com/microsoft/devicescript/compare/v2.13.10...v2.14.0)
+
+> 5 July 2023
+
+- fix duplicate role tree node warning [`#539`](https://github.com/microsoft/devicescript/pull/539)
+- add schemas for board defs [`2ebe4e7`](https://github.com/microsoft/devicescript/commit/2ebe4e753db44aba43f6734bdf0865b7a2fae332)
+- re-work pin names [`f094f29`](https://github.com/microsoft/devicescript/commit/f094f29b4752c51a957db586f217dcbcb4f1a907)
+- add support for UC8151 e-ink display [`d4bdc0b`](https://github.com/microsoft/devicescript/commit/d4bdc0b97a488f45586ef6e35b4164231bc38a63)
+
 #### [v2.13.10](https://github.com/microsoft/devicescript/compare/v2.13.9...v2.13.10)
 
 > 1 July 2023
