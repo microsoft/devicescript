@@ -45,6 +45,17 @@ Visual Studio Code will automatically integrate any configuration files in the `
 The new configuration file is a schematized JSON file.
 In Visual Studio Code, you will get tooltip, completion, syntax errors and auto-completion.
 
+A new product identifier was automatically generated for you (but [you can regenerate a new one as well](https://microsoft.github.io/jacdac-docs/reference/service-specification/)).
+
+-   [ ] configure the status light LED
+
+```json
+    "led": {
+        "pin": 7,
+        "isMono": true
+    },
+```
+
 -   [ ] configure the `console.log` pin
 
 ```json
@@ -60,15 +71,6 @@ In Visual Studio Code, you will get tooltip, completion, syntax errors and auto-
     "i2c": {
         "pinSCL": 5,
         "pinSDA": 4,
-    },
-```
-
--   [ ] configure the status light
-
-```json
-    "led": {
-        "pin": 7,
-        "isMono": true
     },
 ```
 
