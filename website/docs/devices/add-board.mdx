@@ -15,13 +15,19 @@ keywords:
 In DeviceScript, we commonly refere a Device Configuration as a `board`.
 You can see examples of configuration in each device page ([like this one](/devices/esp32/seeed-xiao-esp32c3#configuration))
 
-If your device is already using a supported system-on-a-chip or MCU,
+If your device is already using a supported system-on-a-chip (SoC) or MCU (ESP32, RP2040, ...),
 you can create a new `board` configuration in your project to support it in DeviceScript.
+You do **not** need to build a new firmware.
 
-On the other hand, if you want to add a new system-on-a-chip (SoC) or MCU,
-we have [some docs for that as well](/devices/add-soc).
+If you want to add a new system-on-a-chip (SoC), [follow the add Soc guide](/devices/add-soc).
 
-## How to create a new board
+:::tip
+
+We are here to help. Don't hesitate to reach out in the [GitHub discussions](https://github.com/microsoft/devicescript/discussions)!
+
+:::
+
+## How to create a new board configuration
 
 ### Create the new `board.json` file
 
@@ -45,7 +51,14 @@ Visual Studio Code will automatically integrate any configuration files in the `
 The new configuration file is a schematized JSON file.
 In Visual Studio Code, you will get tooltip, completion, syntax errors and auto-completion.
 
-A new product identifier was automatically generated for you (but [you can regenerate a new one as well](https://microsoft.github.io/jacdac-docs/reference/service-specification/)).
+-   [ ] A new product identifier was automatically generated for you (but [you can regenerate a new one as well](https://microsoft.github.io/jacdac-docs/reference/service-specification/)).
+
+:::note
+
+The product identifier is used to identify devices in the [Jacdac device catalog](https://microsoft.github.io/jacdac-docs/devices/)
+which is leveraged by the simulator dashboard.
+
+:::
 
 -   [ ] configure the status light LED
 
