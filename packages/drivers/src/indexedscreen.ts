@@ -1,12 +1,7 @@
 import * as ds from "@devicescript/core"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
-import {
-    AsyncVoid,
-    IndexedScreen,
-    IndexedScreenServerSpec,
-    assert,
-} from "@devicescript/core"
-import { Image, fontForText, Font, Display } from "@devicescript/graphics"
+import { IndexedScreen, IndexedScreenServerSpec } from "@devicescript/core"
+import { Display, Image, Palette } from "@devicescript/graphics"
 
 export interface IndexedScreenOptions {}
 
@@ -84,26 +79,44 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
         // TODO: add to display interface?
     }
 
-    show() {
-        this.display.show()
+    async show() {
+        await this.display.show()
         if (ds.isSimulator()) {
             const topic = `${this.serviceIndex}/pixels`
-            ds._twinMessage(topic, this.display.image.buffer)
+            await ds._twinMessage(topic, this.display.image.buffer)
         }
     }
 }
 
 /**
+ * A pseudo-client indexed screen client
+ */
+export interface IndexScreenClient {
+    palette: Palette
+    image: Image
+    show: () => Promise<void>
+}
+
+/**
  * Starts an indexed color screen server on a display.
+ * Due to bandwidth limitation, simulation of the screen is only supported
+ * for the simulated device.
  */
 export async function startIndexedScreen(
     display: Display,
     options: IndexedScreenOptions & ServerOptions = {}
-) {
+): Promise<IndexScreenClient> {
     await display.init()
     const server = new IndexedScreenServer({
         display,
         ...options,
     })
-    return new IndexedScreen(startServer(server))
+    // start client that expose it on the bus
+    const client = new IndexedScreen(startServer(server))
+
+    return {
+        palette: display.palette,
+        image: display.image,
+        show: async () => await server.show(),
+    }
 }

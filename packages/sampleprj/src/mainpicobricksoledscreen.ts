@@ -4,5 +4,8 @@ import { SSD1306Driver, startIndexedScreen } from "@devicescript/drivers"
 const screen = await startIndexedScreen(
     new SSD1306Driver({ width: 64, height: 48 })
 )
-screen.display.image.print("Hello world!", 3, 10)
-await screen.show()
+let i = 0
+setInterval(async () => {
+    screen.image.print(`Hello world! ${i++}`, 3, 10)
+    await screen.show()
+}, 1000)
