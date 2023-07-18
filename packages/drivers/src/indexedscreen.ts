@@ -82,7 +82,7 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     async show() {
         await this.display.show()
         if (ds.isSimulator()) {
-            const topic = `${this.serviceIndex}/pixels`
+            const topic = `jd/${this.serviceIndex}/pixels`
             await ds._twinMessage(topic, this.display.image.buffer)
         }
     }
