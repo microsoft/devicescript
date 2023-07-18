@@ -33,4 +33,18 @@ export class Palette {
         this.buffer[3 * idx + 1] = color >> 8
         this.buffer[3 * idx + 2] = color >> 0
     }
+
+    packed(): [number, number, number, number][] {
+        const res: [number, number, number, number][] = []
+        for (let i = 0; i < this.numColors; ++i) {
+            const c: [number, number, number, number] = [
+                this.buffer[i * 3],
+                this.buffer[i * 3 + 1],
+                this.buffer[i * 3 + 2],
+                0,
+            ]
+            res.push(c)
+        }
+        return res
+    }
 }
