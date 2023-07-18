@@ -43,7 +43,7 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     }
     palette(): ds.AsyncValue<number[]> {
         // fix codegen
-        return this.display.palette.packed() as any as number[]
+        return this.display.palette.packed() as number[]
     }
     set_palette(
         blue: number,
