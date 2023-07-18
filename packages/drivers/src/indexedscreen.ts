@@ -83,6 +83,14 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     set_rotation(value: number): ds.AsyncValue<void> {
         // TODO: add to display interface?
     }
+
+    show() {
+        this.display.show()
+        if (ds.isSimulator()) {
+            const topic = `${this.serviceIndex}/pixels`
+            ds._twinMessage(topic, this.display.image.buffer)
+        }
+    }
 }
 
 /**
