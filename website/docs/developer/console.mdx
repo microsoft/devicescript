@@ -1,14 +1,15 @@
 ---
 sidebar_position: 1
 description: Learn how to use console functionality in DeviceScript to add
-  logging to your script and how to use format strings to write registers.
+    logging to your script and how to use format strings to write registers.
 keywords:
-  - DeviceScript
-  - console
-  - logging
-  - format strings
-  - registers
+    - DeviceScript
+    - console
+    - logging
+    - format strings
+    - registers
 ---
+
 # Console output
 
 DeviceScript supports basic `console` functionality which allows you to add logging to your script.
@@ -33,9 +34,18 @@ const humi = 60
 console.data({ temp, humi })
 ```
 
-In Visual Studio Code, you will find the data in the **DeviceScript - Data** output pane or you can download it from the view menu.
+In Visual Studio Code, you will find the data in the **DeviceScript - Data**
+output pane or you can download it from the view menu.
 
 ![console data icon](./consoledata.png)
+
+The following Visual Studio Code extensions are recommended for a best experience:
+
+-   [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
+-   [Jupyter Renderers](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers)
+-   [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [PyLance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
+-   [Raibow CSV](https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv)
 
 ## Format strings
 

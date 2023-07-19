@@ -1,19 +1,21 @@
 ---
 sidebar_position: 2
 description: Learn how to use clients and roles in DeviceScript to interact with
-  Jacdac services for sensors and actuators in a home heating system example.
+    Jacdac services for sensors and actuators in a home heating system example.
 keywords:
-  - DeviceScript
-  - Jacdac
-  - clients
-  - roles
-  - home automation
+    - DeviceScript
+    - Jacdac
+    - clients
+    - roles
+    - home automation
 ---
+
 # Clients
 
 In DeviceScript, all access to sensors, actuators or other hardware components
-are abstracted through [Jacdac](https://aka.ms/jacdac) services.
+are abstracted through **services**.
 Sensors act as **servers** and your scripts connects **clients** to interact with them.
+Servers are implemented by **drivers**, which may provide one or more services.
 
 To interact with servers, you start clients, known as **roles**, for each service you need.
 

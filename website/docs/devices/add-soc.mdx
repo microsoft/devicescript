@@ -1,0 +1,51 @@
+---
+position: 11
+title: Add new SoC/MCU
+---
+
+# Adding a new System-on-a-Chip or Microcontroller
+
+DeviceScript currently supports the following:
+
+-   [ESP32](https://github.com/microsoft/devicescript-esp32), including the "classic", S2, S3, and C3 variants
+-   [RP2040](https://github.com/microsoft/devicescript-pico), including Raspberry Pi Pico and Pico W
+-   [WASM and POSIX](https://github.com/microsoft/devicescript/tree/main/runtime/posix) for simulation
+
+Following are work-in-progress:
+
+-   [STM32](https://github.com/microsoft/devicescript-stm32), specifically STM32L475VG
+
+If you're working on a port, let us know (via
+[GitHub issue](https://github.com/microsoft/devicescript/issues) or
+[discussion](https://github.com/microsoft/devicescript/discussions)) so we can list is here.
+
+Generally, DeviceScript has a concept of an "architecture" which corresponds 1:1 to an executable binary,
+which is a specific SoC/MCU or a family thereof
+(we use SoC (System-on-a-Chip) and MCU (Microcontroller Unit) interchangably in this document).
+
+For example, for ESP32 there are `esp32`, `esp32c3`, `esp32s2`, and `esp32s3` architectures.
+For RP2040, we have two architectures: `rp2040` (generic) and `rp2040w` (with support for WiFi chip from Pico W).
+For STM32, it may be possible in future to have say a single `stm32l4` architecture that then dynamically adds enables support
+for peripherals that are present and auto-detects the size of RAM and FLASH,
+but right now we just have a specific `stm32l475vg`.
+
+DeviceScript further [defines "boards"](/devices/add-board) which take a binary architecture image and binary-edit it to include
+configuration data about pin names and on-board peripherals.
+
+Note, that there isn't any shared code for say "ARM" or "RISC-V" architecture, as all the VM code is platform-agnostic C anyways,
+which sits in the main [DeviceScript repo](https://github.com/microsoft/devicescript/tree/main/runtime/devicescript).
+
+## Creating new SoC
+
+It's best to start by forking an existing port, we suggest the `rp2040` one, and implement functions one by one.
+Start by looking at `jd_user_config.h` file and disable things.
+
+Note that the STM32 port borrows heavily from [Jacdac firmware for STM32G0-based modules](https://github.com/microsoft/jacdac-msr-modules),
+so parts of the source are not necessary for DeviceScript.
+If you want to use STM32 as a base, it's likely better to use `rp2040` or `esp32` as the skeleton,
+and copy code from the STM32 as needed.
+
+As for SoC requirements:
+
+-   make sure your SoC [has enough memory](/language/runtime#memory)
+-   it's highly recommended to use SoCs with built-in USB peripheral; we do have some support for using external USB-UART chips (as in ESP32 classic port) but it's rather buggy

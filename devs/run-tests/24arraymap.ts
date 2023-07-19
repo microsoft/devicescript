@@ -45,6 +45,18 @@ function testArrayEvery() {
         "everytrue"
     )
 }
+
+function testArrayFill() {
+    assert([1, 2, 3].fill(4).join() === '4,4,4')
+    assert([1, 2, 3].fill(4, 1).join() === '1,4,4')
+    assert([1, 2, 3].fill(4, 1, 2).join() === '1,4,3')
+    assert([1, 2, 3].fill(4, 1, 1).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, 3, 3).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, -3, -2).join() === '4,2,3')
+    assert([1, 2, 3].fill(4, NaN, NaN).join() === '1,2,3')
+    assert([1, 2, 3].fill(4, 3, 5).join() === '1,2,3')
+    assert(Array(3).fill(4).join() === '4,4,4')
+}
 function testArrayIndexOf() {
     let str = [1, 2, 2, 3]
     assert(str.indexOf(2) === 1, "indexOf")
@@ -68,10 +80,22 @@ function testArrayFind() {
     assert(str.find(x => x === 2) === 2, "sometrue")
     assert(str.find(x => x < 0) === undefined, "somefalse")
 }
+
+function testArrayFindLast() {
+    let str = [0, 1, 2, 3]
+    assert(str.findLast(x => x < 3) === 2, "findLastTrue")
+    assert(str.findLast(x => x < 0) === undefined, "findLastFalse")
+}
 function testArrayFindIndex() {
     let str = ["a", "b", "c", "d"]
     assert(str.findIndex(x => x === "c") === 2, "sometrue")
     assert(str.findIndex(x => x === "z") === -1, "somefalse")
+}
+
+function testArrayFindLastIndex() {
+    let str = ["a", "b", "c", "cee", "d"]
+    assert(str.findLastIndex(x => x.startsWith("c")) === 3, "findLastIndexTrue")
+    assert(str.findLastIndex(x => x === "z") === -1, "findLastIndexFalse")
 }
 function swap<T>(arr: T[], i: number, j: number): void {
     let temp: T = arr[i]
@@ -130,11 +154,14 @@ function testArrayAt() {
 
 testArraySome()
 testArrayEvery()
+testArrayFill()
 testArrayIndexOf()
 testArrayForEach()
 testArrayMap()
 testArrayFind()
+testArrayFindLast()
 testArrayFindIndex()
+testArrayFindLastIndex()
 testGenerics()
 testArrayIncludes()
 testArrayAt()

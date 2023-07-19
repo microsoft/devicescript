@@ -341,6 +341,7 @@ export async function mainCli() {
 
     addCommand("init", program)
         .argument("[dir]", "path to create or update project", "./")
+        .option("-b, --board <board-id>", "board ID")
         .description("creates or configures a devicescript project")
         .action(dropReturn(init))
 

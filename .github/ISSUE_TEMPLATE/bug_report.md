@@ -1,11 +1,12 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: ""
 labels: bug
-assignees: ''
-
+assignees: ""
 ---
+
+> **Tip:** From Visual Studio Code, you can use the command **DeviceScript: Report Issue...** to prefill the issue template.
 
 **Describe the bug**
 A clear and concise description of what the bug is.

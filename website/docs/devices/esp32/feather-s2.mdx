@@ -54,9 +54,23 @@ ESP32-S2 based development board in a Feather format.
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Unexpected Maker FeatherS2 ESP32-S2".
+
+```ts
+import { pins, board } from "@dsboard/feather_s2"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

@@ -40,8 +40,8 @@ import {
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
-import { openDocUri } from "./commands"
-import { CONNECTION_RESOURCE_GROUP } from "./constants"
+import { openDocUri, showInformationMessageWithHelp } from "./commands"
+import { CONNECTION_RESOURCE_GROUP, MESSAGE_PREFIX } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { checkFileExists, openFileEditor, writeFile } from "./fs"
@@ -356,7 +356,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 matchOnDescription: true,
             }
         )
-        if (!res) return // user escaped
+        if (!res) return undefined // user escaped
 
         if (!res.data?.board) {
             openDocUri("devices")
@@ -370,11 +370,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         await this.devtools.start()
         if (!this.devtools.connected) return
         await this.devtools.refreshSpecs()
+
         const { boards } = this.devtools
-
         const document = editor.document
-
-        // first identify the board
         const { boardimport } =
             /from "@dsboard\/(?<boardimport>[^"]+)/.exec(document.getText())
                 ?.groups || {}
@@ -393,6 +391,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     `import { pins, board } from "@dsboard/${board.id}"\n`
                 )
             })
+            showInformationMessageWithHelp(
+                `Imported ${board.devName} configuration`,
+                "developer/board-configuration"
+            )
+            return
         }
 
         await this.showQuickAddFeatureOrDriver(editor)

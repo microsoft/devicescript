@@ -48,9 +48,23 @@ A S2 Feather from Adafruit. (untested)
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Adafruit Feather ESP32-S2".
+
+```ts
+import { pins, board } from "@dsboard/adafruit_feather_esp32_s2"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

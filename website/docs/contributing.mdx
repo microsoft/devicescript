@@ -7,12 +7,14 @@ title: Contributing
 
 **Contributions are welcome!**
 
-## Contributions
+## Contributionut
 
 ### Add Core JavaScript APIs
 
 The DeviceScript [core js library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) is not complete; but it is possible to fill the gaps
 as needed. The requests are tracked by the [core js issue label](https://github.com/microsoft/devicescript/issues?q=is%3Aissue+is%3Aopen+label%3A%22core+js%22).
+
+You will need a local development setup for these tasks.
 
 If you want to add a new function:
 
@@ -24,19 +26,13 @@ If you want to add a new function:
 -   build and test
 -   create a pull request and go!
 
-### Adding Builtin Packages
+If you want to add a new Type, we currently have a limitation with the `core` package and you will need to add it to the `runtime` package:s
 
-> A good question to start with: Do we need a new builtin package or should it be a new npm package?
-
-Generally, search for `@devicescript/gpio` within the workspace.
-The main places that need updating is:
-
--   this file, `website/docs/developer/packages.mdx`
--   list in `plugin/src/plugin.ts`
--   list in `devs/run-test/allcompile.ts`
-
-After adding a new packages, run `yarn` at the top-level to update workspace links,
-followed by the usual `yarn build`.
+-   implement the class in the implementation file of the type (see `packages/runtime/src/map.ts` for example).
+    If you are adding a new file, make sure to import it in `packages/runtime/src/map.ts`.
+-   add test cases in the corresponding test file under `packages/runtime/src/main.ts`
+-   build and test
+-   create a pull request and go!
 
 ### Samples
 
@@ -51,8 +47,7 @@ and refresh the documentation page on each edit.
 
 If your sample requires multiple files, such as images,
 
--   create a folder with the same name as the `.mdx`
-    file
+-   create a folder with the same name as the `.mdx` file
 -   move your `.mdx` file and rename it to `index.mdx`
 -   add a `_category_.json` file with the front matter
 
@@ -71,6 +66,22 @@ The `website/docs/developer/errors.mdx` gets parsed by builderrors.mjs.
 The hash of the H2 titles is the console log look up key (replacing - with spaces) and the H2 text will replace that key + URL.
 
     loopback rx ovf --> Loopback buffer overflow (....#loopback-rx-ovf)
+
+### Adding Builtin Packages
+
+Adding a new package is more advanced scenario and most likely we should have a discussion prior to start this work. You are welcome to publish packages under your account in npm.
+
+> A good question to start with: Do we need a new builtin package or should it be a new npm package?
+
+Generally, search for `@devicescript/gpio` within the workspace. The main places that need updating is:
+
+-   this file, `website/docs/developer/packages.mdx`
+-   list in `plugin/src/plugin.ts`
+-   list in `devs/run-test/allcompile.ts`
+
+After adding a new packages, run `yarn` at the top-level to update workspace links,
+followed by the usual `yarn build`.
+
 
 ## Local development
 
@@ -128,18 +139,18 @@ Once you have it all:
 
 Open the Debug view in VSCode and run the `VSCode Extension` configuration. This will launch a new VSCode instance with the extension loaded. A build is automatically triggered before launch VSCode.
 
-### Builting packages
+### Building packages
 
 Similar to working on the Visual Studio Code extension, lunch the `VSCode Extension` debugger configuration. This will launch a new VSCode instance with the extension loaded.
-It should also open the `packages` folder which will allow you to work on the builtin packages.
+It should also open the `packages` folder which will allow you to work on the built-in packages.
 
 ### Documentation
 
-Run ``yarn docs` and edit any markdown file in the `website/docs` folder. The changes should be automatically picked up and rendered by docusaurus.
+Run `yarn docs` and edit any markdown file in the `website/docs` folder. The changes should be automatically picked up and rendered by docusaurus.
 
 ## Release process
 
-Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
+Run `yarn bump` (or `make bump`). Alternatively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
 
 The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.
 

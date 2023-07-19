@@ -13,11 +13,22 @@ keywords:
 # Add Board
 
 In DeviceScript, we commonly refere a Device Configuration as a `board`.
+You can see examples of configuration in each device page ([like this one](/devices/esp32/seeed-xiao-esp32c3#configuration))
 
-If your device is already using a supported chipset architecture,
+If your device is already using a supported system-on-a-chip (SoC) or MCU (ESP32, RP2040, ...),
 you can create a new `board` configuration in your project to support it in DeviceScript.
+You do **not** need to build a new firmware.
 
-## How to create a new board
+If you want to add a new system-on-a-chip (SoC), [follow the add Soc guide](/devices/add-soc).
+
+:::tip
+
+If you just need to reconfigure a couple pins, you can also use
+the [configureHardware](/developer/board-configuration) function and skip the creation of a new board.
+
+:::
+
+## How to create a new board configuration
 
 ### Create the new `board.json` file
 
@@ -41,7 +52,55 @@ Visual Studio Code will automatically integrate any configuration files in the `
 The new configuration file is a schematized JSON file.
 In Visual Studio Code, you will get tooltip, completion, syntax errors and auto-completion.
 
+-   [ ] A new product identifier was automatically generated for you (but [you can regenerate a new one as well](https://microsoft.github.io/jacdac-docs/reference/service-specification/)).
+
+:::note
+
+The product identifier is used to identify devices in the [Jacdac device catalog](https://microsoft.github.io/jacdac-docs/devices/)
+which is leveraged by the simulator dashboard.
+
+:::
+
+-   [ ] configure the status light LED. DeviceScript supports monochrome LEDs, RGB LEDs,
+        ws2812, APA102 and more (refer to the schema information).
+
+```json
+    "led": {
+        "pin": 7,
+        "isMono": true
+    },
+```
+
+-   [ ] configure the `console.log` pin
+
+```json
+    "log": {
+        "baud": 115200,
+        "pinTX": 0
+    },
+```
+
+-   [ ] configure I2C pins
+
+```json
+    "i2c": {
+        "pinSCL": 5,
+        "pinSDA": 4,
+    },
+```
+
 -   [ ] Update the pin map
+
+```json
+    "pins": {
+        "P1": 1,
+        "P11": 11,
+        "P13": 13,
+        "P14": 14,
+        ...
+    }
+```
+
 -   [ ] Update the board description
 -   [ ] If available, provide a URL where the board can be purchased
 
@@ -59,14 +118,22 @@ which need to be called for the service to be started.
 The ones under `"services": [ ... ]` are always started; this is typically only
 used for `power` service.
 
+```json
+    "$services": [
+        {
+            "service": "buzzer",
+            "pin": 20,
+            "name": "buzzer"
+        },
+        ...
+    ]
+```
+
 ### Flash the new configuration
 
-The command line and Visual Studio will automatically integrate any configuration file in the `boards/` folder.
-The first should be to flash the firmware again using the new configuration.
-
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-Using the [command line](/getting-started/cli), use the `flash` command.
+The command line and Visual Studio will automatically integrate
+any configuration file in the `boards/` folder.
+The first time you deploy a program with a new hardware configuration, it will reset the device.
 
 ## Contributing
 

@@ -18,3 +18,12 @@ On ESP32-C3, we do not support external serial chips. This is the [list of known
 
 If the `esptool` complains about not being able to connect, try plugging your board in
 while holding `IO0`/`BOOT` button.
+
+## I2C device not found or malfunctioning {#i2c-device-not-found-or-malfunctioning}
+
+There is a number of reasons why this error message will appear. A few common ones
+are due to invalid configurations, aside from hardware issues with the sensor.
+
+-   Check that the I2C pins have been configured. Read about [board configuration](/developer/board-configuration).
+-   The I2C address is incorrect. Check the datasheet for the correct address.
+-   The I2C address is correct, but the sensor is not responding. Check the wiring and the sensor datasheet.

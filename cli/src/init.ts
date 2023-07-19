@@ -30,7 +30,10 @@ import type {
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
-import { MIN_NODE_VERSION } from "@devicescript/interop"
+import {
+    MIN_NODE_VERSION,
+    MARKETPLACE_EXTENSION_ID,
+} from "@devicescript/interop"
 import { TSDOC_TAGS } from "@devicescript/compiler"
 
 const MAIN = "src/main.ts"
@@ -252,15 +255,7 @@ const optionalFiles: FileSet = {
         tabWidth: 4,
     },
     ".vscode/extensions.json": {
-        recommendations: [
-            "devicescript.devicescript-vscode",
-            "esbenp.prettier-vscode",
-            "ms-toolsai.jupyter",
-            "ms-toolsai.jupyter-renderers",
-            "ms-python.python",
-            "ms-python.vscode-pylance",
-            "mechatroner.rainbow-csv",
-        ],
+        recommendations: [MARKETPLACE_EXTENSION_ID, "esbenp.prettier-vscode"],
     },
     ".vscode/launch.json": {
         version: "0.2.0",
@@ -365,6 +360,7 @@ export interface InitOptions {
     force?: boolean
     spaces?: number
     install?: boolean
+    board?: string
 }
 
 function patchJSON(fn: string, data: any) {
@@ -451,9 +447,10 @@ function finishAdd(message: string, files: string[] = []) {
 export async function init(dir: string | undefined, options: InitOptions) {
     log(`Configuring DeviceScript project`)
 
+    // write template files
     const cwd = writeFiles(dir, options, optionalFiles)
 
-    // .gitignore
+    // patch .gitignore
     const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
     const gitignoren = join(cwd, GITIGNORE)
     if (!pathExistsSync(gitignoren)) {
@@ -479,6 +476,19 @@ export async function init(dir: string | undefined, options: InitOptions) {
     }
 
     await runInstall(cwd, options)
+
+    // patch main.ts with board info
+    if (options.board) {
+        const mainFn = join(cwd, MAIN)
+        if (pathExistsSync(mainFn)) {
+            const main = readFileSync(mainFn, { encoding: "utf8" })
+            if (!main.includes(`from "@dsboard/${options.board}"`)) {
+                const importStmt = `import { pins, board } from "@dsboard/${options.board}"\n`
+                const newMain = importStmt + main
+                writeFileSync(mainFn, newMain, { encoding: "utf8" })
+            }
+        }
+    }
 
     // build to get node_modules/@devicescript/* files etc
     await build(MAIN, {})

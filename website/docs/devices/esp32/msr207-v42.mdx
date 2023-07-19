@@ -11,6 +11,13 @@ description: MSR JM Brain S2-mini 207 v4.2
 -  Serial logging on pin 43 at 115200 8N1
 -  Service: power (auto-start)
 
+:::caution
+
+I2C pins are not [configured](/developer/board-configuration).
+
+:::
+
+
 ## Stores
 
 
@@ -34,9 +41,23 @@ description: MSR JM Brain S2-mini 207 v4.2
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "MSR JM Brain S2-mini 207 v4.2".
+
+```ts
+import { pins, board } from "@dsboard/msr207_v42"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

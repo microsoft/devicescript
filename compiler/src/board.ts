@@ -154,13 +154,33 @@ description: ${devName}
         `\n## Features\n`,
         ...info.features.map(f => `-  ${f}`),
         ...info.services.map(f => `-  Service: ${f}`),
+        !boardJson.i2c &&
+            `
+:::caution
+
+I2C pins are not [configured](/developer/board-configuration).
+
+:::
+`,
         `\n## Stores\n`,
         ...stores.map(url => `-  [${url}](${url})`),
         `\n## Pins\n`,
         `${renderPinout(info.pinInfoText)}\n\n`,
-        `\n## Firmware update
+        `\n## DeviceScript import\n`,
+        `
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "${devName}".
+`,
+        `\`\`\`ts
+import { pins, board } from "@dsboard/${devId}"
+\`\`\``,
+        `\n## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.
@@ -178,7 +198,7 @@ ${JSON.stringify(boardJson, null, 4)}
 \`\`\`
 `,
     ]
-    return r.filter(s => s !== undefined).join("\n")
+    return r.filter(s => !!s).join("\n")
 
     function renderPinout(pinout: string) {
         const pins = pinout.split(/\n/g).map(line => line.split(/[:,]/g))

@@ -14,6 +14,13 @@ ESP32-S3 DevKitM development board. Should also work for DevKitC.
 -  WS2812B RGB LED on pin P48  (use [setStatusLight](/developer/status-light) to control)
 -  Serial logging on pin P43 at 115200 8N1
 
+:::caution
+
+I2C pins are not [configured](/developer/board-configuration).
+
+:::
+
+
 ## Stores
 
 -  [https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html)
@@ -57,9 +64,23 @@ ESP32-S3 DevKitM development board. Should also work for DevKitC.
 
 
 
-## Firmware update
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
 
 In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "Espressif ESP32-S3 DevKitM".
+
+```ts
+import { pins, board } from "@dsboard/esp32s3_devkit_m"
+```
+
+## Firmware update
+
+In Visual Studio Code,
 select **DeviceScript: Flash Firmware...** from the command palette.
         
 Run this [command line](/api/cli) command and follow the instructions.

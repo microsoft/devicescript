@@ -471,6 +471,7 @@ export class Image {
 
     srcmap: SrcMapResolver
 
+    sizeInfo = ""
     private specData: Uint8Array
     private dcfgData: Uint8Array
 
@@ -575,6 +576,11 @@ export class Image {
                 BinFmt.FIX_HEADER_SIZE + i * BinFmt.SECTION_HEADER_SIZE
             )
         )
+
+        this.sizeInfo =
+            `// fun: ${funDesc.length}+${funData.length}, float: ${floatData.length}, ` +
+            `strings: A:${asciiDesc.length}+U:${utf8Desc.length}+B:${bufferDesc.length}+D:${strData.length} ` +
+            `specs: ${specData.length}, dcfg: ${dcfgData.length}\n`
 
         this.specData = specData
         this.dcfgData = dcfgData
@@ -724,7 +730,8 @@ export class Image {
         const img = this
         let r =
             `// img size ${this.devsBinary.length}\n` +
-            `// ${this.numGlobals} globals\n`
+            `// ${this.numGlobals} globals, ${this.functions.length} functions\n` +
+            this.sizeInfo
 
         for (const fn of this.functions) r += "\n" + fn.disassemble(verbose)
 

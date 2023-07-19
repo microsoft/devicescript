@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { pixelBuffer, rgb, schedule, setStatusLight, uptime } from "."
+import { encodeURIComponent, pixelBuffer, rgb, schedule, setStatusLight, uptime, Map, Set } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -87,5 +87,125 @@ describe("schedule", () => {
         await delay(100)
         console.log({ called })
         expect(called === 2).toBe(true)
+    })
+})
+
+describe("encodeURIComponent tests", () => {
+    test("Basic Encoding Test", async () => {
+        let encoded = encodeURIComponent("Hello World")
+        expect(encoded === "Hello World").toBe(true)
+    })
+    test("Encoding Already Encoded Characters", async () => {
+        let encoded = encodeURIComponent("Hello%20World")
+        expect(encoded === "Hello%20World").toBe(true)
+    })
+    test("Encoding Slash", async () => {
+        let encoded = encodeURIComponent("/path/to/resource")
+        expect(encoded === "/path/to/resource").toBe(true)
+    })
+    test("Encoding Non-ASCII Character", async () => {
+        let encoded = encodeURIComponent("😀")
+        expect(encoded === "%E0%9F%98%80").toBe(true)
+    })
+})
+
+describe('Test Es Map Class', () => {
+    function msg(m: string) {
+        console.log(m)
+    }
+
+    test("map+methods", () => {
+        let map = new Map()
+        map.set("one", 1)
+        map.set("two", 2)
+        map.set("three", 3)
+
+        msg("map test set")
+        expect(map.size() === 3).toBe(true)
+
+        msg("map test get")
+        expect(map.get("one") === 1).toBe(true)
+        map.delete("two")
+
+        msg("map test delete")
+        expect(map.size() === 2).toBe(true)
+
+        map.clear()
+
+        msg("map test clear")
+        expect(map.size() === 0).toBe(true)
+    })
+
+    test("map+constructor", () => {
+        const map = new Map<string, number>([
+            ["one", 1],
+            ["two", 2],
+            ["three", 3],
+        ])
+        msg("map test constructor")
+        expect(map.size() === 3).toBe(true)
+
+    })
+    msg("Map tests completed")
+})
+
+describe('Test Es Set Class', () => {
+
+    test("add", () => {
+        let elements = new Set<number>();
+        expect(elements === elements.add(1)).toBe(true)
+        expect(elements.size === 1).toBe(true)
+
+        expect(elements === elements.add(2)).toBe(true)
+        expect(elements.size === 2).toBe(true)
+
+        expect(elements === elements.add(1)).toBe(true)
+        expect(elements === elements.add(2)).toBe(true)
+
+        expect(elements === elements.add(3)).toBe(true)
+        expect(elements.size === 3).toBe(true)
+    })
+
+
+    test("clear", () => {
+        let elements = new Set<number>();
+        [1, 3, 1, 4, 5, 3].forEach(element => {
+            elements.add(element)
+        })
+        expect(elements.size === 4).toBe(true)
+
+        elements.clear();
+        expect(elements.size === 0).toBe(true)
+    })
+
+    test("delete", () => {
+        let elements = new Set<string>();
+        ["a", "b", "e", "b", "d", "c", "a"].forEach(element => {
+            elements.add(element)
+        })
+
+        expect(elements.size === 5).toBe(true)
+
+        expect(!elements.delete("f")).toBe(true)
+        expect(elements.size === 5).toBe(true)
+
+        expect(elements.delete("a")).toBe(true)
+        expect(elements.size === 4).toBe(true)
+
+        expect(!elements.delete("a")).toBe(true)
+        expect(elements.size === 4).toBe(true)
+    })
+
+
+    test("has", () => {
+        let elements = new Set<string>();
+        ["a", "d", "f", "d", "d", "a", "g"].forEach(element => {
+            elements.add(element)
+        })
+
+        expect(elements.has("g")).toBe(true)
+        expect(elements.has("d")).toBe(true)
+        expect(elements.has("f")).toBe(true)
+        expect(!elements.has("e")).toBe(true)
     })
 })
