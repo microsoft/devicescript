@@ -66,7 +66,7 @@ export async function showInformationMessageWithHelp(
     message: string,
     path: string
 ): Promise<boolean | undefined> {
-    const help = "Open Help"
+    const help = "Help..."
     const res = await vscode.window.showInformationMessage(
         MESSAGE_PREFIX + message,
         help

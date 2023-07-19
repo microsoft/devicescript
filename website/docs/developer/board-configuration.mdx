@@ -15,12 +15,6 @@ configure drivers.
 ```ts
 // highlight-next-line
 import { pins } from "@dsboard/adafruit_qt_py_c3"
-import { startLightBulb } from "@devicescript/servers"
-
-const lightBulb = startLightBulb({
-    // highlight-next-line
-    pin: pins.A0_D0,
-})
 ```
 
 :::tip
@@ -31,6 +25,18 @@ load the correct board configuration.
 
 :::
 
+Once the board configuration is imported, you can use the `pins` export to reference named pins from the board
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { startLightBulb } from "@devicescript/servers"
+
+const lightBulb = startLightBulb({
+    // highlight-next-line
+    pin: pins.A0_D0,
+})
+```
+
 ## Available Boards
 
 You can find the list of supported devices and configuration in
@@ -40,23 +46,18 @@ If your board system-on-chip (SoC) is supported (ESP32, RP2040, ...) but the pin
 is not yet available, you have 2 options: create a new board configuration file
 or configure the board by code.
 
-## Configuration by file
-
-Refer to the [Add board](/devices/add-board) documentation to learn
-how to create a new board configuration file.
-
 ## Configuration by Code
-
-You can also configure the board by code using the `configureHardware` function.
 
 Some board configuration are generic and the I2C pins are not configured by default.
 For example, the [pico-w](/devices/rp2040/pico-w) board configuration does not configure
 the I2C pins and the code below configure them by code.
 
+You can configure the board by code using the `configureHardware` function.
+
 ```ts
+import { pins } from "@dsboard/pico_w"
 // highlight-next-line
 import { configureHardware } from "@devicescript/servers"
-import { pins } from "@dsboard/pico_w"
 
 // highlight-start
 configureHardware({
@@ -67,3 +68,11 @@ configureHardware({
 })
 // highlight-end
 ```
+
+### Configuration by file
+
+This is a more advanced scenario where you want to fork an existing board configuration
+and publish configuration for a different board.
+
+Refer to the [Add board](/devices/add-board) documentation to learn
+how to create a new board configuration file.
