@@ -53,10 +53,10 @@ export function HorizontalGauge(props: {
     return (
         <Translate x={x} y={y}>
             <Rect width={width} height={height}></Rect>
-            <FillRect x={2} y={2} width={w} height={height - 4}></FillRect>
+            <FillRect x={2} y={2} width={w} height={height - 4} />
             {!!showPercent && (
                 <Style fillColor={fc}>
-                    <Text x={width >> 1} y={2}>
+                    <Text x={width / 2} y={2}>
                         {Math.round(value * 100) + "%"}
                     </Text>
                 </Style>
