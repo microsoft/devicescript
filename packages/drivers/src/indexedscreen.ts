@@ -1,23 +1,28 @@
 import * as ds from "@devicescript/core"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
-import { IndexedScreen, IndexedScreenServerSpec } from "@devicescript/core"
+import {
+    IndexedScreen,
+    IndexedScreenServerSpec,
+    LightBulb,
+} from "@devicescript/core"
 import { Display, Image, Palette } from "@devicescript/graphics"
 
 export interface IndexedScreenOptions {}
 
 class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     readonly display: Display
+    readonly brightness?: LightBulb
 
     constructor(
         options: {
             display: Display
+            brightness?: LightBulb
         } & IndexedScreenOptions &
             ServerOptions
     ) {
         super(ds.IndexedScreen.spec, options)
         this.display = options.display
     }
-
     startUpdate(
         x: number,
         y: number,
@@ -29,24 +34,23 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     setPixels(pixels: ds.Buffer): ds.AsyncValue<void> {
         // ignored
     }
-    intensity(): ds.AsyncValue<number> {
-        // TODO: add to display interface?
-        return 1
+    async intensity(): Promise<number> {
+        if (this.brightness) return await this.brightness.intensity.read()
+        else return 1
     }
-    set_intensity(value: number): ds.AsyncValue<void> {
-        // TODO: add to display interface?
+    async set_intensity(value: number) {
+        if (this.brightness) await this.brightness.intensity.write(value)
     }
-    palette(): ds.AsyncValue<number[]> {
+    palette(): number[] {
         // fix codegen
         return this.display.palette.packed() as number[]
     }
-    set_palette(
-        blue: number,
-        green: number,
-        red: number,
-        padding: number
-    ): ds.AsyncValue<void> {
-        // TODO: wrong signature, fix codegen
+    set_palette(...color: number[]): void {
+        const p = this.display.palette
+        const n = p.numColors
+        if (color.length !== n)
+            throw new RangeError("incorrect number of colors")
+        for (let i = 0; i < n; ++i) p.setColor(i, color[i] >> 8)
     }
     bitsPerPixel(): ds.AsyncValue<number> {
         return this.display.image.bpp
@@ -58,25 +62,13 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
         return this.display.image.height
     }
     widthMajor(): ds.AsyncValue<boolean> {
-        // TODO: add to display interface?
         return false
     }
-    set_widthMajor(value: boolean): ds.AsyncValue<void> {
-        // TODO: add to display interface?
-    }
     upSampling(): ds.AsyncValue<number> {
-        // TODO: add to display interface?
         return 1
     }
-    set_upSampling(value: number): ds.AsyncValue<void> {
-        // TODO: add to display interface?
-    }
     rotation(): ds.AsyncValue<number> {
-        // TODO: add to display interface?
         return 0
-    }
-    set_rotation(value: number): ds.AsyncValue<void> {
-        // TODO: add to display interface?
     }
 
     /**
