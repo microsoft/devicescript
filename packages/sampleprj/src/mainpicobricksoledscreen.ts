@@ -6,6 +6,7 @@ const screen = await startIndexedScreen(
 )
 let i = 0
 setInterval(async () => {
+    console.log(i)
     screen.image.print(`Hello world! ${i++}`, 3, 10)
     await screen.show()
 }, 1000)
