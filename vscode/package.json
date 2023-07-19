@@ -199,7 +199,7 @@
         "viewsWelcome": [
             {
                 "view": "extension.devicescript.jdom",
-                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read the docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
+                "contents": "Start a device simulator, no hardware needed.\n[Start Simulator](command:extension.devicescript.simulator.start)\n\nConnect to a hardware device using serial or USB.\n[Connect Device](command:extension.devicescript.connect)\n\nStart a new project in the current workspace or in a new folder.\n[Create New Project](command:extension.devicescript.project.new)\n\nTo learn more about DeviceScript, [read the docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
             },
             {
                 "view": "extension.devicescript.watch",
@@ -299,8 +299,14 @@
             ],
             "view/title": [
                 {
+                    "command": "extension.devicescript.project.new",
+                    "when": "!inDebugMode && view == extension.devicescript.jdom",
+                    "group": "navigation",
+                    "order": 2
+                },
+                {
                     "command": "extension.devicescript.connect",
-                    "when": "view == extension.devicescript.jdom",
+                    "when": "!inDebugMode && view == extension.devicescript.jdom",
                     "group": "navigation"
                 },
                 {
@@ -554,7 +560,8 @@
             {
                 "command": "extension.devicescript.project.new",
                 "title": "Create New Project...",
-                "category": "DeviceScript"
+                "category": "DeviceScript",
+                "icon": "$(add)"
             },
             {
                 "command": "extension.devicescript.project.upgrade",
