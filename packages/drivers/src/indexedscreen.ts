@@ -79,6 +79,10 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
         // TODO: add to display interface?
     }
 
+    /**
+     * Renders the current image on the display.
+     * On the device simulator, sends the image to simulator dashboard.
+     */
     async show() {
         await this.display.show()
         if (ds.isSimulator()) {
