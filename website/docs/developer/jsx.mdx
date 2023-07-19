@@ -1,0 +1,73 @@
+---
+sidebar_position: 10
+title: JSX/TSX
+---
+
+# JSX/TSX
+
+[JSX](https://www.typescriptlang.org/docs/handbook/jsx.html) is an embeddable XML-like syntax (.tsx for TypeScript files).
+It is meant to be transformed into valid JavaScript,
+though the semantics of that transformation are implementation-specific.
+JSX rose to popularity with the [React](https://react.dev/) framework,
+but has since seen other implementations as well. TypeScript supports embedding, type checking, and compiling JSX directly to JavaScript.
+
+DeviceScript supports TSX compilation as documented in the TypeScript documentation.
+
+## Sample
+
+The [sampleui](https://github.com/microsoft/devicescript/tree/main/packages/sampleui) package is a sample UI framework based on a set of TSX functional components.
+It is designed to be used with small LCD screens such as the [SSD1306](/api/servers/ssd1306).
+
+This snippet show a potential use of the JSX syntax to render a progress bar on a screen.
+
+```tsx skip
+pot.reading.subscribe(async (pos: number) => {
+    await renderOnImage(
+        <HorizontalGauge
+            y={12}
+            width={image.width}
+            height={12}
+            value={pos}
+            showPercent={true}
+        />,
+        image
+    )
+    await ssd.show()
+})
+```
+
+If you are familiar with React developement, the implementation of `HorizontalGauge` will feel familiar.
+
+```tsx skip
+export function HorizontalGauge(props: {
+    x?: number
+    y?: number
+    width: number
+    height: number
+    value: number
+    showPercent?: boolean
+}): JSX.Element {
+    const { x, y, width, height, value, showPercent } = props
+    const w = Math.round((width - 4) * value)
+    const fc = value > 0.5 ? 0 : 1
+    return (
+        <Translate x={x} y={y}>
+            <Rect width={width} height={height}></Rect>
+            <FillRect x={2} y={2} width={w} height={height - 4} />
+            {!!showPercent && (
+                <Style fillColor={fc}>
+                    <Text x={width / 2} y={2}>
+                        {Math.round(value * 100) + "%"}
+                    </Text>
+                </Style>
+            )}
+        </Translate>
+    )
+}
+```
+
+## Where are the UI frameworks?!!?!
+
+We do not provide a fully fledge UI framework on top of the JSX compilation support.
+The sample is very limited (no layout, no dom, no virtual DOM, ...).
+If you feel up to the challenge, we recommend having a try at it!

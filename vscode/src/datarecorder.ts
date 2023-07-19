@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { JDEventSource, CHANGE } from "jacdac-ts"
 import { CONSOLE_DATA_MAX_ROWS } from "./constants"
 import { JSONtoCSV } from "./csv"
@@ -12,7 +13,14 @@ export class DataRecorder extends JDEventSource {
         if (isNaN(millis) || json === undefined) return false
 
         // no entries yet
-        if (!this.entries) this.entries = []
+        if (!this.entries) {
+            this.entries = []
+            vscode.commands.executeCommand(
+                "setContext",
+                "extension.devicescript.console.data",
+                true
+            )
+        }
         // device reset
         if (millis < this.lastMillis) {
             this.offsetMillis += this.lastMillis
@@ -42,6 +50,12 @@ export class DataRecorder extends JDEventSource {
         this.entries = undefined
         this.lastMillis = undefined
         this.offsetMillis = 0
+
+        vscode.commands.executeCommand(
+            "setContext",
+            "extension.devicescript.console.data",
+            null
+        )
 
         this.emit(CHANGE)
     }
