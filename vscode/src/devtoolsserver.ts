@@ -572,11 +572,18 @@ export class DeveloperToolsManager extends JDEventSource {
         await this.saveProjectFolder()
 
         try {
+            const args = ["devtools", "--vscode"]
+            const config = vscode.workspace.getConfiguration(
+                "devicescript.devtools"
+            )
+            const localhost = !!config.get("localhost")
+            if (localhost) args.push("--localhost")
+
             this.connectionState = ConnectionState.Connecting
             const t = await this.createCliTerminal({
                 title: "DeviceScript",
                 progress: "Starting Development Server...",
-                args: ["devtools", "--vscode"],
+                args,
                 message: "DeviceScript Development Server\n",
             })
             if (!t) {
