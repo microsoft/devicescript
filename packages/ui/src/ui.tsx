@@ -1,3 +1,5 @@
+/// <reference path="./jsxtypes.d.ts" />
+
 import * as ds from "@devicescript/core"
 import { Image, ImageContext } from "@devicescript/graphics"
 
