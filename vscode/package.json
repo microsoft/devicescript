@@ -304,13 +304,8 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.terminal.show",
-                    "when": "view == extension.devicescript.jdom",
-                    "group": "navigation"
-                },
-                {
                     "command": "extension.devicescript.data.download",
-                    "when": "view == extension.devicescript.jdom",
+                    "when": "view == extension.devicescript.jdom && extension.devicescript.console.data",
                     "group": "navigation"
                 },
                 {
