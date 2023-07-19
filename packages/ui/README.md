@@ -1,8 +1,9 @@
 # @devicescript/ui
 
-[DeviceScript](https://microsoft.github.io/devicescript/) basic user interface with TSX.
+A sample of a
+[DeviceScript](https://microsoft.github.io/devicescript/) basic user interface with JSX/TSX.
 
--   [Read documentation](https://microsoft.github.io/devicescript/developer/ui)
+-   [Read documentation](https://microsoft.github.io/devicescript/developer/jsx)
 
 ## Contributing
 

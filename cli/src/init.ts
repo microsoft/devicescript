@@ -245,9 +245,11 @@ const optionalFiles: FileSet = {
             isolatedModules: true,
             noImplicitAny: true,
             moduleDetection: "force",
+            forceConsistentCasingInFileNames: true,
             types: [],
+            jsx: "preserve",
         },
-        include: ["**/*.ts", `../${LIBDIR}/core/src/*.ts`],
+        include: ["**/*.ts", "**/*.tsx", `../${LIBDIR}/core/src/*.ts`],
     },
     ".prettierrc": {
         arrowParens: "avoid",

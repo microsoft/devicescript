@@ -16,12 +16,9 @@
         "noImplicitAny": true,
         "moduleDetection": "force",
         "noImplicitOverride": true,
+        "forceConsistentCasingInFileNames": true,
         "jsx": "preserve",
         "types": []
     },
-    "include": [
-        "**/*.ts",
-        "**/*.tsx",
-        "../../core/src/*.ts"
-    ]
+    "include": ["**/*.ts", "**/*.tsx", "../../core/src/*.ts"]
 }

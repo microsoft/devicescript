@@ -1,5 +1,4 @@
 // this is just a sample, but some types in the JSX namespace are required by the compiler
-
 import type { ImageContext } from "@devicescript/graphics"
 
 declare global {
