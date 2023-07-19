@@ -41,16 +41,11 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     async set_intensity(value: number) {
         if (this.brightness) await this.brightness.intensity.write(value)
     }
-    palette(): number[] {
-        // fix codegen
-        return this.display.palette.packed() as number[]
+    palette(): Buffer {
+        return this.display.palette.packed()
     }
-    set_palette(...color: number[]): void {
-        const p = this.display.palette
-        const n = p.numColors
-        if (color.length !== n)
-            throw new RangeError("incorrect number of colors")
-        for (let i = 0; i < n; ++i) p.setColor(i, color[i] >> 8)
+    set_palette(value: Buffer): void {
+        this.display.palette.unpack(value)
     }
     bitsPerPixel(): ds.AsyncValue<number> {
         return this.display.image.bpp

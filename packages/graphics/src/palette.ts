@@ -34,17 +34,25 @@ export class Palette {
         this.buffer[3 * idx + 2] = color >> 0
     }
 
-    // r,g,b, padding
-    packed(): number[] {
-        const res: number[] = []
+    // r,g,b,padding
+    packed(): Buffer {
+        const res: Buffer = Buffer.alloc(this.numColors << 2)
         for (let i = 0; i < this.numColors; ++i) {
-            res.push(
-                this.buffer[i * 3],
-                this.buffer[i * 3 + 1],
-                this.buffer[i * 3 + 2],
-                0
-            )
+            res[i * 4] = this.buffer[i * 3]
+            res[i * 4 + 1] = this.buffer[i * 3 + 1]
+            res[i * 4 + 2] = this.buffer[i * 3 + 2]
         }
         return res
+    }
+
+    // r,g,b,padding
+    unpack(buffer: Buffer) {
+        if (buffer.length >> 2 !== this.numColors)
+            throw new RangeError("incorrect number of colors")
+        for (let i = 0; i < this.numColors; ++i) {
+            this.buffer[i * 3] = buffer[i * 4]
+            this.buffer[i * 3 + 1] = buffer[i * 4 + 1]
+            this.buffer[i * 3 + 2] = buffer[i * 4 + 2]
+        }
     }
 }
