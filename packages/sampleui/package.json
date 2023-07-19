@@ -1,15 +1,10 @@
 {
-    "name": "@devicescript/ui",
+    "name": "sampleui",
     "version": "2.14.0",
     "private": true,
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/microsoft/devicescript.git",
-        "directory": "packages/ui"
     },
     "scripts": {
         "setup": "devicescript build",

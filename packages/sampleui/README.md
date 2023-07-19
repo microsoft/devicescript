@@ -1,4 +1,4 @@
-# @devicescript/ui
+# sampleui
 
 A sample of a
 [DeviceScript](https://microsoft.github.io/devicescript/) basic user interface with JSX/TSX.
