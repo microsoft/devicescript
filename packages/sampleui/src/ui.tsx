@@ -54,6 +54,28 @@ export class Translate extends ParentElement {
     }
 }
 
+export class Style extends ParentElement {
+    strokeColor: number
+    fillColor: number
+    constructor(
+        props: {
+            strokeColor?: number
+            fillColor?: number
+        } & JSX.BaseProps
+    ) {
+        super()
+        setup(this, props)
+    }
+
+    render(ctx: ImageContext): void {
+        ctx.save()
+        if (this.strokeColor !== undefined) ctx.strokeColor = this.strokeColor
+        if (this.fillColor !== undefined) ctx.fillColor = this.fillColor
+        this.renderChildren(ctx)
+        ctx.restore()
+    }
+}
+
 export class Text extends PositionElement {
     children: string
 
@@ -107,19 +129,18 @@ export function HorizontalGauge(props: {
     showPercent?: boolean
 }): JSX.Element {
     const { x, y, width, height, value, showPercent } = props
+    const w = Math.round((width - 4) * value)
+    const fc = value > 0.5 ? 0 : 1
     return (
         <Translate x={x} y={y}>
             <Rect width={width} height={height}></Rect>
-            <FillRect
-                x={2}
-                y={2}
-                width={Math.round((width - 4) * value)}
-                height={height - 4}
-            ></FillRect>
+            <FillRect x={2} y={2} width={w} height={height - 4}></FillRect>
             {!!showPercent && (
-                <Text x={width + 2} y={2}>
-                    {Math.round(value * 100) + "%"}
-                </Text>
+                <Style fillColor={fc}>
+                    <Text x={width >> 1} y={2}>
+                        {Math.round(value * 100) + "%"}
+                    </Text>
+                </Style>
             )}
         </Translate>
     )
