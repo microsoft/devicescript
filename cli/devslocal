@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+// this file is not shipped - it's meant to be run from this location in command line
+// to execute locally built DeviceScript
+require("./built/devicescript-cli.cjs").mainCli()

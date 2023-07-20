@@ -14,6 +14,20 @@ Here are some examples of custom packages:
 -   [Blynk.io](https://github.com/pelikhan/devicescript-blynk) to upload data to blynk.io
 -   [devicescrit-pico-bricks](https://github.com/pelikhan/devicescript-pico-bricks), a driver for the Pico Bricks shield
 
+## TL;DR: Creating a new package
+
+-   install command line tools: `npm install -g @devicescript/cli`
+-   install yarn if you don't have it: `npm install -g yarn`
+-   create folder for your package: `mkdir devicescript-my-package` (best if it starts with `devicescript-`)
+-   in that folder run `devs init --yarn` and then `devs add npm`
+-   run VS Code: `code .`
+-   go to "Source Control" side panel, select "Publish to GitHub"
+
+Now you can start building your library.
+
+To publish to `npm` use `yarn publish` - it will ask you for version, tag the repo, and publish.
+Don't forget to `git push --tags`.
+
 ## Getting started
 
 To create a DeviceScript library from your project, run this command
