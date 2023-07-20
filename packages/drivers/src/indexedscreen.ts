@@ -22,6 +22,7 @@ class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     ) {
         super(ds.IndexedScreen.spec, options)
         this.display = options.display
+        this.brightness = options.brightness
     }
     startUpdate(
         x: number,
