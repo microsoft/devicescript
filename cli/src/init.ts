@@ -422,10 +422,14 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
     return cwd
 }
 
+function isYarn(cwd: string, options: InitOptions) {
+    const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
+    return yarnlock || options.yarn
+}
+
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
-        const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
-        const cmd = yarnlock || options.yarn ? "yarn" : "npm"
+        const cmd = isYarn(cwd, options) ? "yarn" : "npm"
         log(`install dependencies using ${cmd}...`)
         spawnSync(cmd, ["install"], {
             shell: true,
@@ -631,6 +635,14 @@ export async function addNpm(options: AddNpmOptions) {
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
     for (const fn of lst) {
         files["src/index.ts"] += `export * from "./${fn.slice(0, -3)}"\n`
+    }
+
+    if (isYarn(".", options)) {
+        const fn = ".github/workflows/build.yml"
+        files[fn] = (files[fn] as string)
+            .replace("npm ci", "yarn install --frozen-lockfile")
+            .replace("npm run build", "yarn build")
+            .replace("npm test", "yarn test")
     }
 
     const cwd = writeFiles(".", options, files)
