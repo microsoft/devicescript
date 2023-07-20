@@ -1,0 +1,73 @@
+---
+title: ST7789
+---
+
+# ST7789
+
+Driver for ST7789 LCD screen.
+
+```ts
+import { ST7789Driver } from "@devicescript/drivers"
+```
+
+-   [Datasheet](https://www.waveshare.com/w/upload/a/ae/ST7789_Datasheet.pdf)
+
+![WaveShare Pico-LCD shield](https://github.com/mmoskal/devicescript-waveshare-pico-lcd/blob/main/assets/pico-lcd-114.png?raw=true)
+
+## Hardware configuration
+
+-   Configure the SPI connection
+
+```ts
+import { spi } from "@devicescript/spi"
+import { pins } from "@dsboard/pico_w"
+
+spi.configure({
+    mosi: pins.GP11,
+    sck: pins.GP10,
+    hz: 8_000_000,
+})
+```
+
+## Display
+
+The driver implements the [Display](/developer/graphics/display) interface and can be used as various services.
+Using the driver through services provides a better simulation experience.
+
+## Driver
+
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/st7735.ts)
+
+The [devicescript-waveshare-pico-lcd](https://github.com/mmoskal/devicescript-waveshare-pico-lcd/blob/main/src/picolcd114.ts)
+uses the driver for a [WaveShare Pico-LCD](https://www.waveshare.com/pico-lcd-1.14.htm) shield.
+
+```ts
+import * as ds from "@devicescript/core"
+import { spi } from "@devicescript/spi"
+import { pins } from "@dsboard/pico_w"
+import { ST7789Driver } from "@devicescript/drivers"
+import { Image } from "@devicescript/graphics"
+
+spi.configure({
+    mosi: pins.GP11,
+    sck: pins.GP10,
+    hz: 8_000_000,
+})
+
+// backlight led
+pins.GP13.setMode(ds.GPIOMode.OutputHigh)
+
+const display = new ST7789Driver(Image.alloc(240, 136, 4), {
+    dc: pins.GP8,
+    cs: pins.GP9,
+    reset: pins.GP12,
+    // frmctr1: 0x0e_14_ff,
+    flip: false,
+    spi: spi,
+    offX: 40,
+    offY: 53,
+})
+await display.init()
+display.image.print("Hello world!", 3, 10)
+await display.show()
+```

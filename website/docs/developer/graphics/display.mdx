@@ -9,7 +9,8 @@ The [Display](https://github.com/microsoft/devicescript/blob/main/packages/graph
 interface provides an abstraction over a small screen. The `Display` interface is implemented
 for various hardware peripherical and can be used with various services.
 
--   [SSD1306](/api/drivers/ssd1306)
+-   [SSD1306](/api/drivers/ssd1306), OLED monochrome, I2C
+-   [ST7789](/api/drivers/st7789), LCD color, SPI
 
 ## Indexed screen
 
@@ -22,11 +23,11 @@ on the simulated device (simulation does not work on hardware device as the comm
 ```ts
 import { SSD1306Driver, startIndexedScreen } from "@devicescript/drivers"
 
-const screen = await startIndexedScreen(
+const display = await startIndexedScreen(
     new SSD1306Driver({ width: 128, height: 64, devAddr: 0x3c })
 )
-screen.image.print(`Hello world!`, 3, 10)
-await screen.show()
+display.image.print(`Hello world!`, 3, 10)
+await display.show()
 ```
 
 ## Character screen
