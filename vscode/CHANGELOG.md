@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.3](https://github.com/microsoft/devicescript/compare/v2.14.2...v2.14.3)
+
+> 20 July 2023
+
+- Server to drivers, Display documentation [`#566`](https://github.com/microsoft/devicescript/pull/566)
+- Indexed screen support [`#564`](https://github.com/microsoft/devicescript/pull/564)
+- sample TSX UI [`#547`](https://github.com/microsoft/devicescript/pull/547)
+- add st7709 [`05e8886`](https://github.com/microsoft/devicescript/commit/05e88868cce6e503e95a5a18e97ef9d7cbad4e4f)
+- updated ssd1306 [`8140a77`](https://github.com/microsoft/devicescript/commit/8140a775233f0202fb659b12cb5874d1d13bda5c)
+- reference help when inserting board configs [`8cd1019`](https://github.com/microsoft/devicescript/commit/8cd1019828556c66ba4f3c41b78f902aea74a822)
+
 #### [v2.14.2](https://github.com/microsoft/devicescript/compare/v2.14.1...v2.14.2)
 
 > 16 July 2023
