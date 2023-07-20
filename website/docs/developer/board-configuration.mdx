@@ -54,6 +54,8 @@ the I2C pins and the code below configure them by code.
 
 You can configure the board by code using the `configureHardware` function.
 
+### I2C
+
 ```ts
 import { pins } from "@dsboard/pico_w"
 // highlight-next-line
@@ -69,7 +71,7 @@ configureHardware({
 // highlight-end
 ```
 
-### Configuration by file
+## Configuration by file
 
 This is a more advanced scenario where you want to fork an existing board configuration
 and publish configuration for a different board.
