@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.4](https://github.com/microsoft/devicescript/compare/v2.14.3...v2.14.4)
+
+> 20 July 2023
+
+- add UC8151 docs; fixes #543 [`#543`](https://github.com/microsoft/devicescript/issues/543)
+- document other ST* drivers; fixes #552 [`#552`](https://github.com/microsoft/devicescript/issues/552)
+- add devs init --yarn; fixes for devs add npm [`dd75d94`](https://github.com/microsoft/devicescript/commit/dd75d94e3586ccb41741ca4a586ad87f7ef55a3e)
+- updated shield info [`3fdb86d`](https://github.com/microsoft/devicescript/commit/3fdb86db5a05ea025aa575e23f85c2169e8607cb)
+- more info on shields [`de363e8`](https://github.com/microsoft/devicescript/commit/de363e843552e75e1d1aaf9a5d8976ff8a9d9624)
+
 #### [v2.14.3](https://github.com/microsoft/devicescript/compare/v2.14.2...v2.14.3)
 
 > 20 July 2023
