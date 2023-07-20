@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.2](https://github.com/microsoft/devicescript/compare/v2.14.1...v2.14.2)
+
+> 16 July 2023
+
+- add command to upgrade tools [`#562`](https://github.com/microsoft/devicescript/pull/562)
+- project init (create new project) with board [`#561`](https://github.com/microsoft/devicescript/pull/561)
+
 #### [v2.14.1](https://github.com/microsoft/devicescript/compare/v2.14.0...v2.14.1)
 
 > 16 July 2023
