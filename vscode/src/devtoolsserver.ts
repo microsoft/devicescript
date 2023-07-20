@@ -464,7 +464,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
     get boards() {
         let boards = Object.values(this.buildConfig?.boards || {})
-        if (!Flags.developerMode) boards = boards.filter(b => !!b.url)
+        if (!Flags.developerMode) boards = boards.filter(b => !!b.url || b.$custom)
         return boards.sort((l, r) => {
             let c = -(l.url ? 1 : 0) + (r.url ? 1 : 0)
             if (c) return c
