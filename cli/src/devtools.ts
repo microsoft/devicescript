@@ -145,6 +145,7 @@ export async function devtools(
             .forEach(c => c.send(Buffer.from(frame)))
     })
     bus.on(FRAME_PROCESS_LARGE, (frame: JDFrameBuffer) => {
+        console.log("frame large", frame)
         devtoolsSelf.clients
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))

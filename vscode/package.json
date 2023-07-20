@@ -116,6 +116,12 @@
                     "description": "Enables additional logging or allows to connect to device outside the catalog.",
                     "scope": "machine-overridable"
                 },
+                "devicescript.devtools.localhost": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Listens for a jacdac-docs devtools server at localhost:8000",
+                    "scope": "machine-overridable"
+                },
                 "devicescript.jacdac.diagnostics": {
                     "type": "boolean",
                     "default": false,
@@ -275,11 +281,6 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
-                    "group": "navigation@1"
-                },
-                {
                     "command": "extension.devicescript.editor.configure",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@3"
@@ -295,6 +296,11 @@
                     "command": "extension.devicescript.editor.run",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "extension.devicescript.editor.build",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
+                    "group": "navigation@3"
                 }
             ],
             "view/title": [

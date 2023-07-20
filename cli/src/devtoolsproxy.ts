@@ -21,13 +21,12 @@ function uncachedFetchDevToolsProxy(
 ): Promise<string> {
     const protocol = localhost ? http : https
     const url = localhost
-        ? "http://localhost:8000/devtools/proxy.html"
+        ? "http://127.0.0.1:8000/devtools/proxy.html"
         : "https://microsoft.github.io/jacdac-docs/devtools/proxy"
     const dashboardPath = vscode ? VSCODE_DASHBOARD_PATH : DASHBOARD_PATH
     const root = localhost
-        ? "http://localhost:8000"
+        ? "http://127.0.0.1:8000"
         : "https://microsoft.github.io/jacdac-docs"
-    //debug(`fetch jacdac devtools proxy at ${url}`)
     return new Promise<string>((resolve, reject) => {
         protocol
             .get(url, res => {
@@ -41,7 +40,7 @@ function uncachedFetchDevToolsProxy(
                 res.on("end", () => {
                     body = body
                         .replace(
-                            /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
+                            /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard\//g,
                             `${root}/${dashboardPath}/`
                         )
                         .replace("Jacdac DevTools", "DeviceScript DevTools")

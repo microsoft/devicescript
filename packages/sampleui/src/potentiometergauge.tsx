@@ -1,18 +1,19 @@
 import "@devicescript/observables"
 import { Potentiometer } from "@devicescript/core"
-import { SSD1306Driver } from "@devicescript/drivers"
+import { SSD1306Driver, startIndexedScreen } from "@devicescript/drivers"
 import { HorizontalGauge, Text, renderOnImage } from "./ui"
 import { auditTime, distinctUntilChanged } from "@devicescript/observables"
 
 const pot = new Potentiometer()
 
 export async function startPotentiometerGauge() {
-    const ssd = new SSD1306Driver({ width: 128, height: 64, devAddr: 0x3c })
-    await ssd.init()
+    const screen = await startIndexedScreen(
+        new SSD1306Driver({ width: 128, height: 64, devAddr: 0x3c })
+    )
 
-    const image = ssd.image
+    const image = screen.image
     image.print("loading...", 0, 0)
-    await ssd.show()
+    await screen.show()
 
     pot.reading
         .pipe(auditTime(50), distinctUntilChanged())
@@ -31,6 +32,6 @@ export async function startPotentiometerGauge() {
                 </>,
                 image
             )
-            await ssd.show()
+            await screen.show()
         })
 }
