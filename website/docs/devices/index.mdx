@@ -20,6 +20,9 @@ For sensors and other peripherals, see [drivers](/api/drivers).
 | **RP2040**   | ✓   | ❌  | ❌  | ✓   | ✓   | ✓    | ✓   | ✓      |
 | **RP2040-W** | ✓   | ✓   | ❌  | ✓   | ✓   | ✓    | ✓   | ✓      |
 
+-   [ESP32](/devices/esp32/)
+-   [RP2040](/devices/rp2040/)
+
 The PWM is currently only supported through servo, light bulb, buzzer and similar drivers.
 
 **The ESP32-C3 boards are best supported.**
@@ -56,9 +59,15 @@ For [RP2040](/devices/rp2040/),
 
 -   [Raspberry Pi Pico](/devices/rp2040/pico)
 
-
 :::tip
 
 Your device is not in the list? [Add a new Device Configuration](/devices/add-board) in your project.
 
 :::
+
+## Shields
+
+It is also possible to create npm packages for shields or breakouts. Those packages
+typically configure the pins and drivers for a better experience.
+
+See [Add a new shield](/devices/add-shield).
