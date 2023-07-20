@@ -1,0 +1,54 @@
+---
+title: UC8151
+---
+
+# UC8151 eInk Driver
+
+Driver for UC8151 eInk screens.
+
+```ts
+import { UC8151Driver } from "@devicescript/drivers"
+```
+
+-   [Datasheet for UC8151](https://www.orientdisplay.com/wp-content/uploads/2022/09/UC8151C.pdf)
+
+![Pimoroni Badger W](https://cdn.learn.pimoroni.com/article/getting-started-with-badger-2040/assets/hero.jpg?width=1200)
+
+## Display
+
+The driver implements the [Display](/developer/graphics/display) interface and can be used as various services.
+Using the driver through services provides a better simulation experience.
+
+## Driver
+
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/uc8151.ts)
+
+
+```ts
+import * as ds from "@devicescript/core"
+import { UC8151Driver } from "@devicescript/drivers"
+import { Image, font8, scaledFont } from "@devicescript/graphics"
+import { spi } from "@devicescript/spi"
+import { pins } from "@dsboard/pico_w"
+
+spi.configure({
+    miso: pins.GP16,
+    mosi: pins.GP19,
+    sck: pins.GP18,
+    hz: 8_000_000,
+})
+
+const display = new UC8151Driver(Image.alloc(296, 128, 1), {
+    cs: pins.GP17,
+    dc: pins.GP20,
+    reset: pins.GP21,
+    busy: pins.GP26,
+
+    flip: false,
+    spi: spi,
+})
+await display.init()
+const bigFont = scaledFont(font8(), 3)
+display.image.print("Hello world!", 3, 10, 1, bigFont)
+await display.show()
+```
