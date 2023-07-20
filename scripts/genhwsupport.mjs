@@ -10,7 +10,7 @@ function fail(msg) {
 const drivers = `runtime/jacdac-c/drivers/`
 const driversURL = `https://github.com/microsoft/jacdac-c/blob/main/drivers`
 const servicesURL = `/api/clients`
-const serversURL = `/api/servers`
+const serversURL = `/api/drivers`
 
 const srvNames = {
     "accelerometers": "accelerometer",
@@ -80,16 +80,16 @@ function collectAnalog() {
         let m = /interface (\w+)Config extends AnalogConfig/.exec(line)
         if (m) {
             const serv = m[1]
-            analog += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
+            analog += `-   [${serv}](${serversURL}/${serv.toLowerCase()})\n`
         }
 
         m = /interface (\w+)Config extends BaseServiceConfig/.exec(line)
         if (m) {
             const serv = m[1]
             if (serv.startsWith("Hid")) {
-                hid += `* [HID ${serv.slice(3)}](/api/servers/${serv.toLowerCase()})\n`
+                hid += `-   [HID ${serv.slice(3)}](/api/drivers/${serv.toLowerCase()})\n`
             } else if (serv != "Analog") {
-                servers += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
+                servers += `-   [${serv}](${serversURL}/${serv.toLowerCase()})\n`
             }
         }
     }

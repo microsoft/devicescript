@@ -1,3 +1,3 @@
-* [HID Mouse](/api/servers/hidmouse)
-* [HID Keyboard](/api/servers/hidkeyboard)
-* [HID Joystick](/api/servers/hidjoystick)
+-   [HID Mouse](/api/drivers/hidmouse)
+-   [HID Keyboard](/api/drivers/hidkeyboard)
+-   [HID Joystick](/api/drivers/hidjoystick)

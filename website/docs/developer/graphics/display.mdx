@@ -1,0 +1,77 @@
+---
+sidebar_position: 2
+title: Display
+---
+
+# Display
+
+The [Display](https://github.com/microsoft/devicescript/blob/main/packages/graphics/src/display.ts)
+interface provides an abstraction over a small screen. The `Display` interface is implemented
+for various hardware peripherical and can be used with various services.
+
+-   [SSD1306](/api/drivers/ss1306)
+
+## Indexed screen
+
+The `startIndexedScreen` returns a local client for the screen service.
+Most importantly it wraps the native driver to enable simulation of the screen
+on the simulated device (simulation does not work on hardware device as the communication channel is too slow).
+
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/indexedscreen.ts)
+
+```ts
+import { SSD1306Driver, startIndexedScreen } from "@devicescript/drivers"
+
+const screen = await startIndexedScreen(
+    new SSD1306Driver({ width: 128, height: 64, devAddr: 0x3c })
+)
+screen.image.print(`Hello world!`, 3, 10)
+await screen.show()
+```
+
+## Character screen
+
+The user sets a message on the character screen and it will be rendered on the screen.
+Using the service is compatible with the simulator.
+
+-   Service: [character screen](/api/clients/characterscreen/)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/characterscreen.ts)
+
+```ts
+import { SSD1306Driver, startCharacterScreen } from "@devicescript/drivers"
+
+const screen = await startCharacterScreen(
+    new SSD1306Driver({ width: 128, height: 64 })
+)
+await screen.message.write(`hello
+world`)
+```
+
+## Dot matrix
+
+The screen emulates a dot matrix of monochrome LEDs.
+
+-   Service: [dot matrix](/api/clients/dotmatrix/)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/dotmatrix.ts)
+
+```ts
+import { SSD1306Driver, startDotMatrix } from "@devicescript/drivers"
+import { img } from "@devicescript/graphics"
+
+const dots = await startDotMatrix(
+    new SSD1306Driver({
+        width: 128,
+        height: 64,
+        devAddr: 0x3c,
+    }),
+    {
+        rows: 5,
+        columns: 5,
+    }
+)
+await dots.writeImage(img`# # . # #
+# # . # #
+. # # # .
+. # # # .
+# . # . .`)
+```
