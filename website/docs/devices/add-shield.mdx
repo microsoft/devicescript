@@ -4,4 +4,51 @@ sidebar_position: 12
 
 # Add Shield
 
-.
+Shield typically rely on using an existing [board definition](/developer/board-configuration)
+and with extra configuration using `configureHardware`
+and the logic to start drivers.
+
+## How-to
+
+-   [ ] start a new DeviceScript project
+-   [ ] add the board package for your target [device](/devices)
+
+-   [ ] create a class `Shield` (rename to your shield name) and add the `@devsWhenUsed` attribute in the jsdoc.
+
+```ts skip
+/**
+ * A shield driver
+ * @devsWhenUsed
+ */
+export class Shield {}
+```
+
+-   [ ] call `configureHardware` in the constructor to setup additional hardware configuration like I2C.
+
+```ts skip
+export class Shield {
+    constructor() {
+        // highlight-next-line
+        configureHardware({
+            ...
+        })
+    }
+}
+```
+
+-   [ ] add instance methods to start each driver
+
+```ts
+export class Shield {
+    startButton() {
+        return startButton({
+            pin: pins.GP10,
+            activeHigh: true,
+        })
+    }
+}
+```
+
+-   [ ] update the README with examples and documentation
+-   [ ] publish a release of your package
+-   [ ] send us a pull request so we list your shield package!
