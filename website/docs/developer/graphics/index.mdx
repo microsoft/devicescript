@@ -5,9 +5,12 @@ title: Graphics
 
 # Graphics
 
-The `@devicescript/graphics` package provides an `Image` type that supports
+The `@devicescript/graphics` package provides an `Image` type and a `Display` type that supports
 paletted graphics.
-The image which can be used to author efficient driver for small screens
+
+![Progress bar image](../jsx.png)
+
+The [image](/developer/graphics/image) can be used to author efficient driver for small screens
 such as the [SSD1306 OLED screen](/api/drivers/ssd1306)
 
 ```ts
@@ -18,7 +21,7 @@ const img = Image.alloc(128, 64, 1)
 
 -   [Image](/developer/graphics/image)
 
-A [Display](/developer/graphics/display) driver for a screen, such as the [SSD1306](/api/drivers/ssd1306),
+A [display](/developer/graphics/display) driver for a screen, such as the [SSD1306](/api/drivers/ssd1306),
 exposes an image that represents the screen buffer. The driver typically
 can be used as an indexed screen service which provides simulation support.
 
@@ -32,4 +35,4 @@ screen.image.print(`Hello world!`, 3, 10)
 await screen.show()
 ```
 
--   [Display(/developer/graphics/display)]
+-   [Display](/developer/graphics/display)
