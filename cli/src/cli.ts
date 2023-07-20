@@ -33,6 +33,7 @@ import { addBoard } from "./addboard"
 import { LoggerPriority } from "jacdac-ts"
 import { snippets } from "./snippets"
 import { bundle } from "./bundle"
+import { initTemplate } from "./inittemplate"
 
 export async function mainCli() {
     await notifyUpdates({
@@ -422,6 +423,8 @@ export async function mainCli() {
         .option("--elf <file.elf>", "specify ELF file name")
         .arguments("<file.board.json...>")
         .action(binPatch)
+
+    program.command("init-template", { hidden: true }).action(initTemplate)
 
     program.on("option:quiet", () => setQuiet(true))
     program.on("option:verbose", incVerbose)
