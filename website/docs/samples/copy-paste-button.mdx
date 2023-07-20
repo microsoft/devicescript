@@ -15,7 +15,7 @@ keywords:
 In this example, we use a single button to create a `copy-paste` micro-keyboard
 on [Raspberry Pi Pico](/devices/rp2040).
 
--   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/servers/hidkeyboard) server.
+-   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/drivers/hidkeyboard) server.
     The `ctrl+c` keystroke will copy the selected text, and the `ctrl+v` keystroke will paste the copied text.
 -   The status of the clipboard is indicated by a status LED connected to the Pico's GP1 pin. When the LED is on, the clipboard is full, and when the LED is off, the clipboard is empty.
 

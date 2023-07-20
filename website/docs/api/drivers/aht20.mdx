@@ -9,9 +9,10 @@ Driver for AHT20 temperature/humidity sensor at I2C address `0x38`.
 ## Usage
 
 ```ts
-// highlight-next-line
 import { startAHT20 } from "@devicescript/drivers"
-
-// highlight-next-line
 const { temperature, humidity } = await startAHT20()
 ```
+
+## Configuration
+
+-   Configure I2C throught the [board configuration](/developer/board-configuration)

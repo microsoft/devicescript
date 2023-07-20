@@ -1,15 +1,15 @@
-# SS1306
+---
+sidebar_position: 2
+title: Display
+---
 
-Driver for SS1306 OLED screen at I2C address `0x3c` (or `0x3d`).
+# Display
 
-This screen can be driven directly or through a character screen service.
+The [Display](https://github.com/microsoft/devicescript/blob/main/packages/graphics/src/display.ts)
+interface provides an abstraction over a small screen. The `Display` interface is implemented
+for various hardware peripherical and can be used with various services.
 
--   [Datasheet](https://www.digikey.com/htmldatasheets/production/2047793/0/0/1/ssd1306.html)
-
-## Hardware configuration
-
--   Configure the I2C connection through the [board configuration](/developer/board-configuration)
--   Check that you are using the proper I2C address
+-   [SSD1306](/api/drivers/ssd1306)
 
 ## Indexed screen
 
@@ -74,19 +74,4 @@ await dots.writeImage(img`# # . # #
 . # # # .
 . # # # .
 # . # . .`)
-```
-
-## Driver
-
-You can also use the SS1306 driver directly. However, it will not be usable from a simulator.
-
--   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/ssd1306.ts)
-
-```ts
-import { SSD1306Driver } from "@devicescript/drivers"
-
-const ssd = new SSD1306Driver({ width: 64, height: 48 })
-await ssd.init()
-ssd.image.print("Hello world!", 3, 10)
-await ssd.show()
 ```
