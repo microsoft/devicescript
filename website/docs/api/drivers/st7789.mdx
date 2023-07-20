@@ -1,16 +1,20 @@
 ---
-title: ST7789
+title: ST7735, ILI9163, ST7789
 ---
 
-# ST7789
+# ST7735, ILI9163, ST7789
 
-Driver for ST7789 LCD screen.
+Driver for ST7735, ST7789 and similar LCD screens.
+The ST7735 driver also works for ILI9163C.
+ILI9341 should be [easy to add](https://github.com/microsoft/devicescript/issues/568).
 
 ```ts
 import { ST7789Driver } from "@devicescript/drivers"
+import { ST7735Driver } from "@devicescript/drivers"
 ```
 
--   [Datasheet](https://www.waveshare.com/w/upload/a/ae/ST7789_Datasheet.pdf)
+-   [Datasheet for ST7789](https://www.waveshare.com/w/upload/a/ae/ST7789_Datasheet.pdf)
+-   [Datasheet for ST7735](https://www.displayfuture.com/Display/datasheet/controller/ST7735.pdf)
 
 ![WaveShare Pico-LCD shield](https://github.com/mmoskal/devicescript-waveshare-pico-lcd/blob/main/assets/pico-lcd-114.png?raw=true)
 
