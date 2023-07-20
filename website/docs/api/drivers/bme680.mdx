@@ -1,6 +1,7 @@
 # BME680
 
-Driver for BME680 temperature/humidity/air pressure/aqi.
+Driver for BME680 temperature/humidity/air pressure/aqi
+at I2C address `0x76` (default) or `0x77`.
 
 -   Services: [temperature](/api/clients/temperature/), [humidity](/api/clients/humidity/), [air pressure](/api/clients/airpressure/), [air quality index](/api/clients/airqualityindex/)
 -   [Datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme680-ds001.pdf)
@@ -12,3 +13,8 @@ Driver for BME680 temperature/humidity/air pressure/aqi.
 import { startBME680 } from "@devicescript/drivers"
 const { temperature, humidity, pressure, airQualityIndex } = await startBME680()
 ```
+
+## Configuration
+
+-   Configure I2C throught the [board configuration](/developer/board-configuration)
+-   Check that you are using the correct I2C address
