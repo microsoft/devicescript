@@ -20,6 +20,7 @@ export async function snippets(options: SnippetsOptions) {
     await rm(snipFolder, { recursive: true, force: true })
 
     const pref = 'import * as ds from "@devicescript/core"'
+    const allImports: string[] = []
     let imports = ""
     let numsnip = 0
 
@@ -54,16 +55,26 @@ export async function snippets(options: SnippetsOptions) {
             await writeFile(fullname, snip)
             imports += `import "./${mod}"\n`
             numsnip++
+            if (numsnip % 150 == 0) {
+                allImports.push(imports)
+                imports = ""
+            }
         }
     }
 
-    const idx = resolve(snipFolder, "index.ts")
-    await writeFile(idx, imports)
+    if (imports) allImports.push(imports)
 
-    const res = await compileFile(idx, {
-        ignoreMissingConfig: true,
-        flag: { allFunctions: true, allPrototypes: true },
-    })
-    if (!res.success) process.exit(1)
+    for (let i = 0; i < allImports.length; ++i) {
+        const idx = resolve(snipFolder, `index${i}.ts`)
+        log(`compile ${idx}`)
+        await writeFile(idx, allImports[i])
+
+        const res = await compileFile(idx, {
+            ignoreMissingConfig: true,
+            flag: { allFunctions: true, allPrototypes: true },
+        })
+        if (!res.success) process.exit(1)
+    }
+
     log(`${numsnip} snippets OK!`)
 }
