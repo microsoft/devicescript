@@ -1,4 +1,4 @@
-import { debug, fatal, GENDIR, LIBDIR, log } from "./command"
+import { debug, fatal, GENDIR, LIBDIR, log, verboseLog } from "./command"
 import { basename, dirname, join, resolve } from "node:path"
 import {
     pathExistsSync,
@@ -79,7 +79,6 @@ const npmFiles: FileSet = {
     },
     "src/index.ts": `${IMPORT_PREFIX}\n\n`,
     "src/tsdoc.json": {
-        [IS_PATCH]: true,
         $schema:
             "https://developer.microsoft.com/en-us/json-schemas/tsdoc/v0/tsdoc.schema.json",
         extends: ["typedoc/tsdoc.json"],
@@ -253,6 +252,7 @@ const optionalFiles: FileSet = {
     },
     ".prettierrc": {
         arrowParens: "avoid",
+        trailingComma: "es5",
         semi: false,
         tabWidth: 4,
     },
@@ -373,7 +373,7 @@ function patchJSON(fn: string, data: any) {
         const force = !!src[FORCE]
         for (const k of Object.keys(src)) {
             if (k == IS_PATCH || k == FORCE) continue
-            if (trg[k] === undefined || force) trg[k] = src[k]
+            if (trg[k] === undefined || trg[k] === "" || force) trg[k] = src[k]
             else if (
                 Array.isArray(src[k]) &&
                 Array.isArray(trg[k]) &&
@@ -563,7 +563,7 @@ export interface AddNpmOptions extends InitOptions {
 
 export interface AddSettingsOptions extends InitOptions {}
 
-function execCmd(cmd: string) {
+export function execCmd(cmd: string) {
     try {
         return execSync(cmd, { encoding: "utf-8" }).trim()
     } catch {
@@ -588,12 +588,15 @@ export async function addNpm(options: AddNpmOptions) {
         let uname = execCmd("git config --get user.name")
         if (uname) {
             uname += " <" + execCmd("git config --get user.email") + ">"
+            debug(`set author to ${uname}`)
             pkg.author = uname
         }
     }
 
+    let url = ""
+
     if (!pkg.repository && pathExistsSync(".git")) {
-        const url = execCmd("git remote get-url origin")
+        url = execCmd("git remote get-url origin")
         if (url)
             pkg.repository = {
                 type: "git",
@@ -601,7 +604,11 @@ export async function addNpm(options: AddNpmOptions) {
             }
     }
     if (!pkg.version) pkg.version = "0.0.0"
-    if (!pkg.name) pkg.name = options.name || basename(resolve("."))
+    if (!pkg.name)
+        pkg.name =
+            options.name || url
+                ? url.replace(/.*\//, "")
+                : basename(resolve("."))
     pkg.private = false
     let lst = await readdir("src")
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
