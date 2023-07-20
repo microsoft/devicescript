@@ -325,6 +325,7 @@ export async function mainCli() {
         return base
             .command(name)
             .option("-f, --force", "force overwrite existing files")
+            .option("-y, --yarn", "use yarn, not npm")
             .option(
                 "--spaces <number>",
                 "number of spaces when generating JSON"

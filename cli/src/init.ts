@@ -66,6 +66,7 @@ const npmFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
         main: "./src/index.ts",
+        version: "0.0.0",
         license: "MIT",
         devicescript: {
             library: true,
@@ -359,6 +360,7 @@ to use the simulators or deploy to hardware.
 }
 
 export interface InitOptions {
+    yarn?: boolean
     force?: boolean
     spaces?: number
     install?: boolean
@@ -423,7 +425,7 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
         const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
-        const cmd = yarnlock ? "yarn" : "npm"
+        const cmd = yarnlock || options.yarn ? "yarn" : "npm"
         log(`install dependencies using ${cmd}...`)
         spawnSync(cmd, ["install"], {
             shell: true,
@@ -580,22 +582,41 @@ export async function addSettings(options: AddSettingsOptions) {
     )
 }
 
+// enforce nicer order on package.json fields
+function sortPkgJson(pkg: any) {
+    const jsonFields: string[] = [
+        "name",
+        "description",
+        "version",
+        "author",
+        "license",
+        "main",
+        "devicescript",
+    ]
+    const p2: any = {}
+    for (const f of jsonFields.concat(Object.keys(pkg))) {
+        p2[f] = pkg[f]
+    }
+    return p2
+}
+
 export async function addNpm(options: AddNpmOptions) {
     const files = clone(npmFiles)
-    const pkg = files["package.json"] as any
-    pkg.license = options.license ?? "MIT"
-    if (!pkg.author) {
-        let uname = execCmd("git config --get user.name")
-        if (uname) {
-            uname += " <" + execCmd("git config --get user.email") + ">"
-            debug(`set author to ${uname}`)
-            pkg.author = uname
-        }
+    let pkg = files["package.json"] as any
+
+    // note that these operations are performed on the *patch* not on package.json
+    // these fields apply *only* if given field is missing or set to ""
+
+    let uname = execCmd("git config --get user.name")
+    if (uname) {
+        uname += " <" + execCmd("git config --get user.email") + ">"
+        debug(`set author to ${uname}`)
+        pkg.author = uname
     }
 
     let url = ""
 
-    if (!pkg.repository && pathExistsSync(".git")) {
+    if (pathExistsSync(".git")) {
         url = execCmd("git remote get-url origin")
         if (url)
             pkg.repository = {
@@ -603,13 +624,9 @@ export async function addNpm(options: AddNpmOptions) {
                 url: url,
             }
     }
-    if (!pkg.version) pkg.version = "0.0.0"
-    if (!pkg.name)
-        pkg.name =
-            options.name || url
-                ? url.replace(/.*\//, "")
-                : basename(resolve("."))
-    pkg.private = false
+
+    pkg.name = url ? url.replace(/.*\//, "") : basename(resolve("."))
+
     let lst = await readdir("src")
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
     for (const fn of lst) {
@@ -617,6 +634,22 @@ export async function addNpm(options: AddNpmOptions) {
     }
 
     const cwd = writeFiles(".", options, files)
+
+    // ok, soft patch applied, now we apply more stuff that always has to be set
+    pkg = readJSON5Sync("package.json")
+
+    // npm is never private:
+    delete pkg.private
+
+    // if user specified, override
+    if (options.license) pkg.license = options.license
+    if (options.name) pkg.name = options.name
+
+    // save
+    writeJSONSync("package.json", sortPkgJson(pkg), {
+        spaces: options.spaces ?? 4,
+    })
+
     await runInstall(cwd, options)
 
     return finishAdd(`Prepared package.json for publishing, please review.`, [
