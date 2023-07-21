@@ -72,10 +72,8 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
     }
 
     emit(newValue: T) {
-        if (this.value !== newValue) {
-            this.value = newValue
-            this.emitter?.emit(this.value)
-        }
+        this.value = newValue
+        this.emitter?.emit(this.value)
     }
 }
 
