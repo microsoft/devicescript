@@ -121,10 +121,18 @@ export module Exts {
             let sock: any = null
 
             const send = (data: Uint8Array) => {
-                if (data.length >= 0xff) return
-                const buf = new Uint8Array(1 + data.length)
-                buf[0] = data.length
-                buf.set(data, 1)
+                let buf: Uint8Array
+                if (data.length >= 0xff) {
+                    buf = new Uint8Array(3 + data.length)
+                    buf[0] = 0xff
+                    buf[1] = data.length & 0xff
+                    buf[2] = data.length >> 8
+                    buf.set(data, 3)
+                } else {
+                    buf = new Uint8Array(1 + data.length)
+                    buf[0] = data.length
+                    buf.set(data, 1)
+                }
                 if (sock) sock.write(buf)
             }
 

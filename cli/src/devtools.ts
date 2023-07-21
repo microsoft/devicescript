@@ -145,7 +145,6 @@ export async function devtools(
             .forEach(c => c.send(Buffer.from(frame)))
     })
     bus.on(FRAME_PROCESS_LARGE, (frame: JDFrameBuffer) => {
-        console.log("frame large", frame)
         devtoolsSelf.clients
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
@@ -292,9 +291,14 @@ function startProxyServers(
                 buf = new Uint8Array(buf)
             }
             while (buf) {
-                const endp = buf[0] + 1
+                let endp = buf[0] + 1
+                let off = 1
+                if (endp == 0x100 && buf.length > 3) {
+                    endp = 3 + buf[1] + (buf[2] << 8)
+                    off = 3
+                }
                 if (buf.length >= endp) {
-                    const pkt = buf.slice(1, endp)
+                    const pkt = buf.slice(off, endp)
                     if (buf.length > endp) buf = buf.slice(endp)
                     else buf = null
                     processPacket(pkt, sender)
