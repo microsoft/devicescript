@@ -18,7 +18,7 @@ ds.Gamepad.prototype.axes = function axes() {
     let r = (this as any).__axes as ds.ClientRegister<[number, number]>
     if (!r) {
         ;(this as any).__axes = r = ds.clientRegister([0, 0])
-        this.reading.subscribe(([, x, y]) => r.emit([x, y]))
+        this.reading.subscribe(rv => r.emit([rv[1], rv[2]]))
     }
     return r
 }
@@ -28,9 +28,7 @@ ds.Gamepad.prototype.button = function button(value: ds.GamepadButtons) {
     let r = (this as any)[key] as ds.ClientRegister<boolean>
     if (!r) {
         ;(this as any)[key] = r = ds.clientRegister(false)
-        this.reading.subscribe(([buttons]) =>
-            r.emit((buttons & value) === value)
-        )
+        this.reading.subscribe(rv => r.emit((rv[0] & value) === value))
     }
     return r
 }
