@@ -78,12 +78,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     if (projectName === undefined) return
                 }
 
-                const board = await extensionState.showQuickPickBoard(
-                    "Pick a board for your project",
-                    { useUniqueDevice: true }
-                )
-                if (board === undefined) return
-
                 const cwd = projectName
                     ? Utils.joinPath(folder, projectName)
                     : folder
@@ -93,7 +87,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     cwd,
                 })
                 let cmd = "npx --yes @devicescript/cli@latest init --quiet"
-                if (board) cmd += ` --board ${board.id}`
                 terminal.sendText(cmd)
                 terminal.show()
 
