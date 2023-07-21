@@ -216,7 +216,7 @@ void fun2_DeviceScript__twinMessage(devs_ctx_t *ctx) {
         return;
     devs_ret_gc_ptr(ctx, buf);
     buf->data[2] = 0xff;
-    uint64_t id = jd_device_id();
+    uint64_t id = devs_jd_server_device_id();
     memcpy(buf->data + 8, &id, 8);
     memcpy(buf->data + 16, topic, topic_size);
     memcpy(buf->data + 16 + topic_size + 1, data, data_size);
