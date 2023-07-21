@@ -864,9 +864,9 @@ export class DeveloperToolsManager extends JDEventSource {
                 return undefined
             }
 
-            showErrorMessage(
+            showErrorWithHelp(
                 "terminal.notinstalled",
-                "Install Node.JS dependencies to enable tools.",
+                "Install @devicescript/cli package.",
                 "Install"
             ).then(async (res: string) => {
                 if (res === "Install") {

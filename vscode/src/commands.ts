@@ -77,15 +77,16 @@ export async function showInformationMessageWithHelp(
 
 export async function showErrorWithHelp(
     eventName: string,
-    message: string
-): Promise<boolean | undefined> {
+    message: string,
+    ...items: string[]
+): Promise<string> {
     const path = `developer/errors#${eventName.replace(/\./g, "-")}`
     const help = "Help..."
     const res = await showErrorMessage(
         eventName,
         MESSAGE_PREFIX + message,
-        help
+        help, ...items
     )
-    if (res === help) return await openDocUri(path)
-    return undefined
+    if (res === help) await openDocUri(path)
+    return res
 }

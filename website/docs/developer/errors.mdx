@@ -39,3 +39,14 @@ You can try to run npm update in the folder and try again.
 ```bash npm2yarn
 npm update
 ```
+
+## Install @devicescript/cli package {#terminal-notinstalled}
+
+The Visual Studio Code extension tries to locate the
+CLI script, `./node_modules/.bins/devicescript`, that gets installed by the package manager.
+
+If this file is not present, it typically means that the CLI is not installed in the project
+and needs to be added as `devDependency`.
+
+-   click **Install** to install @devicescript/cli
+-   try running `npm update` or `yarn update` to fix the installation
