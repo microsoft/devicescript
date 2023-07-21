@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.5](https://github.com/microsoft/devicescript/compare/v2.14.4...v2.14.5)
+
+> 20 July 2023
+
+- setup gh action for yarn if detected [`076418b`](https://github.com/microsoft/devicescript/commit/076418b7469bf16f41c5f628e0d32c0010cdd4ba)
+- link pico-lcd pkg [`a9d46ce`](https://github.com/microsoft/devicescript/commit/a9d46ce305739dfc539d2e2d49efc03a462050c1)
+
 #### [v2.14.4](https://github.com/microsoft/devicescript/compare/v2.14.3...v2.14.4)
 
 > 20 July 2023

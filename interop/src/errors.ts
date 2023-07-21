@@ -3,5 +3,6 @@ export const errors: Record<string, string> = {
   "loopback rx ovf": "loopback-rx-ovf",
   "can't connect, no HF2 nor JDUSB": "no-hf2",
   "esptool cannot connect": "esptool-cannot-connect",
-  "I2C device not found or malfunctioning": "i2c-device-not-found-or-malfunctioning"
+  "I2C device not found or malfunctioning": "i2c-device-not-found-or-malfunctioning",
+  "Unable to locate Node.JS v16+.": "terminal-nodemissing"
 };
