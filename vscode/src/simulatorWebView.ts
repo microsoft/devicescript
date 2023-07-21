@@ -115,14 +115,21 @@ export class SimulatorsWebView extends JDEventSource {
         }
     }
 
+    private dontShowStartSimulatorDialogAgain = false
     private async handleOpen(options?: { askUser?: boolean }) {
         const { askUser } = options || {}
         if (!this.simulatorsWebviewPanel && askUser) {
+            if (this.dontShowStartSimulatorDialogAgain) return
+
+            const start = "Start"
+            const noShow = "Don't show again"
             const res = await vscode.window.showInformationMessage(
                 "DeviceScript: Start simulators?",
-                "Start"
+                start,
+                noShow
             )
-            if (res !== "Start") return
+            if (res === noShow) this.dontShowStartSimulatorDialogAgain = true
+            if (res !== start) return
         }
 
         if (this.simulatorsWebviewPanel) {
