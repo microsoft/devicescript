@@ -7,7 +7,7 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { MESSAGE_PREFIX } from "./constants"
-import { showError } from "./telemetry"
+import { showError, showErrorMessage } from "./telemetry"
 
 export async function sendCmd(
     service: JDService,
@@ -68,6 +68,21 @@ export async function showInformationMessageWithHelp(
 ): Promise<boolean | undefined> {
     const help = "Help..."
     const res = await vscode.window.showInformationMessage(
+        MESSAGE_PREFIX + message,
+        help
+    )
+    if (res === help) return await openDocUri(path)
+    return undefined
+}
+
+export async function showErrorWithHelp(
+    eventName: string,
+    message: string
+): Promise<boolean | undefined> {
+    const path = `developer/errors#${eventName.replace(/\./g, "-")}`
+    const help = "Help..."
+    const res = await showErrorMessage(
+        eventName,
         MESSAGE_PREFIX + message,
         help
     )

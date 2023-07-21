@@ -27,3 +27,15 @@ are due to invalid configurations, aside from hardware issues with the sensor.
 -   Check that the I2C pins have been configured. Read about [board configuration](/developer/board-configuration).
 -   The I2C address is incorrect. Check the datasheet for the correct address.
 -   The I2C address is correct, but the sensor is not responding. Check the wiring and the sensor datasheet.
+
+## Unable to locate Node.JS v16+. {#terminal-nodemissing}
+
+The Visual Studio Code extension was unable to determine the version of Node.JS.
+This may mean that Node.JS is not installed or not in the path,
+the local installation of modules is broken.
+
+You can try to run npm update in the folder and try again.
+
+```bash npm2yarn
+npm update
+```

@@ -30,7 +30,7 @@ import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
-import { showInformationMessageWithHelp } from "./commands"
+import { showErrorWithHelp, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
 import {
     MIN_NODE_VERSION,
@@ -464,7 +464,8 @@ export class DeveloperToolsManager extends JDEventSource {
 
     get boards() {
         let boards = Object.values(this.buildConfig?.boards || {})
-        if (!Flags.developerMode) boards = boards.filter(b => !!b.url || b.$custom)
+        if (!Flags.developerMode)
+            boards = boards.filter(b => !!b.url || b.$custom)
         return boards.sort((l, r) => {
             let c = -(l.url ? 1 : 0) + (r.url ? 1 : 0)
             if (c) return c
@@ -840,13 +841,13 @@ export class DeveloperToolsManager extends JDEventSource {
                 Utils.joinPath(cwd, ".devicescript/node.version")
             )
             if (!v) {
-                showErrorMessage(
+                showErrorWithHelp(
                     "terminal.nodemissing",
                     "Unable to locate Node.JS v16+."
                 )
                 return undefined
             }
-            if (!(v.major >= 18)) {
+            if (!(v.major >= 16)) {
                 showErrorMessage(
                     "terminal.nodeversion",
                     `Node.JS version outdated, found ${v.major}.${v.minor} but needed v16+.`
