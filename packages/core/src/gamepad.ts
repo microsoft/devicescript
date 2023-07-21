@@ -5,7 +5,7 @@ declare module "@devicescript/core" {
         /**
          * The thumbstick position register if any
          */
-        axes(): ds.ClientRegister<[number, number]>
+        axes(): ds.ClientRegister<{ x: number; y: number }>
 
         /**
          * Button (or combo) register
@@ -15,10 +15,12 @@ declare module "@devicescript/core" {
 }
 
 ds.Gamepad.prototype.axes = function axes() {
-    let r = (this as any).__axes as ds.ClientRegister<[number, number]>
+    let r = (this as any).__axes as ds.ClientRegister<{ x: number; y: number }>
     if (!r) {
-        ;(this as any).__axes = r = ds.clientRegister([0, 0])
-        this.reading.subscribe(rv => r.emit([rv[1], rv[2]]))
+        ;(this as any).__axes = r = ds.clientRegister<{ x: number; y: number }>(
+            { x: 0, y: 0 }
+        )
+        this.reading.subscribe(rv => r.emit({ x: rv[1], y: rv[2] }))
     }
     return r
 }
