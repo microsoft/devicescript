@@ -192,8 +192,8 @@ export class DeveloperToolsManager extends JDEventSource {
             name: "@devicescript/cli upgrade",
             cwd: projectFolder,
         })
-        const cmd = await this.resolvePackageTool(projectFolder)
-        t.sendText(`${cmd} upgrade @devicescript/cli`)
+        const cmd = await this.resolvePackageTool(projectFolder, "upgrade")
+        t.sendText(`${cmd} @devicescript/cli`)
         t.show()
     }
 
@@ -798,10 +798,19 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
-    private async resolvePackageTool(cwd: vscode.Uri) {
+    private async resolvePackageTool(cwd: vscode.Uri, command?: string) {
         if (!cwd) return "npm"
         const yarn = await checkFileExists(cwd, "yarn.lock")
-        const cmd = yarn ? "yarn" : "npm"
+        let cmd = yarn ? "yarn" : "npm"
+        if (command) {
+            if (yarn) {
+                command =
+                    {
+                        ["install"]: "add",
+                    }[command] || command
+            }
+            cmd += " " + command
+        }
         return cmd
     }
 
@@ -866,8 +875,8 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd: cwd.fsPath,
                         isTransient: true,
                     })
-                    const cmd = await this.resolvePackageTool(cwd)
-                    t.sendText(`${cmd} install`)
+                    const cmd = await this.resolvePackageTool(cwd, "install")
+                    t.sendText(`${cmd} -D @devicescript/cli`)
                     t.show()
                 }
             })
