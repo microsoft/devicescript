@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.7](https://github.com/microsoft/devicescript/compare/v2.14.6...v2.14.7)
+
+> 21 July 2023
+
+- traffic light server [`#574`](https://github.com/microsoft/devicescript/pull/574)
+- gamepad client apis [`#573`](https://github.com/microsoft/devicescript/pull/573)
+- more error handling on missing @devicescript/cli [`d6cf355`](https://github.com/microsoft/devicescript/commit/d6cf35577076b36b49856efce8d1249aae6feee5)
+- ensure that @devicescript/cli is locally installed [`a3b15cd`](https://github.com/microsoft/devicescript/commit/a3b15cd8177139d39d1c4ac1e94a0037c3d863c3)
+- traffic light sample [`2544de0`](https://github.com/microsoft/devicescript/commit/2544de05e56455a0f7abd3252adb1a994a6d1920)
+
 #### [v2.14.6](https://github.com/microsoft/devicescript/compare/v2.14.5...v2.14.6)
 
 > 21 July 2023
