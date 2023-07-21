@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/runtime",
-    "version": "2.14.6",
+    "version": "2.14.7",
     "private": true,
     "dependencies": {},
     "devDependencies": {

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.6](https://github.com/microsoft/devicescript/compare/v2.14.5...v2.14.6)
+
+> 21 July 2023
+
+- better error messages on missing node [`941084f`](https://github.com/microsoft/devicescript/commit/941084f4ad58e701bbad6dfdf4a166eff6d66a60)
+- updated pico_w samples [`8368737`](https://github.com/microsoft/devicescript/commit/8368737ff2a70f7cfdf602fdb1ae21672ca43c19)
+- support for large frames over tcp [`3cebccb`](https://github.com/microsoft/devicescript/commit/3cebccbb00386e96a7de3d53a23330e3ec77e3c4)
+
 #### [v2.14.5](https://github.com/microsoft/devicescript/compare/v2.14.4...v2.14.5)
 
 > 20 July 2023
