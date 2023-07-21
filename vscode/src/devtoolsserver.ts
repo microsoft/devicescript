@@ -361,7 +361,7 @@ export class DeveloperToolsManager extends JDEventSource {
                             label: file,
                             description: this.projectFolder.fsPath,
                             data: file,
-                        } as TaggedQuickPickItem<string>)
+                        }) as TaggedQuickPickItem<string>
                 ),
                 {
                     title: "Pick an entry point file (main*.ts)",
@@ -876,7 +876,7 @@ export class DeveloperToolsManager extends JDEventSource {
                         isTransient: true,
                     })
                     const cmd = await this.resolvePackageTool(cwd, "install")
-                    t.sendText(`${cmd} -D @devicescript/cli`)
+                    t.sendText(`${cmd} -D @devicescript/cli@latest`)
                     t.show()
                 }
             })
