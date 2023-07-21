@@ -505,7 +505,14 @@ ${varname}.${sig}
     const regs = info.packets
         .filter(pkt => isRegister(pkt.kind))
         .filter(pkt => !pkt.derived && !pkt.internal && !pkt.lowLevel)
-    if (regs?.length) r.push("## Registers", "")
+    if (regs?.length) {
+        r.push(
+            "## Registers",
+            "",
+            `{@import optional ../clients-custom/${info.shortId}-registers.mdp}`,
+            ""
+        )
+    }
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
         const nobuild = status === "stable" && !pkt.client ? "" : "skip"
