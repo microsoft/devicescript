@@ -381,7 +381,14 @@ ${spec.description}`,
                     const description = control?.register(
                         ControlReg.DeviceDescription
                     )
-                    this.tooltip = description?.stringValue
+                    this.tooltip = toMarkdownString(
+                        `#### ${description?.stringValue || "no description"}
+
+- device id: ${deviceId}
+
+`,
+                        "devicescript:devices"
+                    )
                 }
             }
         }
