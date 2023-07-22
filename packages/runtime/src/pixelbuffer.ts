@@ -60,14 +60,32 @@ export class PixelBuffer {
     }
 
     /**
+     * Sets all the color in the buffer to the given color
+     * @param c 24bit rgb color
+     */
+    setAll(c: number) {
+        const r = (c >> 16) & 0xff
+        const g = (c >> 8) & 0xff
+        const b = c & 0xff
+        const n = this.length
+        const buf = this.buffer
+        for (let i = 0; i < n; ++i) {
+            const bi = (this.start + i) * 3
+            buf[0] = r
+            buf[1] = g
+            buf[2] = b
+        }
+    }
+
+    /**
      * Apply a conversion function to all pixels
      * @param converter
      */
     apply(converter: (c: number, index: number) => number) {
         const n = this.length
         const buf = this.buffer
-        for (let i = this.start; i < n; ++i) {
-            const bi = i * 3
+        for (let i = 0; i < n; ++i) {
+            const bi = (this.start + i) * 3
 
             const r = buf[bi]
             const g = buf[bi + 1]
@@ -88,13 +106,12 @@ export class PixelBuffer {
      */
     fade(brightness: number) {
         brightness = Math.max(0, Math.min(0xff, brightness << 8))
-        if (brightness < 0xff) {
-            const s = this.start * 3
-            const n = this.length * 3
-            const buf = this.buffer
-            for (let i = s; i < n; ++i) {
-                buf[i] = (buf[i] * brightness) >> 8
-            }
+        if (brightness >= 0xff) return
+        const s = this.start * 3
+        const n = (this.start + this.length) * 3
+        const buf = this.buffer
+        for (let i = s; i < n; ++i) {
+            buf[i] = (buf[i] * brightness) >> 8
         }
     }
 
@@ -183,7 +200,7 @@ export class PixelBuffer {
      * Clears the buffer to #000000
      */
     clear() {
-        this.buffer.fillAt(this.start, this.length, 0)
+        this.buffer.fillAt(this.start * 3, this.length * 3, 0)
     }
 
     /**

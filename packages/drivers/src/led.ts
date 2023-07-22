@@ -111,9 +111,9 @@ class LedServer extends Server implements ds.LedServerSpec {
  * @param options
  * @returns
  */
-export async function startLedServer(
+export async function startLed(
     options: LedServerOptions & ServerOptions
-) {
+): Promise<ds.Led> {
     const { length } = options
     const server = new LedServer(options)
     const buffer = server.buffer
@@ -129,7 +129,7 @@ export async function startLedServer(
         if (ds.isSimulator()) {
             // the simulator handles brightness separately
             const topic = `jd/${server.serviceIndex}/pixels`
-            ds._twinMessage(topic, server.buffer.buffer)
+            await ds._twinMessage(topic, server.buffer.buffer)
         }
     }
 

@@ -1,10 +1,17 @@
-import { delay, Led } from "@devicescript/core"
+import { delay, Led, LedVariant } from "@devicescript/core"
 import { rgb } from "@devicescript/runtime"
+import { startLed } from "@devicescript/drivers"
 
-const led = new Led()
+const led = await startLed({
+    length: 12,
+    variant: LedVariant.Strip
+})
+const pixels = await led.buffer()
 
 setTimeout(async () => {
-    await led.setAll(rgb(255, 0, 0))
+    pixels.setAll(rgb(255, 0, 0))
+    await led.show()
     await delay(500)
-    await led.setAll(0)
+    pixels.setAll(0)
+    await led.show()
 }, 500)
