@@ -20,13 +20,13 @@ describe("rgb", () => {
 describe("colorbuffer", () => {
     test("setpixelcolor", () => {
         const buf = pixelBuffer(3)
-        buf.setColor(1, 0x123456)
-        expect(buf.getColor(1)).toBe(0x123456)
+        buf.setAt(1, 0x123456)
+        expect(buf.at(1)).toBe(0x123456)
     })
     test("setpixelcolor negative", () => {
         const buf = pixelBuffer(3)
-        buf.setColor(-1, 0x123456)
-        expect(buf.getColor(-1)).toBe(0x123456)
+        buf.setAt(-1, 0x123456)
+        expect(buf.at(-1)).toBe(0x123456)
     })
     test("setbargraph", () => {
         const buf = pixelBuffer(4)

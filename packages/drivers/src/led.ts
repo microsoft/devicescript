@@ -1,9 +1,21 @@
 import * as ds from "@devicescript/core"
-import { PixelBuffer, pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer, fade, pixelBuffer } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 
 export interface LedServerOptions {
+    /**
+     * Number of LEDs
+     */
     length: number
+    /**
+     * Brightness applied to pixels before being rendered.
+     * This allocate twice the memory if less than 1 as an additional buffer is needed to compute the color.
+     * @default 1
+     */
+    intensity?: number
+    /**
+     * Number of columns of a LED matrix
+     */
     columns?: number
     maxPower?: number
     ledsPerPixel?: number
@@ -27,6 +39,7 @@ class LedServer extends Server implements ds.LedServerSpec {
     constructor(options: LedServerOptions & ServerOptions) {
         super(ds.Led.spec, options)
         this.buffer = pixelBuffer(options.length)
+        this._intensity = options.intensity ?? 1
         this._columns = options.columns
         this._maxPower = options.maxPower
         this._ledPerPixels = options.ledsPerPixel
@@ -75,6 +88,20 @@ class LedServer extends Server implements ds.LedServerSpec {
     variant(): ds.LedVariant {
         return this._variant
     }
+
+    /**
+     * Apply brightness and gamma correction
+     */
+    render(): ds.Buffer {
+        const b = this.buffer
+        // full brightness so we can use the buffer as is
+        if (this._intensity >= 1) return b.buffer
+
+        // apply brightness
+        const r = b.allocClone()
+        r.fade(this._intensity)
+        return r.buffer
+    }
 }
 
 /**
@@ -95,13 +122,14 @@ export async function startLedServer(
     ;(client as any as LedWithBuffer)._buffer = buffer
 
     client.show = async function () {
+        const b = server.render()
         // TODO send buffer to hardware
 
-        // send to register
         if (length <= 64) await client.pixels.write(buffer.buffer)
-        else if (ds.isSimulator()) {
+        if (ds.isSimulator()) {
+            // the simulator handles brightness separately
             const topic = `jd/${server.serviceIndex}/pixels`
-            ds._twinMessage(topic, buffer.buffer)
+            ds._twinMessage(topic, server.buffer.buffer)
         }
     }
 
