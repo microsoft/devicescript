@@ -159,13 +159,14 @@ export class PixelBuffer {
      * @param color RGB color
      */
     setColor(pixeloffset: number, color: number) {
+        pixeloffset = pixeloffset | 0
         while (pixeloffset < 0) pixeloffset += this.length
         const i = this.start + (pixeloffset << 0)
         if (i < this.start || i >= this.start + this.length) return
         const bi = i * 3
-        this.buffer.setAt(bi, "u8", (color >> 16) & 0xff)
-        this.buffer.setAt(bi + 1, "u8", (color >> 8) & 0xff)
-        this.buffer.setAt(bi + 2, "u8", color & 0xff)
+        this.buffer[bi] = (color >> 16) & 0xff
+        this.buffer[bi + 1] = (color >> 8) & 0xff
+        this.buffer[bi + 2] = color & 0xff
     }
 
     /**
@@ -174,19 +175,19 @@ export class PixelBuffer {
      * @returns
      */
     getColor(pixeloffset: number): number {
+        pixeloffset = pixeloffset | 0
         while (pixeloffset < 0) pixeloffset += this.length
         const i = this.start + (pixeloffset << 0)
         if (i < this.start || i >= this.start + this.length) return undefined
         const bi = i * 3
-        const r = this.buffer.getAt(bi, "u8")
-        const g = this.buffer.getAt(bi + 1, "u8")
-        const b = this.buffer.getAt(bi + 2, "u8")
-
+        const r = this.buffer[bi]
+        const g = this.buffer[bi + 1]
+        const b = this.buffer[bi + 2]
         return rgb(r, g, b)
     }
 
     /**
-     * Renders a bar grpah on the LEDs
+     * Renders a bar graph on the LEDs
      * @param value
      * @param high
      * @returns
@@ -269,7 +270,7 @@ export class PixelBuffer {
      * @param length length of the range
      * @returns a view of the color buffer
      */
-    range(start: number, length?: number): PixelBuffer {
+    view(start: number, length?: number): PixelBuffer {
         const rangeStart = this.start + (start << 0)
         const rangeLength =
             length === undefined
