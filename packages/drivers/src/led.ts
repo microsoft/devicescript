@@ -126,9 +126,9 @@ export async function startLed(
         // TODO send buffer to hardware
 
         if (length <= 64) await client.pixels.write(buffer.buffer)
-        if (ds.isSimulator()) {
+        else if (ds.isSimulator()) {
             // the simulator handles brightness separately
-            const topic = `jd/${server.serviceIndex}/pixels`
+            const topic = `jd/${server.serviceIndex}/leds`
             await ds._twinMessage(topic, server.buffer.buffer)
         }
     }
