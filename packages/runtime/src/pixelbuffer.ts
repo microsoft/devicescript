@@ -71,9 +71,9 @@ export class PixelBuffer {
         const buf = this.buffer
         for (let i = 0; i < n; ++i) {
             const bi = (this.start + i) * 3
-            buf[0] = r
-            buf[1] = g
-            buf[2] = b
+            buf[bi] = r
+            buf[bi + 1] = g
+            buf[bi + 2] = b
         }
     }
 

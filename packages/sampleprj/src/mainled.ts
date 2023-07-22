@@ -8,10 +8,13 @@ const led = await startLed({
 })
 const pixels = await led.buffer()
 
-setTimeout(async () => {
+setInterval(async () => {
     pixels.setAll(rgb(255, 0, 0))
     await led.show()
-    await delay(500)
+    await delay(1000)
+
     pixels.setAll(0)
     await led.show()
+    await delay(500)
+
 }, 500)
