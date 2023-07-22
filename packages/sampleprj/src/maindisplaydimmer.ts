@@ -1,4 +1,5 @@
 import * as ds from "@devicescript/core"
+import "@devicescript/runtime"
 
 const pot = new ds.Potentiometer()
 const ledD = new ds.Led()

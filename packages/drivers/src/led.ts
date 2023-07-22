@@ -150,6 +150,12 @@ declare module "@devicescript/core" {
          * Sends the pixel buffer to the LED driver
          */
         show(): Promise<void>
+
+        /**
+         * Sets all pixel color to the given color
+         * @param c Set
+         */
+        setAll(c: number): Promise<void>
     }
 }
 
@@ -165,4 +171,10 @@ ds.Led.prototype.buffer = async function () {
 ds.Led.prototype.show = async function () {
     const b = (this as any as LedWithBuffer)._buffer
     if (b && b.length <= 64) await this.pixels.write(b.buffer)
+}
+
+ds.Led.prototype.setAll = async function (c: number) {
+    const b = await this.buffer()
+    b.setAll(c)
+    await this.show()
 }
