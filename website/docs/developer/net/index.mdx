@@ -69,3 +69,8 @@ const status = await socket.readLine()
 console.log(status)
 await socket.close()
 ```
+
+### Limitations
+
+-   Only one socket can be open at a time. On most devices, a TLS will use a large part of the usable memory.
+-   Sockets can be connect to server but not listen so it is not possible to implement a HTTP server currently.
