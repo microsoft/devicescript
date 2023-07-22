@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { PixelBuffer, fade, pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer, pixelBuffer } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 
 export interface LedServerOptions {
@@ -117,14 +117,12 @@ export async function startLed(
 ): Promise<ds.Led> {
     const { length } = options
     const server = new LedServer(options)
-    const buffer = server.buffer
     const client = new ds.Led(startServer(server))
 
-    ;(client as any as LedWithBuffer)._buffer = buffer
-
+    ;(client as any as LedWithBuffer)._buffer = server.buffer
     client.show = async function () {
         await server.show()
-        if (length <= 64) await client.pixels.write(buffer.buffer)
+        if (length <= 64) await client.pixels.write(server.buffer.buffer)
         else if (ds.isSimulator()) {
             // the simulator handles brightness separately
             const topic = `jd/${server.serviceIndex}/leds`
