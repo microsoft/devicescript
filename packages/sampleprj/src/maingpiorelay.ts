@@ -49,6 +49,6 @@ await p0.setMode(ds.GPIOMode.InputPullDown)
 
 const relay = new Relay(startServer(new GPIORelayServer(p0)))
 setInterval(async () => {
-    const enabled = !relay.enabled.read()
+    const enabled = await relay.enabled.read()
     await relay.enabled.write(!enabled)
 }, 1000)
