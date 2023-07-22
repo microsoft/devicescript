@@ -90,17 +90,18 @@ class LedServer extends Server implements ds.LedServerSpec {
     }
 
     /**
-     * Apply brightness and gamma correction
+     * Display buffer on hardware
      */
-    render(): ds.Buffer {
-        const b = this.buffer
+    async show(): Promise<void> {
+        let b = this.buffer
         // full brightness so we can use the buffer as is
-        if (this._intensity >= 1) return b.buffer
-
-        // apply brightness
-        const r = b.allocClone()
-        r.fade(this._intensity)
-        return r.buffer
+        if (this._intensity < 1) {
+            // apply brightness
+            const r = b.allocClone()
+            r.fade(this._intensity)
+            b = r
+        }
+        // TODO: render b to hardware
     }
 }
 
@@ -122,9 +123,7 @@ export async function startLed(
     ;(client as any as LedWithBuffer)._buffer = buffer
 
     client.show = async function () {
-        const b = server.render()
-        // TODO send buffer to hardware
-
+        await server.show()
         if (length <= 64) await client.pixels.write(buffer.buffer)
         else if (ds.isSimulator()) {
             // the simulator handles brightness separately
