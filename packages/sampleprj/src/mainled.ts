@@ -2,32 +2,26 @@ import { delay, Led, LedVariant } from "@devicescript/core"
 import { rgb } from "@devicescript/runtime"
 import { startLed } from "@devicescript/drivers"
 
+const jdled = new Led()
 const led = await startLed({
     length: 12,
-    variant: LedVariant.Strip,
+    columns: 3,
+    variant: LedVariant.Matrix,
 })
-const pixels = await led.buffer()
-
 const led2 = await startLed({
     length: 256,
     variant: LedVariant.Strip,
 })
-const pixels2 = await led.buffer()
 
 setInterval(async () => {
-    pixels.setAll(rgb(255, 0, 0))
-    await led.show()
-
-    pixels2.setAll(rgb(0, 0, 255))
-    await led2.show()
-
+    await jdled.showAll(0x00ff00)
+    await led.showAll(0xff0000)
+    await led2.showAll(0x0000ff)
     await delay(1000)
 
-    pixels.setAll(0)
-    await led.show()
-
-    pixels2.setAll(0)
-    await led2.show()
+    await jdled.showAll(0x0f0fff)
+    await led.showAll(0x00ff00)
+    await led2.showAll(0x00ff00)
 
     await delay(500)
 }, 500)

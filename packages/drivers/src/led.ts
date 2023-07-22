@@ -144,16 +144,16 @@ declare module "@devicescript/core" {
          * Call `show` to send the buffer to the LED strip.
          */
         buffer(): Promise<PixelBuffer>
+
         /**
          * Sends the pixel buffer to the LED driver
          */
         show(): Promise<void>
 
         /**
-         * Sets all pixel color to the given color
-         * @param c Set
+         * Sets all pixel color to the given color and renders the buffer
          */
-        setAll(c: number): Promise<void>
+        showAll(c: number): Promise<void>
     }
 }
 
@@ -171,7 +171,7 @@ ds.Led.prototype.show = async function () {
     if (b && b.length <= 64) await this.pixels.write(b.buffer)
 }
 
-ds.Led.prototype.setAll = async function (c: number) {
+ds.Led.prototype.showAll = async function (c: number) {
     const b = await this.buffer()
     b.setAll(c)
     await this.show()
