@@ -5,7 +5,7 @@ import * as ds from "@devicescript/core"
 import "@devicescript/gpio"
 
 class GPIORelayServer extends Server implements RelayServerSpec {
-    private _active: boolean = false
+    private _enabled: boolean = false
     private _variant: RelayVariant | undefined
     constructor(
         readonly pin: OutputPin,
@@ -16,15 +16,15 @@ class GPIORelayServer extends Server implements RelayServerSpec {
 
         this.sync.start()
     }
-    active(): AsyncValue<boolean> {
-        return this._active
+    enabled(): AsyncValue<boolean> {
+        return this._enabled
     }
-    async set_active(value: boolean): Promise<void> {
-        this._active = value
+    async set_enabled(value: boolean): Promise<void> {
+        this._enabled = value
         await this.sync()
     }
     private async sync() {
-        await this.pin.write(this._active ? 1 : 0)
+        await this.pin.write(this._enabled ? 1 : 0)
     }
 
     variant(): AsyncValue<RelayVariant> {
@@ -46,5 +46,9 @@ await p0.setMode(ds.GPIOMode.Output)
 await p0.write(1)
 await p0.write(0)
 await p0.setMode(ds.GPIOMode.InputPullDown)
-const v = await p0.read()
 
+const relay = new Relay(startServer(new GPIORelayServer(p0)))
+setInterval(async () => {
+    const enabled = await relay.enabled.read()
+    await relay.enabled.write(!enabled)
+}, 1000)

@@ -13,7 +13,7 @@ export class ObservableValue<T> extends Observable<T> {
     private _subscriptions: ((value: T) => ds.AsyncVoid)[]
 
     /**
-     * @deprecated
+     * @internal
      */
     constructor(
         subscriber: SubscriberFunction<T>,
