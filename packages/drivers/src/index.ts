@@ -14,6 +14,6 @@ export * from "./dotmatrix"
 export * from "./st7735"
 export * from "./uc8151"
 export * from "./trafficlight"
-export * from "./led"
+//export * from "./led"
 
 configureHardware({ scanI2C: false })
