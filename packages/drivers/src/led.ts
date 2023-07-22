@@ -75,15 +75,6 @@ class LedServer extends Server implements ds.LedServerSpec {
     variant(): ds.LedVariant {
         return this._variant
     }
-    async show(): Promise<void> {
-        // TODO send buffer to hardware
-
-        // sim support
-        if (ds.isSimulator()) {
-            const topic = `jd/${this.serviceIndex}/leds`
-            ds._twinMessage(topic, this.buffer.buffer)
-        }
-    }
 }
 
 /**
