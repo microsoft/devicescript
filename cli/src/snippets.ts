@@ -55,7 +55,7 @@ export async function snippets(options: SnippetsOptions) {
             await writeFile(fullname, snip)
             imports += `import "./${mod}"\n`
             numsnip++
-            if (numsnip % 150 == 0) {
+            if (numsnip % 100 == 0) {
                 allImports.push(imports)
                 imports = ""
             }
