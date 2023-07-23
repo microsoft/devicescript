@@ -16,6 +16,22 @@ import "@devicescript/runtime"
 const led = new Led()
 ```
 
+## Driver
+
+You can start a driver for WS2812 or AP102 using [startLed](./leds/driver).
+
+```ts
+import { LedVariant } from "@devicescript/core"
+import { startLed } from "@devicescript/drivers"
+
+// highlight-start
+const led = await startLed({
+    length: 32,
+    variant: LedVariant.Ring,
+})
+// highlight-end
+```
+
 ## PixelBuffer and show
 
 The `Led` client has a [pixel buffer](/api/runtime/pixelbuffer), a 1D vector of colors,
@@ -49,7 +65,7 @@ const led = new Led()
 await led.showAll(0x00ee00)
 ```
 
-## startLedDisplay
+## LED Display
 
 You can mount a LED matrix as a [display](./leds/display).
 

@@ -1,5 +1,4 @@
 import { delay, Led, LedVariant } from "@devicescript/core"
-import { rgb } from "@devicescript/runtime"
 import { startLed, startLedDisplay } from "@devicescript/drivers"
 
 const jdled = new Led()

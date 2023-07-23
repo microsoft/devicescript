@@ -23,8 +23,17 @@ export interface LedServerOptions {
      */
     columns?: number
     ledsPerPixel?: number
+    /**
+     * For monochrome LEDs, the LED wavelength
+     */
     waveLength?: number
+    /**
+     * The luminous power of the LEDs, is it very bright?
+     */
     luminousIntensity?: number
+    /**
+     * The shape and topology of the LEDs
+     */
     variant?: ds.LedVariant
     /**
      * Specify the amount of gamma correction
