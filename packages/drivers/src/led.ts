@@ -1,6 +1,12 @@
 import * as ds from "@devicescript/core"
 import { Display, Image, Palette } from "@devicescript/graphics"
-import { PixelBuffer, fillSolid, fillFade, pixelBuffer } from "@devicescript/runtime"
+import {
+    PixelBuffer,
+    fillSolid,
+    fillFade,
+    pixelBuffer,
+    correctGamma,
+} from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 
 export interface LedServerOptions {
@@ -22,7 +28,10 @@ export interface LedServerOptions {
     waveLength?: number
     luminousIntensity?: number
     variant?: ds.LedVariant
-    // TODO configure pins?
+    /**
+     * Specify the amount of gamma correction
+     */
+    gamma?: number
 }
 
 class LedServer extends Server implements ds.LedServerSpec {
@@ -32,6 +41,7 @@ class LedServer extends Server implements ds.LedServerSpec {
     private _waveLength: number
     private _luminousIntensity: number
     private _variant: ds.LedVariant
+    private _gamma: number
 
     readonly buffer: PixelBuffer
 
@@ -44,6 +54,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._waveLength = options.waveLength
         this._luminousIntensity = options.luminousIntensity
         this._variant = options.variant
+        this._gamma = options.gamma
     }
 
     pixels(): ds.Buffer {
@@ -87,10 +98,10 @@ class LedServer extends Server implements ds.LedServerSpec {
     async show(): Promise<void> {
         let b = this.buffer
         // full brightness so we can use the buffer as is
-        if (this._intensity < 1) {
-            // apply brightness
+        if (this._intensity < 1 || this._gamma) {
             const r = b.allocClone()
-            fillFade(r, this._intensity)
+            if (this._intensity < 1) fillFade(r, this._intensity)
+            if (this._gamma) correctGamma(r, this._gamma)
             b = r
         }
         // TODO: render b to hardware

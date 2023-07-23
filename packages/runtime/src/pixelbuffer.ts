@@ -242,10 +242,33 @@ export function fillFade(pixels: PixelBuffer, brightness: number) {
     brightness = Math.max(0, Math.min(0xff, (brightness | 0) << 8))
 
     const s = pixels.start * 3
-    const n = (pixels.start + pixels.length) * 3
+    const e = (pixels.start + pixels.length) * 3
     const buf = pixels.buffer
 
-    for (let i = s; i < n; ++i) {
+    for (let i = s; i < e; ++i) {
         buf[i] = (buf[i] * brightness) >> 8
+    }
+}
+
+/**
+ * Applies a inplace gamma correction to the pixel colors
+ * @param pixels
+ * @param gamma
+ */
+export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
+    const s = pixels.start * 3
+    const e = (pixels.start + pixels.length) * 3
+    const buf = pixels.buffer
+
+    for (let i = s; i < e; ++i) {
+        const c = buf[i]
+        let o =
+            c === 0
+                ? 0
+                : c === 0xff
+                ? 0xff
+                : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
+        if (c > 0 && o === 0) o = 1
+        buf[i] = o
     }
 }

@@ -16,12 +16,13 @@ const ledm = await startLed({
     columns: 16,
     length: 256,
     variant: LedVariant.Matrix,
+    gamma: 2.7,
 })
 const display = await startLedDisplay(ledm)
 
 let ci = 0
 setInterval(async () => {
-    ci = (ci+1) % display.palette.length
+    ci = (ci + 1) % display.palette.length
     if (!ci) ci++
     await jdled.showAll(0x00ff00)
     await led.showAll(0xff0000)
