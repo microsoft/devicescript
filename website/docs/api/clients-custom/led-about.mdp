@@ -1,0 +1,15 @@
+:::note
+
+Additional runtime support is provided for `Led`
+by importing the `@devicescript/runtime` package.
+
+Please refer to the [LEDs developer documentation](/developer/leds).
+
+```ts
+import { Led } from "@devicescript/core"
+import "@devicescript/runtime"
+
+const led = new Led()
+```
+
+:::
