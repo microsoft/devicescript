@@ -13,7 +13,7 @@ export class PixelBuffer {
     /**
      * Starting pixel index in the original buffer
      */
-    private readonly start: number
+    readonly start: number
     /**
      * Number of pixels in the buffer
      */
@@ -43,6 +43,20 @@ export class PixelBuffer {
     }
 
     /**
+     * Setter for individual RGB colors. Does not check bounds and should be used with care.
+     * @param pixeloffset
+     * @param r
+     * @param g
+     * @param b
+     */
+    setRgbAt(pixeloffset: number, r: number, g: number, b: number) {
+        const i = (this.start + (pixeloffset | 0)) * 3
+        this.buffer[i] = r
+        this.buffer[i + 1] = g
+        this.buffer[i + 2] = b
+    }
+
+    /**
      * Reads the pixel color at the given offsret
      * @param pixeloffset pixel offset. if negative starts from the end
      * @returns
@@ -57,24 +71,6 @@ export class PixelBuffer {
         const g = this.buffer[bi + 1]
         const b = this.buffer[bi + 2]
         return rgb(r, g, b)
-    }
-
-    /**
-     * Sets all the color in the buffer to the given color
-     * @param c 24bit rgb color
-     */
-    setAll(c: number) {
-        const r = (c >> 16) & 0xff
-        const g = (c >> 8) & 0xff
-        const b = c & 0xff
-        const n = this.length
-        const buf = this.buffer
-        for (let i = 0; i < n; ++i) {
-            const bi = (this.start + i) * 3
-            buf[bi] = r
-            buf[bi + 1] = g
-            buf[bi + 2] = b
-        }
     }
 
     /**
@@ -101,21 +97,6 @@ export class PixelBuffer {
     }
 
     /**
-     * Fades each color channels according to the brigthness value between 0 dark and 1 full brightness.
-     * @param brightness
-     */
-    fade(brightness: number) {
-        brightness = Math.max(0, Math.min(0xff, brightness << 8))
-        if (brightness >= 0xff) return
-        const s = this.start * 3
-        const n = (this.start + this.length) * 3
-        const buf = this.buffer
-        for (let i = s; i < n; ++i) {
-            buf[i] = (buf[i] * brightness) >> 8
-        }
-    }
-
-    /**
      * Allocates a clone of the buffer view
      * @returns
      */
@@ -126,74 +107,6 @@ export class PixelBuffer {
             this.length
         )
         return res
-    }
-
-    /**
-     * Renders a bar graph on the LEDs
-     * @param value
-     * @param high
-     * @returns
-     */
-    setBarGraph(
-        value: number,
-        high: number,
-        options?: {
-            emptyRangeColor?: number
-            zeroColor?: number
-        }
-    ): void {
-        if (high <= 0) {
-            const emptyRangeColor = options?.emptyRangeColor
-            this.clear()
-            this.setAt(0, isNaN(emptyRangeColor) ? 0xffff00 : emptyRangeColor)
-            return
-        }
-
-        value = Math.abs(value)
-        const n = this.length
-        const n1 = n - 1
-        let v = Math.idiv(value * n, high)
-        if (v === 0) {
-            const zeroColor = options?.zeroColor
-            this.setAt(0, isNaN(zeroColor) ? 0x666600 : zeroColor)
-            for (let i = 1; i < n; ++i) this.setAt(i, 0)
-        } else {
-            for (let i = 0; i < n; ++i) {
-                if (i <= v) {
-                    const b = Math.idiv(i * 255, n1)
-                    this.setAt(i, rgb(b, 0, 255 - b))
-                } else this.setAt(i, 0)
-            }
-        }
-    }
-
-    /**
-     * Writes a gradient between the two colors.
-     * @param startColor
-     * @param endColor
-     */
-    setGradient(
-        startColor: number,
-        endColor: number,
-        start?: number,
-        end?: number
-    ): void {
-        // normalize range
-        if (start < 0) start += this.length
-        start = start || 0
-        if (end < 0) end += this.length
-        end = end === undefined ? this.length - 1 : end
-        // check if any work needed
-        const steps = end - start
-        if (steps < 1) return
-
-        this.setAt(start, startColor)
-        this.setAt(end, endColor)
-        for (let i = start + 1; i < end - 1; ++i) {
-            const alpha = Math.idiv(0xff * i, steps)
-            const c = blend(startColor, alpha, endColor)
-            this.setAt(i, c)
-        }
     }
 
     /**
@@ -227,4 +140,112 @@ export function pixelBuffer(numPixels: number) {
     numPixels = numPixels | 0
     const buf = ds.Buffer.alloc(numPixels * 3)
     return new PixelBuffer(buf, 0, numPixels)
+}
+
+/**
+ * Writes a gradient between the two colors.
+ * @param startColor
+ * @param endColor
+ */
+export function fillGradient(
+    pixels: PixelBuffer,
+    startColor: number,
+    endColor: number,
+    start?: number,
+    end?: number
+): void {
+    // normalize range
+    if (start < 0) start += pixels.length
+    start = start || 0
+    if (end < 0) end += pixels.length
+    end = end === undefined ? pixels.length - 1 : end
+    // check if any work needed
+    const steps = end - start
+    if (steps < 1) return
+
+    pixels.setAt(start, startColor)
+    pixels.setAt(end, endColor)
+    for (let i = start + 1; i < end - 1; ++i) {
+        const alpha = Math.idiv(0xff * i, steps)
+        const c = blend(startColor, alpha, endColor)
+        pixels.setAt(i, c)
+    }
+}
+
+/**
+ * Renders a bar graph of value (absolute value) on a pixel buffer
+ * @param pixels
+ * @param value
+ * @param high
+ * @param options
+ * @returns
+ */
+export function fillBarGraph(
+    pixels: PixelBuffer,
+    value: number,
+    high: number,
+    options?: {
+        /**
+         * Color used when the range is empty
+         */
+        emptyRangeColor?: number
+        /**
+         * Color used when the value is 0
+         */
+        zeroColor?: number
+    }
+) {
+    if (high <= 0) {
+        const emptyRangeColor = options?.emptyRangeColor
+        pixels.clear()
+        pixels.setAt(0, isNaN(emptyRangeColor) ? 0xffff00 : emptyRangeColor)
+        return
+    }
+
+    value = Math.abs(value)
+    const n = pixels.length
+    const n1 = n - 1
+    let v = Math.idiv(value * n, high)
+    if (v === 0) {
+        const zeroColor = options?.zeroColor
+        pixels.setAt(0, isNaN(zeroColor) ? 0x666600 : zeroColor)
+        for (let i = 1; i < n; ++i) pixels.setAt(i, 0)
+    } else {
+        for (let i = 0; i < n; ++i) {
+            if (i <= v) {
+                const b = Math.idiv(i * 255, n1)
+                pixels.setRgbAt(i, b, 0, 255 - b)
+            } else pixels.setRgbAt(i, 0, 0, 0)
+        }
+    }
+}
+
+/**
+ * Sets all the color in the buffer to the given color
+ * @param c 24bit rgb color
+ */
+export function fillSolid(pixels: PixelBuffer, c: number) {
+    const r = (c >> 16) & 0xff
+    const g = (c >> 8) & 0xff
+    const b = c & 0xff
+    const n = pixels.length
+    for (let i = 0; i < n; ++i) {
+        pixels.setRgbAt(i, r, g, b)
+    }
+}
+
+/**
+ * Fades each color channels according to the brigthness value between 0 dark and 1 full brightness.
+ * @param brightness
+ */
+export function fillFade(pixels: PixelBuffer, brightness: number) {
+    brightness = Math.max(0, Math.min(0xff, (brightness | 0) << 8))
+
+    const s = pixels.start * 3
+    const n = (pixels.start + pixels.length) * 3
+    const buf = pixels.buffer
+
+    for (let i = s; i < n; ++i) {
+        buf[i] = (buf[i] * brightness) >> 8
+    }
 }

@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 import { Display, Image, Palette } from "@devicescript/graphics"
-import { PixelBuffer, pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer, fillSolid, fillFade, pixelBuffer } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 
 export interface LedServerOptions {
@@ -90,7 +90,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         if (this._intensity < 1) {
             // apply brightness
             const r = b.allocClone()
-            r.fade(this._intensity)
+            fillFade(r, this._intensity)
             b = r
         }
         // TODO: render b to hardware
@@ -165,7 +165,7 @@ ds.Led.prototype.show = async function () {
 
 ds.Led.prototype.showAll = async function (c: number) {
     const b = await this.buffer()
-    b.setAll(c)
+    fillSolid(b, c)
     await this.show()
 }
 
