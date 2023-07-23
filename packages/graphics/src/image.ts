@@ -33,14 +33,14 @@ export declare class Image {
     buffer: Buffer
 
     /**
-     * Get a pixel color
-     */
-    get(x: number, y: number): number
-
-    /**
      * Return a copy of the current image
      */
     clone(): Image
+
+    /**
+     * Get a pixel color
+     */
+    get(x: number, y: number): number
 
     /**
      * Set pixel color

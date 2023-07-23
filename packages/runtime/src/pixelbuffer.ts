@@ -13,7 +13,7 @@ export class PixelBuffer {
     /**
      * Starting pixel index in the original buffer
      */
-    readonly start: number
+    private readonly start: number
     /**
      * Number of pixels in the buffer
      */
