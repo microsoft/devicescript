@@ -48,3 +48,16 @@ const led = new Led()
 // highlight-next-line
 await led.showAll(0x00ee00)
 ```
+
+## startLedDisplay
+
+You can mount a LED matrix as a [display](./leds/display).
+
+```ts
+import { Led } from "@devicescript/core"
+import { startLedDisplay } from "@devicescript/runtime"
+
+const led = new Led()
+// highlight-next-line
+const display = await startLedDisplay(led)
+```

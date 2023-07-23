@@ -1,0 +1,27 @@
+---
+title: Display
+---
+
+# Led Display
+
+You can wrap an LED matrix as a [Display](/developer/graphics/display)
+and render graphics to it as if it was just another screen.
+
+```ts
+import { Led } from "@devicescript/core"
+import { startLedDisplay } from "@devicescript/runtime"
+
+const led = new Led()
+// highlight-next-line
+const display = await startLedDisplay(led)
+// render
+display.image.print(`Hello world!`, 3, 10)
+// and show
+await display.show()
+```
+
+The palette is automatically infered from the `waveLength` register; otherwise you can provide one.
+
+```ts skip
+const display = await startLedDisplay(led, palette)
+```
