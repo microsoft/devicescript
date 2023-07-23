@@ -5,11 +5,46 @@ title: LEDs
 # LEDs
 
 Controlling strips of programmable LEDs can be done through the `Led` client.
-This client requires to import the `@devicescript/runtime` to get all the functionalities.
+
+**This client requires to import the `@devicescript/runtime` to get all the functionalities.**
+
+```ts
+import { Led } from "@devicescript/core"
+// highlight-next-line
+import "@devicescript/runtime"
+
+const led = new Led()
+```
+
+## PixelBuffer and show
+
+The `Led` client has a [pixel buffer](/api/runtime/pixelbuffer), a 1D vector of colors,
+that can be used to perform color operations, and a `show` function to render the buffer to the hardware.
+
+A typical LED program would then look like this:
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillSolid } from "@devicescript/runtime"
+
+const led = new Led()
+// retreive pixel buffer from led
+const pixels = await led.buffer()
+// do operations on pixels, like setting LEDs to green
+fillSolid(pixels, 0x00ee00)
+// send colors to hardware
+await led.show()
+```
+
+## showAll
+
+A convenience function `showAll` is provided to set the color of all LEDs.
 
 ```ts
 import { Led } from "@devicescript/core"
 import "@devicescript/runtime"
 
 const led = new Led()
+// highlight-next-line
+await led.showAll(0x00ee00)
 ```

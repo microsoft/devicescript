@@ -150,15 +150,10 @@ export function pixelBuffer(numPixels: number) {
 export function fillGradient(
     pixels: PixelBuffer,
     startColor: number,
-    endColor: number,
-    start?: number,
-    end?: number
+    endColor: number
 ): void {
-    // normalize range
-    if (start < 0) start += pixels.length
-    start = start || 0
-    if (end < 0) end += pixels.length
-    end = end === undefined ? pixels.length - 1 : end
+    const start = pixels.start
+    const end = pixels.start + pixels.length
     // check if any work needed
     const steps = end - start
     if (steps < 1) return

@@ -1,0 +1,109 @@
+# PixelBuffer
+
+A 1D color vector to support color manipulation of LED strips. All colors are 24bit RGB colors.
+
+The pixel buffer is typically accessed through a [Led](/api/clients/led) client.
+
+```ts
+import { Led } from "@devicescript/core"
+import "@devicescript/runtime"
+
+const led = new Led()
+// highlight-next-line
+const pixels = await led.buffer()
+```
+
+It can also be allocated using `pixelBuffer`.
+
+```ts
+import { pixelBuffer } from "@devicescript/runtime"
+
+// highlight-next-line
+const pixels = pixelBuffer(32)
+```
+
+## Usage
+
+### `at`, `setAt`
+
+Indexing functions similar to `Array.at`, they allow to set color of individual LEDs and support negative indices.
+
+```ts skip
+const c0 = pixels.at(0)
+pixels.setAt(1, c0)
+```
+
+### `clear`
+
+Clears all colors to `#000000`.
+
+```ts skip
+pixels.clear()
+```
+
+### `view`
+
+Creates a aliased range view of the buffer so that you can apply operations on a subset of the colors.
+
+```ts skip
+const view = pixels.view(5, 10)
+view.clear()
+```
+
+## Helpers
+
+Here are a few helpers built for `PixelBuffer`, but many other could be added!
+
+### `fillSolid`
+
+This helper function asigns the given color to the entire range.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillSolid } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+// highlight-next-line
+fillSolid(pixels, 0x00_ff_00)
+
+await led.show()
+```
+
+### `fillGradient`
+
+Helper function that does a linear interpolation of two colors accross the RGB space.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillGradient } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+// highlight-next-line
+fillGradient(pixels, 0x00_ff_00, 0x00_00_ff)
+
+await led.show()
+```
+
+### `fillBarGraph`
+
+A tiny bar chart engine to render on a value on a LED strip
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillBarChart } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+const current = 25
+const max = 100
+
+// highlight-next-line
+fillBarChart(pixels, current, max)
+
+await led.show()
+```
