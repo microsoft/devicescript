@@ -460,8 +460,7 @@ This service is ${status} and may change in the future.
 `
             : undefined,
         patchLinks(info.notes["short"]),
-        `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
-        baseclass ? `-  inherits ${baseclass}` : undefined,
+        `\n{@import optional ../clients-custom/${info.shortId}-short.mdp}\n`,
         info.notes["long"]
             ? `## About
 

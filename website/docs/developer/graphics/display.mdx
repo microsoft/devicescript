@@ -25,6 +25,7 @@ on the simulated device (simulation does not work on hardware device as the comm
 import { SSD1306Driver, startIndexedScreen } from "@devicescript/drivers"
 
 const display = await startIndexedScreen(
+    // implements Display
     new SSD1306Driver({ width: 128, height: 64, devAddr: 0x3c })
 )
 display.image.print(`Hello world!`, 3, 10)

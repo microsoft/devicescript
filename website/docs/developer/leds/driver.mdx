@@ -1,0 +1,27 @@
+---
+title: LED Driver
+---
+
+# LED Driver
+
+You can start a driver for WS2812 or AP102 using `startLed`.
+
+```ts
+import { LedVariant } from "@devicescript/core"
+import { startLed } from "@devicescript/drivers"
+
+// highlight-start
+const led = await startLed({
+    length: 32,
+    variant: LedVariant.Ring,
+})
+// highlight-end
+```
+
+## Simulation and long strips (> 64 LEDs)
+
+For short LED strips, 64 LEDs or less, DeviceScript provides full simulation and device twin
+for hardware and simulated devices.
+
+For strips longer than 64 LEDs, the simulator device will work but the hardware device twin will
+not work anymore. This is a simple limitation that the data overflows the packets used in Jacdac.

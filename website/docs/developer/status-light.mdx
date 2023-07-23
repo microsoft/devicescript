@@ -1,13 +1,29 @@
 ---
 sidebar_position: 1.1
 description: Learn how to use the status light on DeviceScript to message
-  application states. Control the status LED until a system LED pattern is
-  scheduled by the runtime.
+    application states. Control the status LED until a system LED pattern is
+    scheduled by the runtime.
 ---
 
 # Status Light
 
 DeviceScript uses various blinking patterns on the status LED to message application states.
+
+## Controlling the status led
+
+You can set the status LED (until a system LED pattern is scheduled by the runtime)
+using the `setStatusLight` function.
+
+```ts
+import { delay } from "@devicescript/core"
+import { setStatusLight } from "@devicescript/runtime"
+
+setInterval(async () => {
+    await setStatusLight(0x00ff00) // green
+    await delay(500)
+    await setStatusLight(0x000000) // off
+}, 500)
+```
 
 ## Network connectivity
 
@@ -28,19 +44,3 @@ DeviceScript uses various blinking patterns on the status LED to message applica
 -   generic error: short red blink
 
 The blinking patterns are defined at https://github.com/microsoft/jacdac-c/blob/main/inc/jd_io.h#L77
-
-## Controlling the status led
-
-You can also set the status LED (until a system LED pattern is scheduled by the runtime)
-using the `setStatusLight` function.
-
-```ts
-import { delay } from "@devicescript/core"
-import { setStatusLight } from "@devicescript/runtime"
-
-setInterval(async () => {
-    await setStatusLight(0x00ff00) // green
-    await delay(500)
-    await setStatusLight(0x000000) // off
-}, 500)
-```
