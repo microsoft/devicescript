@@ -18,7 +18,6 @@ export interface LedServerOptions {
      * Number of columns of a LED matrix
      */
     columns?: number
-    maxPower?: number
     ledsPerPixel?: number
     waveLength?: number
     luminousIntensity?: number
@@ -29,7 +28,6 @@ export interface LedServerOptions {
 class LedServer extends Server implements ds.LedServerSpec {
     private _intensity: number
     private _columns: number
-    private _maxPower: number
     private _ledPerPixels: number
     private _waveLength: number
     private _luminousIntensity: number
@@ -42,7 +40,6 @@ class LedServer extends Server implements ds.LedServerSpec {
         this.buffer = pixelBuffer(options.length)
         this._intensity = options.intensity ?? 1
         this._columns = options.columns
-        this._maxPower = options.maxPower
         this._ledPerPixels = options.ledsPerPixel
         this._waveLength = options.waveLength
         this._luminousIntensity = options.luminousIntensity
@@ -71,17 +68,11 @@ class LedServer extends Server implements ds.LedServerSpec {
     numColumns(): number {
         return this._columns
     }
-    maxPower(): number {
-        return this._maxPower
-    }
-    set_maxPower(value: number): void {
-        this._maxPower = value
-    }
     ledsPerPixel(): number {
         return this._ledPerPixels
     }
     waveLength(): number {
-        return this._waveLength
+        return this._waveLength || 0
     }
     luminousIntensity(): number {
         return this._luminousIntensity
@@ -179,7 +170,7 @@ ds.Led.prototype.showAll = async function (c: number) {
 }
 
 /**
- * Mounts a Display interface over a LED to make it act as a screen.
+ * Mounts a Display interface over a LED matrix to make it act as a screen.
  * This function allocates one image.
  * @param led
  * @param palette
@@ -190,8 +181,8 @@ export async function startLedDisplay(
     palette?: Palette
 ): Promise<Display> {
     if (!palette) {
-        const waveLength = await led.waveLength
-        if (waveLength !== undefined) palette = Palette.monochrome()
+        const waveLength = await led.waveLength.read()
+        if (waveLength) palette = Palette.monochrome()
         else palette = Palette.arcade()
     }
 
