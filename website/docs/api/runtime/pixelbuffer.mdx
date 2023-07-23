@@ -94,7 +94,7 @@ A tiny bar chart engine to render on a value on a LED strip
 
 ```ts
 import { Led } from "@devicescript/core"
-import { fillBarChart } from "@devicescript/runtime"
+import { fillBarGraph } from "@devicescript/runtime"
 
 const led = new Led()
 const pixels = await led.buffer()
@@ -103,7 +103,7 @@ const current = 25
 const max = 100
 
 // highlight-next-line
-fillBarChart(pixels, current, max)
+fillBarGraph(pixels, current, max)
 
 await led.show()
 ```
