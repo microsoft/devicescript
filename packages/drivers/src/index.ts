@@ -15,5 +15,6 @@ export * from "./st7735"
 export * from "./uc8151"
 export * from "./trafficlight"
 export * from "./led"
+export * from "./leddisplay"
 
 configureHardware({ scanI2C: false })
