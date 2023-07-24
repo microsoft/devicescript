@@ -17,7 +17,7 @@ ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
         if (!steps) steps = await self.clicksPerTurn.read()
         let p0 = await self.reading.read()
         self.reading.subscribe(v => {
-            const curr = Math.clamp(0, v - p0, steps)
+            const curr = Math.constrain(v - p0, 0, steps)
             p0 = v - curr
             reg.emit(curr / steps)
         })

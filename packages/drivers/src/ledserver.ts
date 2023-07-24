@@ -75,7 +75,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         return this._intensity
     }
     set_intensity(value: number): void {
-        this._intensity = Math.clamp(0, value, 1)
+        this._intensity = Math.constrain(value, 0, 1)
     }
     actualBrightness(): number {
         return this._intensity

@@ -111,7 +111,8 @@ class BME680Driver extends I2CSensorDriver<{
         await delay(5)
         const id = await this.readReg(BME680_REG_CHIPID)
         console.debug(`BME680 id=${id}`)
-        if (id !== BME680_CHIPID) throw new DriverError(`BME680: wrong chip id (${id})`)
+        if (id !== BME680_CHIPID)
+            throw new DriverError(`BME680: wrong chip id (${id})`)
         this.chipVariant = await this.readReg(BME680_REG_VARIANT)
         await this.readCalibration()
 
@@ -251,7 +252,7 @@ class BME680Driver extends I2CSensorDriver<{
         let var6 = (var4 * var5) / 2
         let calc_hum = (((var3 + var6) / 1024) * 1000) / 4096
         calc_hum /= 1000 // get back to RH
-        return Math.clamp(0, calc_hum, 100)
+        return Math.constrain(calc_hum, 0, 100)
     }
 
     private fillTables() {

@@ -8,19 +8,13 @@ export interface SensorServerOptions extends ServerOptions {
     interval?: number
 }
 
-export class SensorServer
-    extends Server
-    implements ds.SensorServerSpec
-{
+export class SensorServer extends Server implements ds.SensorServerSpec {
     _preferredInterval: number
     _streamingInterval: number
     _streamingSamples = 0
     _interval: number
 
-    constructor(
-        spec: ds.ServiceSpec,
-        options?: SensorServerOptions
-    ) {
+    constructor(spec: ds.ServiceSpec, options?: SensorServerOptions) {
         super(spec, options)
         const interval = options?.interval || 500
         this.set_streamingInterval(interval)
@@ -62,7 +56,11 @@ export class SensorServer
         return this._streamingInterval
     }
     set_streamingInterval(value: number) {
-        this._streamingInterval = Math.clamp(minInterval, value, maxInterval)
+        this._streamingInterval = Math.constrain(
+            value,
+            minInterval,
+            maxInterval
+        )
         if (this._interval)
             updateInterval(this._interval, this._streamingInterval)
     }

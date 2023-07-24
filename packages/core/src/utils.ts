@@ -7,12 +7,6 @@ Math.sign = function sign(v) {
     return NaN
 }
 
-Math.clamp = function clamp(low, v, hi) {
-    if (v < low) return low
-    if (v > hi) return hi
-    return v
-}
-
 Math.sqrt = function sqrt(x) {
     return Math.pow(x, 0.5)
 }

@@ -146,7 +146,7 @@ export function ledStripEncode(format: string, args: (number | number[])[]) {
                 outarr.push(0xd8) // tmpmode
                 outarr.push(3) // mult
                 outarr.push(0xd0) // setall
-                const mm = Math.clamp(0, 255, Math.round(128 * f))
+                const mm = Math.constrain(Math.round(128 * f), 0, 255)
                 outarr.push(0xc1)
                 outarr.push(mm)
                 outarr.push(mm)
