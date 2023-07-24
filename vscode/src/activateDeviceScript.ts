@@ -72,8 +72,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 )
                 if (projetFiles.length) {
                     projectName = await vscode.window.showInputBox({
-                        title: "Pick project subfolder",
-                        prompt: "It will be used as a root for the new DeviceScript project",
+                        title: "Pick project subfolder (optional)",
+                        prompt: "It will be used as a root for the new DeviceScript project. Leave empty to create project on root.",
                     })
                     if (projectName === undefined) return
                 }
