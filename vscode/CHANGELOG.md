@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.8](https://github.com/microsoft/devicescript/compare/v2.14.7...v2.14.8)
+
+> 21 July 2023
+
+- use server id in twin message [`#576`](https://github.com/microsoft/devicescript/pull/576)
+- updated jacdac-ts [`a87665f`](https://github.com/microsoft/devicescript/commit/a87665fffc5584611e85889945bebc383e5fd91e)
+
 #### [v2.14.7](https://github.com/microsoft/devicescript/compare/v2.14.6...v2.14.7)
 
 > 21 July 2023
