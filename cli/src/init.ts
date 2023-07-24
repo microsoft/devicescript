@@ -313,11 +313,11 @@ src/main.ts        default DeviceScript entry point
 
 ## Local/container development
 
--  install [Node.js LTS 16+](https://nodejs.org/en/download)
+-  install [Node.js LTS](https://nodejs.org/en/download)
 
 \`\`\`bash
-nvm install 16
-nvm use 16
+nvm install --lts
+nvm use --lts
 \`\`\`
 
 -  install DeviceScript compiler and tools
@@ -450,8 +450,11 @@ function finishAdd(message: string, files: string[] = []) {
 export async function init(dir: string | undefined, options: InitOptions) {
     log(`Configuring DeviceScript project`)
 
+    const files = { ...optionalFiles }
+    if (options.yarn) patchYarnFiles(files)
+
     // write template files
-    const cwd = writeFiles(dir, options, optionalFiles)
+    const cwd = writeFiles(dir, options, files)
 
     // patch .gitignore
     const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
@@ -599,6 +602,21 @@ function sortPkgJson(pkg: any) {
     return p2
 }
 
+function patchYarnCommands(content: string) {
+    return content
+        .replace("npm ci", "yarn install --frozen-lockfile")
+        .replace("npm install", "yarn install")
+        .replace("npm run build", "yarn build")
+        .replace("npm run watch", "yarn watch")
+        .replace("npm test", "yarn test")
+}
+
+function patchYarnFiles(files: FileSet) {
+    ;[".github/workflows/build.yml", "README.md"].forEach(fn => {
+        files[fn] = patchYarnCommands(files[fn] as string)
+    })
+}
+
 export async function addNpm(options: AddNpmOptions) {
     const files = clone(npmFiles)
     let pkg = files["package.json"] as any
@@ -633,11 +651,7 @@ export async function addNpm(options: AddNpmOptions) {
     }
 
     if (isYarn(".", options)) {
-        const fn = ".github/workflows/build.yml"
-        files[fn] = (files[fn] as string)
-            .replace("npm ci", "yarn install --frozen-lockfile")
-            .replace("npm run build", "yarn build")
-            .replace("npm test", "yarn test")
+        patchYarnFiles(files)
     }
 
     const cwd = writeFiles(".", options, files)
