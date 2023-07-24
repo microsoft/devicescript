@@ -302,16 +302,22 @@ setInterval(async () => {
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
 
-## Project structures
+`,
+    CONTRIBUTING: `
+# Contributing
 
-\`\`\`
-.devicescript      reserved folder for devicescript generated files
-src/main.ts        default DeviceScript entry point
-...
-\`\`\`
+This project uses [DeviceScript](https://microsoft.github.io/devicescript/)
+which provides a TypeScript experience for micro-controllers. 
+
+The best development experience is done through Visual Studio Cocde and the DeviceScript extension;
+but a command line tool is also available.
+
+Container development (Codespaces, CodeSandbox, ...)
+is supported but connection to hardware (through Serial or USB) is not available.
+Simulators and compilers will work.
 
 
-## Local/container development
+## Local development
 
 -  install [Node.js LTS](https://nodejs.org/en/download)
 
@@ -326,9 +332,7 @@ nvm use --lts
 npm install
 \`\`\`
 
-### Using Visual Studio Code
-
-- open the project folder in code
+- open the project folder in [Visual Studio Code](https://code.visualstudio.com/)
 
 \`\`\`bash
 code .
@@ -336,20 +340,7 @@ code .
 
 - install the [DeviceScript extension](https://microsoft.github.io/devicescript/getting-started/vscode)
 
-- start debugging!
-
-### Using the command line
-
-- start the watch build and developer tools server
-
-\`\`\`bash
-npm run watch
-\`\`\`
-
--  navigate to devtools page (see terminal output) 
-to use the simulators or deploy to hardware.
-
--  open \`src/main.ts\` in your favorite TypeScript IDE and start editing.
+- open \`main.ts\` and click on the **play** icon to start the simulator
 
 `,
 }
@@ -448,13 +439,21 @@ function finishAdd(message: string, files: string[] = []) {
 }
 
 export async function init(dir: string | undefined, options: InitOptions) {
-    log(`Configuring DeviceScript project`)
+    log(`Configuring DeviceScript project...`)
 
     const files = { ...optionalFiles }
-    if (options.yarn) patchYarnFiles(files)
+    if (isYarn(".", options)) patchYarnFiles(files)
 
     // write template files
     const cwd = writeFiles(dir, options, files)
+
+    // ok, soft patch applied, now we apply more stuff that always has to be set
+    // in case the project already had a package.json
+    const pkg = readJSON5Sync("package.json") as PackageManifest
+    // ensure cli is added
+    addCliDependency(pkg)
+    // write down
+    writePackage(pkg, options.spaces)
 
     // patch .gitignore
     const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
@@ -612,21 +611,48 @@ function patchYarnCommands(content: string) {
 }
 
 function patchYarnFiles(files: FileSet) {
-    ;[".github/workflows/build.yml", "README.md"].forEach(fn => {
-        files[fn] = patchYarnCommands(files[fn] as string)
+    ;[".github/workflows/build.yml", "README.md", "CONTRIBUTING"].forEach(
+        fn => {
+            files[fn] = patchYarnCommands(files[fn] as string)
+        }
+    )
+}
+
+interface PackageManifest {
+    author: string
+    devDependencies?: Record<string, string>
+    dependencies?: Record<string, string>
+    repository?: {
+        url: string
+        type: "git"
+    }
+    name?: string
+    private?: boolean
+    license?: string
+}
+
+// ensure @devicescript/cli in in package json
+function addCliDependency(pkg: PackageManifest) {
+    // ensure @devicescript/cli in in package json
+    if (!pkg.devDependencies) pkg.devDependencies = {}
+    pkg.devDependencies["@devicescript/cli"] = "latest"
+}
+
+function writePackage(pkg: PackageManifest, spaces?: number) {
+    writeJSONSync("./package.json", sortPkgJson(pkg), {
+        spaces: spaces ?? 4,
     })
 }
 
 export async function addNpm(options: AddNpmOptions) {
     const files = clone(npmFiles)
-    let pkg = files["package.json"] as any
+    let pkg = files["package.json"] as PackageManifest
 
     // note that these operations are performed on the *patch* not on package.json
     // these fields apply *only* if given field is missing or set to ""
 
     let uname = execCmd("git config --get user.name")
     if (uname) {
-        uname += " <" + execCmd("git config --get user.email") + ">"
         debug(`set author to ${uname}`)
         pkg.author = uname
     }
@@ -650,14 +676,15 @@ export async function addNpm(options: AddNpmOptions) {
         files["src/index.ts"] += `export * from "./${fn.slice(0, -3)}"\n`
     }
 
-    if (isYarn(".", options)) {
-        patchYarnFiles(files)
-    }
+    if (isYarn(".", options)) patchYarnFiles(files)
 
     const cwd = writeFiles(".", options, files)
 
     // ok, soft patch applied, now we apply more stuff that always has to be set
-    pkg = readJSON5Sync("package.json")
+    pkg = readJSON5Sync("package.json") as PackageManifest
+
+    // ensure cli is added
+    addCliDependency(pkg)
 
     // npm is never private:
     delete pkg.private
@@ -667,9 +694,7 @@ export async function addNpm(options: AddNpmOptions) {
     if (options.name) pkg.name = options.name
 
     // save
-    writeJSONSync("package.json", sortPkgJson(pkg), {
-        spaces: options.spaces ?? 4,
-    })
+    writePackage(pkg, options.spaces)
 
     await runInstall(cwd, options)
 
