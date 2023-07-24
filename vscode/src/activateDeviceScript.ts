@@ -78,6 +78,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     if (projectName === undefined) return
                 }
 
+                const yarn =
+                    "yarn" ===
+                    (await vscode.window.showQuickPick(["npm", "yarn"], {
+                        title: "What package manager do you use?",
+                        placeHolder: "npm",
+                    }))
+
                 const cwd = projectName
                     ? Utils.joinPath(folder, projectName)
                     : folder
@@ -87,6 +94,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     cwd,
                 })
                 let cmd = "npx --yes @devicescript/cli@latest init --quiet"
+                if (yarn) cmd += " --yarn"
                 terminal.sendText(cmd)
                 terminal.show()
 
