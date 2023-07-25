@@ -13,6 +13,12 @@ for various hardware peripherical and can be used with various services.
 -   [ST7789, ST7735, ILI9163](/api/drivers/st7789), LCD color, SPI
 -   [UC8151](/api/drivers/uc8151), eInk monochrome, SPI
 
+:::caution I8080 not supported
+
+The drivers use SPI or I2C. The parralel interface (I8080) is not supported at the moment.
+
+:::
+
 ## Indexed screen
 
 The `startIndexedScreen` returns a local client for the screen service.
