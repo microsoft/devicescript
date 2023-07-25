@@ -17,7 +17,7 @@ import { JDDevice } from "jacdac-ts"
 import { resolvePythonEnvironment } from "./python"
 import { MARKETPLACE_EXTENSION_ID } from "@devicescript/interop"
 import { showConfirmBox } from "./pickers"
-import { readFileText } from "./fs"
+import { checkFileExists, readFileText } from "./fs"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -77,17 +77,22 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     })
                     if (projectName === undefined) return
                 }
-
-                const yarn =
-                    "yarn" ===
-                    (await vscode.window.showQuickPick(["npm", "yarn"], {
-                        title: "What package manager do you use?",
-                        placeHolder: "npm",
-                    }))
-
                 const cwd = projectName
                     ? Utils.joinPath(folder, projectName)
                     : folder
+
+                const yarnLock = await checkFileExists(cwd, "yarn.lock")
+                const packageLock = await checkFileExists(cwd, "package.lock")
+                const yarn = yarnLock
+                    ? true
+                    : packageLock
+                    ? false
+                    : "yarn" ===
+                      (await vscode.window.showQuickPick(["npm", "yarn"], {
+                          title: "What package manager do you use?",
+                          placeHolder: "npm",
+                      }))
+
                 await vscode.workspace.fs.createDirectory(cwd)
                 const terminal = vscode.window.createTerminal({
                     isTransient: true,
