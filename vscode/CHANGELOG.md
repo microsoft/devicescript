@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.9](https://github.com/microsoft/devicescript/compare/v2.14.8...v2.14.9)
+
+> 24 July 2023
+
+- support for LED driver + simulation [`#580`](https://github.com/microsoft/devicescript/pull/580)
+- deprecated Math.clamp in favor of constrain [`0e2ee13`](https://github.com/microsoft/devicescript/commit/0e2ee131bbf5c1babe285e5e2e7a11244568c5b0)
+- fix gpiorelay sample [`621c779`](https://github.com/microsoft/devicescript/commit/621c7792e384ae6934002db93f6db890f4c6e5e8)
+- ask for npm/yarn when creating new project [`b0e34d6`](https://github.com/microsoft/devicescript/commit/b0e34d642d7c284672ea11f3229fb1f15f5f8f3e)
+
 #### [v2.14.8](https://github.com/microsoft/devicescript/compare/v2.14.7...v2.14.8)
 
 > 21 July 2023
