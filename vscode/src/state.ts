@@ -439,7 +439,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     kind: vscode.QuickPickItemKind.Separator,
                 },
                 <ServerQuickPickItem>{
-                    label: "Add settings and secrets",
+                    label: "Add device settings and secrets",
                     detail: "Add .env.default and .env.local files to store configuration settings and secrets.",
                     data: { command: "settings" },
                 },

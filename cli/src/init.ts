@@ -578,7 +578,7 @@ export async function addSettings(options: AddSettingsOptions) {
     const files = clone(settingsFiles)
     const cwd = writeFiles(".", options, files)
     return finishAdd(
-        `Prepared .env.* files, please add settings in those files.`,
+        `Prepared .env.* files, please add device settings in those files.`,
         Object.keys(files)
     )
 }

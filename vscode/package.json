@@ -651,7 +651,7 @@
             },
             {
                 "command": "extension.devicescript.settings.add",
-                "title": "Add Settings...",
+                "title": "Add Device Settings...",
                 "category": "DeviceScript"
             },
             {
