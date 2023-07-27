@@ -645,21 +645,29 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
     }
 
-    async connect() {
-        const { simulatorScriptManagerId } = this
+    get isWorkspace() {
         const { extensionKind } = this.context.extension
-        const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
-        if (isWorkspace) {
-            showErrorMessage(
+        return extensionKind === vscode.ExtensionKind.Workspace
+    }
+
+    async connect() {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+
+        const config = vscode.workspace.getConfiguration("devicescript.connect")
+
+        if (this.isWorkspace || !!config.get("web")) {
+            showInformationMessageWithHelp(
                 "connection.remote",
-                "Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+                "Connection to a hardware device (serial, usb, ...) is not supported in Visual Studio Code remote projects. Connect through the connection page to create a connection."
+            )
+            vscode.env.openExternal(
+                vscode.Uri.parse("http://localhost:8081/connect")
             )
             return
         }
 
-        await this.devtools.start()
-        if (!this.devtools.connected) return
-
+        const { simulatorScriptManagerId } = this
         const { transports } = this.transport
         const connecteds = transports.filter(
             tr => tr.connectionState === ConnectionState.Connected
