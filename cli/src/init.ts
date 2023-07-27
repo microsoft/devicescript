@@ -303,7 +303,7 @@ setInterval(async () => {
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
 
 `,
-    CONTRIBUTING: `
+    "CONTRIBUTING.md": `
 # Contributing
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/)
@@ -612,7 +612,7 @@ function patchYarnCommands(content: string) {
 }
 
 function patchYarnFiles(files: FileSet) {
-    ;[".github/workflows/build.yml", "README.md", "CONTRIBUTING"]
+    ;[".github/workflows/build.yml", "README.md", "CONTRIBUTING.md"]
         .filter(fn => !!files[fn])
         .forEach(fn => {
             files[fn] = patchYarnCommands(files[fn] as string)
