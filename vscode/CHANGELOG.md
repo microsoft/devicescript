@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.10](https://github.com/microsoft/devicescript/compare/v2.14.9...v2.14.10)
+
+> 26 July 2023
+
+- better handling of running init on an existing project [`f368b0f`](https://github.com/microsoft/devicescript/commit/f368b0f5cc4ea8bf3c837096e0c466f0256e61cb)
+- detect yarn.lock/package.lock when initiaizing existing project [`a91f438`](https://github.com/microsoft/devicescript/commit/a91f43840f23856cafa8326911bff6324df48ccb)
+- rename "add settings..." to "add device settings..." [`5ae4072`](https://github.com/microsoft/devicescript/commit/5ae40720067612f33e6ec7c9728a30b6e817a703)
+
 #### [v2.14.9](https://github.com/microsoft/devicescript/compare/v2.14.8...v2.14.9)
 
 > 24 July 2023
