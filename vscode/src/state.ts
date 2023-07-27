@@ -56,6 +56,7 @@ import { SimulatorsWebView } from "./simulatorWebView"
 import { showErrorMessage } from "./telemetry"
 import _serverInfo from "./server-info.json"
 import { resolvePythonEnvironment } from "./python"
+import { resolveDarkMode } from "./assets"
 
 const serverInfo = _serverInfo as ServerInfoFile
 
@@ -663,8 +664,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const config = vscode.workspace.getConfiguration("devicescript.connect")
 
         if (this.isRemote || !!config.get("web")) {
+            const darkMode = resolveDarkMode()
             vscode.env.openExternal(
-                vscode.Uri.parse("http://localhost:8081/connect")
+                vscode.Uri.parse(`http://localhost:8081/connect?${darkMode}=1`)
             )
             return
         }
