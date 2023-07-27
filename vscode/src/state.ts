@@ -613,27 +613,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const board = await this.resolveBoardDefinition(device)
         if (!board) return
 
-        // trying to flash firmware from a workspace won't work
-        if (this.isWorkspace) {
-            const af = architectureFamily(board.archId)
-            const help = `devices/${architectureFamily(
-                board.archId
-            )}/${board.id.replace(/_/g, "-")}`
-            if (af === "rp2040") {
-                vscode.env.openExternal(vscode.Uri.parse(board.$fwUrl))
-                showInformationMessageWithHelp(
-                    "Download the .UF2 firmware file to your device BOOT drive.",
-                    help
-                )
-            } else {
-                showInformationMessageWithHelp(
-                    "Flashing firmware from a remote workspace is not supported. Click Help for more instructions.",
-                    help
-                )
-            }
-            return
-        }
-
         // same host flow
         if (
             !(await showConfirmBox(
@@ -647,6 +626,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const { id } = board
         const args = ["flash", "--board", id, "--refresh", "--install"]
+        if (this.isRemote) args.push("--remote")
         const python = await resolvePythonEnvironment()
         if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
@@ -671,7 +651,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
     }
 
-    get isWorkspace() {
+    get isRemote() {
         const { extensionKind } = this.context.extension
         return extensionKind === vscode.ExtensionKind.Workspace
     }
@@ -682,7 +662,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const config = vscode.workspace.getConfiguration("devicescript.connect")
 
-        if (this.isWorkspace || !!config.get("web")) {
+        if (this.isRemote || !!config.get("web")) {
             showInformationMessageWithHelp(
                 "Connection to a hardware device (serial, usb, ...) is not supported in Visual Studio Code remote projects. Connect through the connection page to create a connection.",
                 "getting-started/vscode/workspaces"
