@@ -602,6 +602,7 @@ function sortPkgJson(pkg: any) {
 }
 
 function patchYarnCommands(content: string) {
+    if (!content) return content
     return content
         .replace("npm ci", "yarn install --frozen-lockfile")
         .replace("npm install", "yarn install")
@@ -611,11 +612,11 @@ function patchYarnCommands(content: string) {
 }
 
 function patchYarnFiles(files: FileSet) {
-    ;[".github/workflows/build.yml", "README.md", "CONTRIBUTING"].forEach(
-        fn => {
+    ;[".github/workflows/build.yml", "README.md", "CONTRIBUTING"]
+        .filter(fn => !!files[fn])
+        .forEach(fn => {
             files[fn] = patchYarnCommands(files[fn] as string)
-        }
-    )
+        })
 }
 
 interface PackageManifest {
