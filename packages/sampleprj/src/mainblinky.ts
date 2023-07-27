@@ -18,6 +18,6 @@ setInterval(async () => {
     await delay(200)
     // turn on
     console.log(`on`)
-    await setStatusLight(0x0f0f0f)
+    await setStatusLight(0x0f0000)
     await delay(200)
 }, 10)
