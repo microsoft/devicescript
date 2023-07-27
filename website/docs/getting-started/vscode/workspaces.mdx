@@ -1,17 +1,25 @@
 # Local, Remote and Web Workspaces
 
-Some features, like connection to hardware devices, are only supported in local workspaces (currently).
+In a local workspace, DeviceScript opens a native serial connection to communicate with hardware devices.
 
-| Feature                       | Local (Windows, MacOS, Linux) | Remote | Web |
-| ----------------------------- | ----------------------------- | ------ | --- |
+In a remote workspace, DeviceScript uses a separate browser window using WebSerial that communicates with
+the localhost developer tools server.
+
+In general, web editor is not supported.
+
+| Feature                       | Local (Windows, MacOS, Linux) | Remote (WSL, Docker, Codespaces, ...)  | Web |
+| ----------------------------- | ----------------------------- | ------  | --- |
 | TypeScript completion, syntax | ✓                             | ✓      |     |
 | Compiler                      | ✓                             | ✓      |     |
 | Device Simulator              | ✓                             | ✓      |     |
 | Debugger                      | ✓                             | ✓      |     |
 | Simulator Dashboard           | ✓                             | ✓      |     |
 | Devices/Watch views           | ✓                             | ✓      |     |
-| Serial connection to hardware | ✓ (1)                         |        |     |
-| USB connection to hardware    | (2)                           |        |     |
+| Flash Firmware                | ✓                             | ✓ (1)  |     |
+| Serial connection to hardware | ✓                             | ✓ (2)  |     |
+| USB connection to hardware    | (3)                           |        |     |
 
--   (1) There may be [a way to connect to USB/Serial in WSL](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) in the future.
--   (2) No board with USB connection supported yet
+-   (1) Using manual download of .UF2 files for RP2040 or the [Adafruit WebSerial ESPTool](https://adafruit.github.io/Adafruit_WebSerial_ESPTool/)
+-   (2) Through a seperate browser window using WebSerial
+-   (3) No board with USB connection supported yet
+
