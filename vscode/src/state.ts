@@ -663,10 +663,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const config = vscode.workspace.getConfiguration("devicescript.connect")
 
         if (this.isRemote || !!config.get("web")) {
-            showInformationMessageWithHelp(
-                "Connection to a hardware device (serial, usb, ...) is not supported in Visual Studio Code remote projects. Connect through the connection page to create a connection.",
-                "getting-started/vscode/workspaces"
-            )
             vscode.env.openExternal(
                 vscode.Uri.parse("http://localhost:8081/connect")
             )
