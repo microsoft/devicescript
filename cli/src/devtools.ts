@@ -217,8 +217,12 @@ function startProxyServers(
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
-        if (pathname === "/") {
-            fetchDevToolsProxy(options.localhost, options.vscode)
+        let route: "vscode" | "connect"
+        if (pathname === "/") route = "vscode"
+        else if (pathname === "/connect") route = "connect"
+        if (!route) res.statusCode = 404
+        else
+            fetchDevToolsProxy(options.localhost, route)
                 .then(proxyHtml => {
                     res.setHeader("Cache-control", "no-cache")
                     res.setHeader("Content-type", "text/html")
@@ -228,9 +232,6 @@ function startProxyServers(
                     error(e)
                     res.statusCode = 3
                 })
-        } else {
-            res.statusCode = 404
-        }
     })
     server.on("error", handleError)
     server.on("upgrade", (request, socket, body) => {

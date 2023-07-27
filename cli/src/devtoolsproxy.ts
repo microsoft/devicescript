@@ -3,27 +3,22 @@ import https from "https"
 
 const DASHBOARD_PATH = "tools/devicescript-devtools"
 const VSCODE_DASHBOARD_PATH = "tools/devicescript-devtools-vscode"
-
-let proxyHtmlPromise: Promise<string>
+const CONNECT_PATH = "tools/devicescript-connect"
 
 export function fetchDevToolsProxy(
     localhost: boolean,
-    vscode: boolean
-): Promise<string> {
-    if (!proxyHtmlPromise)
-        proxyHtmlPromise = uncachedFetchDevToolsProxy(localhost, vscode)
-    return proxyHtmlPromise
-}
-
-function uncachedFetchDevToolsProxy(
-    localhost: boolean,
-    vscode: boolean
+    path: "vscode" | "connect" | "dashboard"
 ): Promise<string> {
     const protocol = localhost ? http : https
     const url = localhost
         ? "http://127.0.0.1:8000/devtools/proxy.html"
         : "https://microsoft.github.io/jacdac-docs/devtools/proxy"
-    const dashboardPath = vscode ? VSCODE_DASHBOARD_PATH : DASHBOARD_PATH
+    const dashboardPath =
+        path === "vscode"
+            ? VSCODE_DASHBOARD_PATH
+            : path === "connect"
+            ? CONNECT_PATH
+            : DASHBOARD_PATH
     const root = localhost
         ? "http://127.0.0.1:8000"
         : "https://microsoft.github.io/jacdac-docs"
@@ -54,7 +49,6 @@ function uncachedFetchDevToolsProxy(
             })
             .on("error", reject)
     }).then(body => {
-        proxyHtmlPromise = Promise.resolve(body)
         return body
     })
 }
