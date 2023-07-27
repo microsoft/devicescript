@@ -334,3 +334,8 @@ export interface ArchConfig extends JsonComment, FstorConfig {
      */
     pins?: PinFunctionInfo & JsonComment
 }
+
+export function architectureFamily(archId: string): "esp32" | "rp2040" | string {
+    for (const a of ["esp32", "rp2040"]) if (archId.startsWith(a)) return a
+    return archId
+}

@@ -305,10 +305,6 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
         return this.node as JDDevice
     }
 
-    async flash() {
-        await this.props.state.flashFirmware(this.device)
-    }
-
     protected update(): boolean {
         const { device, props } = this
         const { state } = props

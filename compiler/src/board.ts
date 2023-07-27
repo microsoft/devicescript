@@ -6,6 +6,7 @@ import {
     PinFunction,
     normalizeDeviceConfig,
     parseAnyInt,
+    architectureFamily,
 } from "@devicescript/interop"
 import { DeviceCatalog, deviceCatalogImage, unique } from "jacdac-ts"
 import { resolveBuildConfig } from "./specgen"
@@ -118,11 +119,6 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
         b.markdown += "\n\n```\n" + b.pinInfoText + "\n```\n"
 
     return b
-}
-
-export function architectureFamily(id: string) {
-    for (const a of ["esp32", "rp2040"]) if (id.startsWith(a)) return a
-    return id
 }
 
 function deviceConfigToMarkdown(

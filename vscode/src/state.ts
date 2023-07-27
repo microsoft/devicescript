@@ -3,7 +3,11 @@ import type {
     ServerInfo,
     ServerInfoFile,
 } from "@devicescript/interop"
-import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
+import {
+    architectureFamily,
+    normalizeDeviceConfig,
+    parseAnyInt,
+} from "@devicescript/interop"
 import {
     CHANGE,
     ControlReg,
@@ -609,6 +613,28 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const board = await this.resolveBoardDefinition(device)
         if (!board) return
 
+        // trying to flash firmware from a workspace won't work
+        if (this.isWorkspace) {
+            const af = architectureFamily(board.archId)
+            const help = `devices/${architectureFamily(
+                board.archId
+            )}/${board.id.replace(/_/g, "-")}`
+            if (af === "rp2040") {
+                vscode.env.openExternal(vscode.Uri.parse(board.$fwUrl))
+                showInformationMessageWithHelp(
+                    "Download the .UF2 firmware file to your device BOOT drive.",
+                    help
+                )
+            } else {
+                showInformationMessageWithHelp(
+                    "Flashing firmware from a remote workspace is not supported. Click Help for more instructions.",
+                    help
+                )
+            }
+            return
+        }
+
+        // same host flow
         if (
             !(await showConfirmBox(
                 `DeviceScript runtime will be flashed on your ${board.devName}. There is NO undo. Confirm?`
