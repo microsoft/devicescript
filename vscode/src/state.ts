@@ -3,7 +3,11 @@ import type {
     ServerInfo,
     ServerInfoFile,
 } from "@devicescript/interop"
-import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
+import {
+    architectureFamily,
+    normalizeDeviceConfig,
+    parseAnyInt,
+} from "@devicescript/interop"
 import {
     CHANGE,
     ControlReg,
@@ -52,6 +56,7 @@ import { SimulatorsWebView } from "./simulatorWebView"
 import { showErrorMessage } from "./telemetry"
 import _serverInfo from "./server-info.json"
 import { resolvePythonEnvironment } from "./python"
+import { resolveDarkMode } from "./assets"
 
 const serverInfo = _serverInfo as ServerInfoFile
 
@@ -609,6 +614,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const board = await this.resolveBoardDefinition(device)
         if (!board) return
 
+        // same host flow
         if (
             !(await showConfirmBox(
                 `DeviceScript runtime will be flashed on your ${board.devName}. There is NO undo. Confirm?`
@@ -621,6 +627,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const { id } = board
         const args = ["flash", "--board", id, "--refresh", "--install"]
+        if (this.isRemote) args.push("--remote")
         const python = await resolvePythonEnvironment()
         if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
@@ -645,21 +652,26 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
     }
 
-    async connect() {
-        const { simulatorScriptManagerId } = this
+    get isRemote() {
         const { extensionKind } = this.context.extension
-        const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
-        if (isWorkspace) {
-            showErrorMessage(
-                "connection.remote",
-                "Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+        return extensionKind === vscode.ExtensionKind.Workspace
+    }
+
+    async connect() {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+
+        const config = vscode.workspace.getConfiguration("devicescript.connect")
+
+        if (this.isRemote || !!config.get("web")) {
+            const darkMode = resolveDarkMode()
+            vscode.env.openExternal(
+                vscode.Uri.parse(`http://localhost:8081/connect?${darkMode}=1`)
             )
             return
         }
 
-        await this.devtools.start()
-        if (!this.devtools.connected) return
-
+        const { simulatorScriptManagerId } = this
         const { transports } = this.transport
         const connecteds = transports.filter(
             tr => tr.connectionState === ConnectionState.Connected

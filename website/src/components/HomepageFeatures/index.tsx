@@ -51,10 +51,15 @@ export default function HomepageFeatures(): JSX.Element {
             link: "/devicescript/developer/simulation",
         },
         {
+            title: "Local and Remote Workspace",
+            description:
+                "Develop your firmware from your local machine or a remote container",
+        },
+        {
             title: "TypeScript Drivers",
             description:
                 "Write drivers in TypeScript using I2C, SPI, ... without having to go down to C (limitations apply :) )",
-            link: "/devicescript/developer/servers",
+            link: "/devicescript/developer/drivers",
         },
         {
             title: "ESP32, RP2040, ...",

@@ -293,6 +293,10 @@ export async function mainCli() {
         )
         r.option("--python <path>", "path to the python executable")
         r.option(
+            "--remote",
+            "flashing from a remote workspace, with no access to serial or usb"
+        )
+        r.option(
             "--file <bin-or-uf2-file>",
             "file to flash instead of downloaded firmware"
         )

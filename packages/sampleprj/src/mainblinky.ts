@@ -13,9 +13,11 @@ import { setStatusLight } from "@devicescript/runtime"
 
 setInterval(async () => {
     // turn off
+    console.log(`off`)
     await setStatusLight(0)
-    await delay(1000)
+    await delay(200)
     // turn on
-    await setStatusLight(0x0f0f0f)
-    await delay(1000)
+    console.log(`on`)
+    await setStatusLight(0x0f0000)
+    await delay(200)
 }, 10)

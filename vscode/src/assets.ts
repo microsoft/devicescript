@@ -14,3 +14,13 @@ export function logo(context: vscode.ExtensionContext) {
         ),
     }
 }
+
+export function resolveDarkMode() {
+    const { kind: colorThemeKind } = vscode.window.activeColorTheme
+    const res =
+        colorThemeKind === vscode.ColorThemeKind.Dark ||
+        colorThemeKind === vscode.ColorThemeKind.HighContrast
+            ? "dark"
+            : "light"
+    return res
+}

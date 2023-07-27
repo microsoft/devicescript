@@ -60,6 +60,11 @@ export interface FlashOptions {
      * Write specified BIN or UF2 file instead of downloaded firmware.
      */
     file?: string
+
+    /**
+     * The flash command is run from a remote workspace
+     */
+    remote?: boolean
 }
 
 export interface FlashESP32Options extends FlashOptions {
@@ -121,14 +126,40 @@ export async function resolveBoard(arch: string, options: FlashOptions) {
 }
 
 export async function flashESP32(options: FlashESP32Options) {
+    const { board } = await resolveBoard("esp32", options)
+
+    if (options.remote) {
+        if (options.clean)
+            log(`clearing flashing from a remote workspace is not supported`)
+        else {
+            const fw = await fetchFW(board, options)
+            const moff = /-(0x[a-f0-9]+)\.bin$/.exec(fw)
+            if (!moff)
+                fatal(
+                    "invalid $fwUrl format, should end in -0x1000.bin or similar"
+                )
+            log(`flash firmware instructions:`)
+            log(
+                `-  open https://adafruit.github.io/Adafruit_WebSerial_ESPTool/`
+            )
+            log(
+                `-  connect your device in bootloader mode (see https://learn.adafruit.com/adafruit-magtag/web-serial-esptool)`
+            )
+            if (moff[1] !== "0x0") log(`-  update **Offset** to ${moff}`)
+            log(`-  click on **Choose a file** and selec the file below`)
+            log(fw)
+            log(`-  click **Program** and wait for the transfer to finish`)
+            log(`-  Reset the device and reconnect`)
+        }
+        return
+    }
+
     const vendors = [
         0x10c4, // SiLabs CP2102
         0x303a, // Espressif (C3, S2, ...)
         0x1a86, // CH340 etc
         0x0403, // M5stick
     ]
-
-    const { board } = await resolveBoard("esp32", options)
 
     const listPorts = async () => {
         const ports = await SerialPort.list()
@@ -544,6 +575,19 @@ async function rescan<T>(
 
 export async function flashRP2040(options: FlashRP2040Options) {
     const { board } = await resolveBoard("rp2040", options)
+    const fn = await fetchFW(board, options)
+
+    if (options.remote) {
+        log(`flash firmware instructions:`)
+        log(`-  put your device in bootloader mode`)
+        log(`-  copy the .UF2 file below to the BOOT drive`)
+        log(fn)
+        log(
+            `-  once the copy is complete, your device should reset in application mode`
+        )
+        return
+    }
+
     if (!options.drive) {
         const drives = await rescan(
             options,
@@ -560,7 +604,6 @@ export async function flashRP2040(options: FlashRP2040Options) {
         options.drive = drives[0]
     }
     log(`using drive ${options.drive}`)
-    const fn = await fetchFW(board, options)
     const buf = readFileSync(fn)
     log(`cp ${fn} ${options.drive}`)
     await writeFile(join(options.drive, "fw.uf2"), buf)

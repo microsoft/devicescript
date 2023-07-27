@@ -145,9 +145,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.device.flash",
             (device?: JDomDeviceTreeItem | JDDevice) =>
-                device instanceof JDomDeviceTreeItem
-                    ? device.flash()
-                    : extensionState.flashFirmware(device)
+                extensionState.flashFirmware(
+                    device instanceof JDomDeviceTreeItem
+                        ? device.device
+                        : device
+                )
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
