@@ -59,6 +59,12 @@ function normalizeUsedFiles(dir: vscode.Uri, usedFiles: string[]) {
 
 const PROJECT_FOLDER_KEY = "devicescript.devtools.projectFolder"
 
+export async function resolveDevtoolsPath(route?: string) {
+    const target = vscode.Uri.parse(`http://localhost:8081/${route || ""}`)
+    const external = await vscode.env.asExternalUri(target)
+    return external
+}
+
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
@@ -828,6 +834,7 @@ export class DeveloperToolsManager extends JDEventSource {
         useShell?: boolean
         diagnostics?: boolean
         developerMode?: boolean
+        internet?: boolean
         message?: string
         args: string[]
     }): Promise<vscode.Terminal> {
@@ -905,12 +912,15 @@ export class DeveloperToolsManager extends JDEventSource {
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
                 const developerMode =
                     options.developerMode ?? devToolsConfig.get("developerMode")
+                const internet =
+                    options.internet || !!devToolsConfig.get("internet")
                 let cli = nodePath || "node"
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
                 if (diagnostics) args.push("--diagnostics", "--verbose")
                 if (developerMode) args.push("--dev")
+                if (internet) args.push("--internet")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath

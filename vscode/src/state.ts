@@ -3,11 +3,7 @@ import type {
     ServerInfo,
     ServerInfoFile,
 } from "@devicescript/interop"
-import {
-    architectureFamily,
-    normalizeDeviceConfig,
-    parseAnyInt,
-} from "@devicescript/interop"
+import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
     ControlReg,
@@ -45,9 +41,9 @@ import {
     TransportStatus,
 } from "../../cli/src/sideprotocol"
 import { openDocUri, showInformationMessageWithHelp } from "./commands"
-import { CONNECTION_RESOURCE_GROUP, MESSAGE_PREFIX } from "./constants"
+import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
-import { DeveloperToolsManager } from "./devtoolsserver"
+import { DeveloperToolsManager, resolveDevtoolsPath } from "./devtoolsserver"
 import { checkFileExists, openFileEditor, writeFile } from "./fs"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
@@ -665,9 +661,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         if (this.isRemote || !!config.get("web")) {
             const darkMode = resolveDarkMode()
-            vscode.env.openExternal(
-                vscode.Uri.parse(`http://localhost:8081/connect?${darkMode}=1`)
+            const connectUri = await resolveDevtoolsPath(
+                `connect?${darkMode}=1`
             )
+            console.log({ connectUri })
+            await vscode.env.openExternal(connectUri)
             return
         }
 
@@ -898,9 +896,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     .register(ControlReg.DeviceDescription)
                 await description.refresh(true)
 
-                return `${description.stringValue || ""} (${
-                    runtimeVersion || "?"
-                })`
+                return `${description.stringValue || ""} (${runtimeVersion || "?"
+                    })`
             }
             const items: DeviceQuickItem[] = await Promise.all(
                 services.map(

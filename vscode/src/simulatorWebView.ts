@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import { JDEventSource } from "jacdac-ts"
 import { DeviceScriptExtensionState } from "./state"
 import { logo, resolveDarkMode } from "./assets"
+import { resolveDevtoolsPath } from "./devtoolsserver"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
     constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
@@ -29,9 +30,7 @@ export class SimulatorsWebView extends JDEventSource {
 
     private async generateSimulatorsHtml() {
         const darkMode = resolveDarkMode()
-        const fullWebServerUri = await vscode.env.asExternalUri(
-            vscode.Uri.parse(`http://localhost:8081/`)
-        )
+        const fullWebServerUri = await resolveDevtoolsPath()
         const cspSource = this.simulatorsWebviewPanel.webview.cspSource
         const nonce = getNonce()
 

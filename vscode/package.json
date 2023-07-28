@@ -122,6 +122,12 @@
                     "description": "Listens for a jacdac-docs devtools server at localhost:8000",
                     "scope": "machine-overridable"
                 },
+                "devicescript.devtools.internet": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "allows connections from non-localhost on developer server",
+                    "scope": "machine-overridable"
+                },
                 "devicescript.connect.web": {
                     "type": "boolean",
                     "default": false,
