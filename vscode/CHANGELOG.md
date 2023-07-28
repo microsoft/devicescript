@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.12](https://github.com/microsoft/devicescript/compare/v2.14.11...v2.14.12)
+
+> 27 July 2023
+
+- Remote connect [`#589`](https://github.com/microsoft/devicescript/pull/589)
+- typo in contributing file name [`f2656da`](https://github.com/microsoft/devicescript/commit/f2656dac1579586a23ea51baddd115053c1e35ca)
+
 #### [v2.14.11](https://github.com/microsoft/devicescript/compare/v2.14.10...v2.14.11)
 
 > 27 July 2023
