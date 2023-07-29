@@ -319,7 +319,7 @@ Simulators and compilers will work.
 
 ## Local development
 
--  install [Node.js LTS](https://nodejs.org/en/download)
+-  install [Node.js LTS](https://nodejs.org/en/download) using [nvm](https://github.com/nvm-sh/nvm)
 
 \`\`\`bash
 nvm install --lts
@@ -500,12 +500,12 @@ export async function init(dir: string | undefined, options: InitOptions) {
 
     return finishAdd(
         `Your DeviceScript project is initialized.\n` +
-            `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
+        `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
         ["package.json", MAIN]
     )
 }
 
-export interface AddSimOptions extends InitOptions {}
+export interface AddSimOptions extends InitOptions { }
 
 export async function addSim(options: AddSimOptions) {
     log(`Adding simulator support`)
@@ -564,7 +564,7 @@ export interface AddNpmOptions extends InitOptions {
     name?: string
 }
 
-export interface AddSettingsOptions extends InitOptions {}
+export interface AddSettingsOptions extends InitOptions { }
 
 export function execCmd(cmd: string) {
     try {
@@ -724,7 +724,7 @@ export async function addTest(options: AddTestOptions) {
     )
 }
 
-export interface AddTestOptions extends InitOptions {}
+export interface AddTestOptions extends InitOptions { }
 
 export function initAddCmds() {
     addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>
