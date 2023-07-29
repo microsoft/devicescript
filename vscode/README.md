@@ -16,6 +16,7 @@ environments.
 -   DeviceScript simulator
 -   Sensor and Jacdac simulator
 -   Connection to native DeviceScript device
+-   Remote workspace support
 -   Device, services, register Explorer view
 -   Register and Event watch
 
