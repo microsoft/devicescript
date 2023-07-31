@@ -124,10 +124,10 @@ export class PixelBuffer {
      */
     view(start: number, length?: number): PixelBuffer {
         const rangeStart = this.start + (start << 0)
-        const rangeLength =
+        const rangeLength = Math.max(0,
             length === undefined
                 ? this.length - start
-                : Math.min(length, this.length - start)
+                : Math.min(length, this.length - start))
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
     }
 }
