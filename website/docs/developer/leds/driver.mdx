@@ -32,11 +32,34 @@ const led = await startLed({
 })
 ```
 
+## Topology
 
-## Simulation and long strips (> 64 LEDs)
+You can specify the topology of the LED strip by using the `variant` register. The default is a flexible strip
+but other popular options like `ring` are also available.
 
-For short LED strips, 64 LEDs or less, DeviceScript provides full simulation and device twin
-for hardware and simulated devices.
+```ts skip
+// highlight-next-line
+import { LedVariant } from "@devicescript/core"
 
-For strips longer than 64 LEDs, the simulator device will work but the hardware device twin will
-not work anymore. This is a simple limitation that the data overflows the packets used in Jacdac.
+const led = await startLed({
+    // highlight-next-line
+    variant: LedVariant.Ring,
+})
+```
+
+For LED `matrix` with row major, you should also specify the number of columns.
+
+```ts skip
+// highlight-next-line
+import { LedVariant } from "@devicescript/core"
+
+const led = await startLed({
+    length: 64 // 8x8
+    // highlight-next-line
+    variant: LedVariant.Matrix,
+    // highlight-next-line
+    columns: 8
+})
+```
+
+To work on the LEDs as it if was an image, use the [startLedDisplay](./display) helper.
