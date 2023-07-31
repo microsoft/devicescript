@@ -18,6 +18,21 @@ const led = await startLed({
 // highlight-end
 ```
 
+## Gamma correction
+
+The Led has a [Gamma correction](https://cdn-learn.adafruit.com/downloads/pdf/led-tricks-gamma-correction.pdf)
+factor of 2.8 by default. Gamma correction is applied before rendering the colors
+to account for how our eyes sense the light created by LEDs.
+
+```ts skip
+const led = await startLed({
+    // highlight-next-line
+    gamma: 2.2
+
+})
+```
+
+
 ## Simulation and long strips (> 64 LEDs)
 
 For short LED strips, 64 LEDs or less, DeviceScript provides full simulation and device twin

@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { blend, rgb } from "./colors"
+import { blend, hsv, rgb } from "./colors"
 
 /**
  * A buffer of RGB colors
@@ -246,6 +246,26 @@ export function fillFade(pixels: PixelBuffer, brightness: number) {
 }
 
 /**
+ * Fills the buffer with colors of increasing Hue (or decreasing)
+ * @param pixels 
+ * @param startHue start hue channel between 0 and 255. eg: 255
+ * @param endHue end hue channel between 0 and 255. eg: 255
+ * @returns 
+ */
+export function fillRainbow(pixels: PixelBuffer, startHue = 0, endHue = 0xff) {
+    const val = 255;
+    const sat = 240;
+    const n = pixels.length
+    if (!n) return
+    const dh = (endHue - startHue) / (n - 1)
+    for (let i = 0; i < n; ++i) {
+        const hue = startHue + i * dh
+        const c = hsv(hue, sat, val)
+        pixels.setAt(i, c)
+    }
+}
+
+/**
  * Applies a inplace gamma correction to the pixel colors
  * @param pixels
  * @param gamma
@@ -261,8 +281,8 @@ export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
             c === 0
                 ? 0
                 : c === 0xff
-                ? 0xff
-                : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
+                    ? 0xff
+                    : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
         if (c > 0 && o === 0) o = 1
         buf[i] = o
     }

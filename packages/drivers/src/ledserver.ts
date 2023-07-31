@@ -36,7 +36,8 @@ export interface LedServerOptions {
      */
     variant?: ds.LedVariant
     /**
-     * Specify the amount of gamma correction
+     * Specify the amount of gamma correction. Default is 2.8, set to 1 to cancel correction.
+     * @see {@link https://cdn-learn.adafruit.com/downloads/pdf/led-tricks-gamma-correction.pdf}
      */
     gamma?: number
 }
@@ -108,7 +109,8 @@ class LedServer extends Server implements ds.LedServerSpec {
         if (this._intensity < 1 || this._gamma) {
             const r = b.allocClone()
             if (this._intensity < 1) fillFade(r, this._intensity)
-            if (this._gamma) correctGamma(r, this._gamma)
+            const g = this._gamma ?? 2.8
+            if (g && g !== 1) correctGamma(r, this._gamma)
             b = r
         }
         // TODO: render b to hardware
@@ -129,7 +131,7 @@ export async function startLed(
     const server = new LedServer(options)
     const client = new ds.Led(startServer(server))
 
-    ;(client as any)._buffer = server.buffer
+        ; (client as any)._buffer = server.buffer
     client.show = async function () {
         await server.show()
         if (length <= 64) await client.pixels.write(server.buffer.buffer)
