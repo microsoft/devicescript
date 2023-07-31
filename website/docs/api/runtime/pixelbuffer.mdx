@@ -107,3 +107,23 @@ fillBarGraph(pixels, current, max)
 
 await led.show()
 ```
+
+### `fillRainbow`
+
+Fills the buffer by interpolating the hue of `hsv` colors.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillRainbow } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+// highlight-next-line
+fillRainbow(pixels)
+
+await led.show()
+```
+
+By default, the helper interpolates between `0` and `0xff`, 
+but this can be changed with optional parameters.
