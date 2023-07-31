@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { blend, hsv, rgb } from "./colors"
+import { blendRgb, hsv, rgb } from "./colors"
 
 /**
  * A buffer of RGB colors
@@ -162,7 +162,7 @@ export function fillGradient(
     pixels.setAt(end, endColor)
     for (let i = start + 1; i < end - 1; ++i) {
         const alpha = Math.idiv(0xff * i, steps)
-        const c = blend(startColor, alpha, endColor)
+        const c = blendRgb(startColor, alpha, endColor)
         pixels.setAt(i, c)
     }
 }

@@ -1,3 +1,5 @@
+import { ColorInterpolator, blendRgb } from "./colors"
+
 export class Palette {
     readonly buffer: Buffer
     /**
@@ -60,6 +62,28 @@ export class Palette {
         this.buffer[3 * index] = color >> 16
         this.buffer[3 * index + 1] = color >> 8
         this.buffer[3 * index + 2] = color >> 0
+    }
+
+    /**
+     * Interpolates a normalize value `[0, 1]` in the palette. By default uses RGB linear interpolation.
+     * @param index 
+     * @param interpolator 
+     * @returns 
+     */
+    interpolate(alpha: number, interpolator?: ColorInterpolator) {
+        const index = Math.constrain(alpha, 0, 1) * this.length
+
+        const li = Math.floor(index)
+        const lc = this.at(li)
+        if (li === index) return lc
+
+        const ui = Math.ceil(index)
+        const uc = this.at(ui)
+        const a = index - li
+
+        const mixer = interpolator || blendRgb
+
+        return mixer(lc, alpha, uc)
     }
 
     /**

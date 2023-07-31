@@ -1,5 +1,5 @@
 import { Image } from "./image"
-import { Palette } from "./palette"
+import { Palette } from "@devicescript/runtime"
 
 /**
  * A display driver

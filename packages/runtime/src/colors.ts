@@ -31,6 +31,11 @@ export const enum ColorHues {
 }
 
 /**
+ * Blends two colors, left and right, using the alpha parameter.
+ */
+export type ColorInterpolator = (left: number, alpha: number, right: number) => number;
+
+/**
  * Encodes an RGB color into a 24bit color number.
  * @param r byte red
  * @param g byte green
@@ -131,7 +136,7 @@ function unpackB(rgb: number): number {
  * @param otherColor
  * @returns
  */
-export function blend(color: number, alpha: number, otherColor: number) {
+export function blendRgb(color: number, alpha: number, otherColor: number) {
     alpha = Math.max(0, Math.min(0xff, alpha | 0))
     const malpha = 0xff - alpha
     const r = (unpackR(color) * malpha + unpackR(otherColor) * alpha) >> 8
