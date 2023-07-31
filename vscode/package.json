@@ -652,7 +652,7 @@
             },
             {
                 "command": "extension.devicescript.jdom.settings.clear",
-                "title": "Clear Settings...",
+                "title": "Clear Device Settings...",
                 "category": "DeviceScript",
                 "icon": "$(trash)"
             },
