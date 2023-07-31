@@ -20,15 +20,14 @@ const led = await startLed({
 
 ## Gamma correction
 
-The Led has a [Gamma correction](https://cdn-learn.adafruit.com/downloads/pdf/led-tricks-gamma-correction.pdf)
-factor of 2.8 by default. Gamma correction is applied before rendering the colors
+The Led supports [Gamma correction](https://cdn-learn.adafruit.com/downloads/pdf/led-tricks-gamma-correction.pdf),
+but it is disabled by default. Gamma correction is applied before rendering the colors
 to account for how our eyes sense the light created by LEDs.
 
 ```ts skip
 const led = await startLed({
     // highlight-next-line
-    gamma: 2.2
-
+    gamma: 2.8
 })
 ```
 

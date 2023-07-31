@@ -106,10 +106,10 @@ class LedServer extends Server implements ds.LedServerSpec {
     async show(): Promise<void> {
         let b = this.buffer
         // full brightness so we can use the buffer as is
-        if (this._intensity < 1 || this._gamma) {
+        const g = this._gamma
+        if (this._intensity < 1 || (g && g !== 1)) {
             const r = b.allocClone()
             if (this._intensity < 1) fillFade(r, this._intensity)
-            const g = this._gamma ?? 2.8
             if (g && g !== 1) correctGamma(r, this._gamma)
             b = r
         }
