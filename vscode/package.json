@@ -202,15 +202,18 @@
             "devicescript": [
                 {
                     "id": "extension.devicescript.jdom",
-                    "name": "Devices"
+                    "name": "Devices",
+                    "initialSize": 3
                 },
                 {
                     "id": "extension.devicescript.watch",
-                    "name": "Watch"
+                    "name": "Watch",
+                    "visibility": "collapsed"
                 },
                 {
                     "id": "extension.devicescript.gateway",
-                    "name": "Development Gateway"
+                    "name": "Development Gateway",
+                    "visibility": "hidden"
                 }
             ]
         },
