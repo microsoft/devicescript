@@ -1,5 +1,6 @@
 import * as ds from "@devicescript/core"
-import { blendRgb, hsv, rgb } from "./colors"
+import { ColorInterpolator, blendRgb, hsv, rgb } from "./colors"
+import { Palette } from "./palette"
 
 /**
  * A buffer of RGB colors
@@ -286,4 +287,41 @@ export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
         if (c > 0 && o === 0) o = 1
         buf[i] = o
     }
+}
+
+/**
+ * Fills a pixel buffer with the interpolated colors of a palette.
+ * @param interpolator color interpolation function. default is blendRgb
+ */
+export function fillPalette(pixels: PixelBuffer, palette: Palette, interpolator?: ColorInterpolator) {
+    const n = pixels.length
+    if (!n) return
+
+    const mixer = interpolator || blendRgb
+    for (let i = 0; i < n; ++i) {
+        const alpha = i / (n - 1)
+        const c = palette.interpolate(alpha, mixer)
+        pixels.setAt(i, c)
+    }
+}
+
+/**
+ * Fill a range of LEDs with a sequence of entries from a palette, so that the entire palette smoothly covers the range of LEDs.
+ * @param interpolator color interpolation function. default is blendRgb
+ */
+export function fillPaletteCircular(pixels: PixelBuffer, palette: Palette, interpolator?: ColorInterpolator) {
+    const n = pixels.length
+    if (!n) return
+
+    const mixer = interpolator || blendRgb
+    const n2 = n >> 1
+    let c: number
+    for (let i = 0; i < n2; ++i) {
+        const alpha = 2 * i / (n - 1)
+        const c = palette.interpolate(alpha, mixer)
+        pixels.setAt(i, c)
+        pixels.setAt(n - 1 - i, c)
+    }
+    if (n % 2 === 1)
+        pixels.setAt(n2, c)
 }
