@@ -133,6 +133,24 @@ export class PixelBuffer {
         )
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
     }
+
+
+    /**
+     * Applies a inplace gamma correction to the pixel colors
+     * @param pixels
+     * @param gamma
+     */
+    correctGamma(gamma: number = 2.7) {
+        const s = this.start * 3
+        const e = (this.start + this.length) * 3
+        const buf = this.buffer
+
+        for (let i = s; i < e; ++i) {
+            const c = buf[i]
+            const o = correctGammaChannel(c, gamma)
+            buf[i] = o
+        }
+    }
 }
 
 /**
@@ -280,26 +298,20 @@ export function fillRainbow(
 }
 
 /**
- * Applies a inplace gamma correction to the pixel colors
- * @param pixels
- * @param gamma
+ * Applies a gamma correction to a single color channel ([0,0xff])
+ * @param c 
+ * @param gamma 
+ * @returns 
  */
-export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
-    const s = pixels.start * 3
-    const e = (pixels.start + pixels.length) * 3
-    const buf = pixels.buffer
-
-    for (let i = s; i < e; ++i) {
-        const c = buf[i]
-        let o =
-            c === 0
-                ? 0
-                : c === 0xff
-                    ? 0xff
-                    : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
-        if (c > 0 && o === 0) o = 1
-        buf[i] = o
-    }
+export function correctGammaChannel(c: number, gamma: number) {
+    let o =
+        c === 0
+            ? 0
+            : c === 0xff
+                ? 0xff
+                : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
+    if (c > 0 && o === 0) o = 1
+    return 0
 }
 
 /**

@@ -110,7 +110,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         if (this._intensity < 1 || (g && g !== 1)) {
             const r = b.allocClone()
             if (this._intensity < 1) fillFade(r, this._intensity)
-            if (g && g !== 1) correctGamma(r, this._gamma)
+            if (g && g !== 1) r.correctGamma(this._gamma)
             b = r
         }
         // TODO: render b to hardware

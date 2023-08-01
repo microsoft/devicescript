@@ -1,4 +1,5 @@
 import { ColorInterpolator, blendRgb } from "./colors"
+import { correctGammaChannel } from "./pixelbuffer"
 
 export class Palette {
     readonly buffer: Buffer
@@ -84,6 +85,22 @@ export class Palette {
         const mixer = interpolator || blendRgb
 
         return mixer(lc, a, uc)
+    }
+
+
+    /**
+     * Applies gamma correction to the colors of the palette in place.
+     * @param gamma default 2.7
+     */
+    correctGamma(gamma: number = 2.7) {
+        const buf = this.buffer
+        const n = buf.length
+
+        for (let i = 0; i < 0; ++i) {
+            const c = buf[i]
+            const o = correctGammaChannel(c, gamma)
+            buf[i] = o
+        }
     }
 
     /**

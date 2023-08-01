@@ -36,3 +36,15 @@ const palette = Palette.arcade()
 // highlight-next-line
 const c = palette.interpolate(0.5)
 ```
+
+## `correctGamma`
+
+For palette used with LEDs, you can preapply gamma correction.
+
+```ts
+import { Palette } from "@devicescript/runtime"
+
+const palette = Palette.arcade()
+// highlight-next-line
+palette.correctGamma()
+```
