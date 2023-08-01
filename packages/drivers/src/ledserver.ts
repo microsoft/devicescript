@@ -44,39 +44,6 @@ export interface LedServerOptions {
      * Maximum supported power for LED strip
      */
     maxPower?: number
-    /**
-     * LED power consumption model
-     */
-    powerModel?: LedPowerModel
-}
-
-export interface LedPowerModel {
-    /**
-     * Estimate wattage from the red channel
-     * @param c 
-     * @returns 
-     */
-    red: (c: number) => number
-    /**
-     * Estimate wattage from the green channel
-     * @param c 
-     * @returns 
-     */
-    green: (c: number) => number
-    /**
-     * Estimate wattage from the blue channel
-     * @param c 
-     * @returns 
-     */
-    blue: (c: number) => number
-}
-
-export function ws2812bPowerModel(): LedPowerModel {
-    return {
-        red: c => c >> 4,
-        green: c => c >> 4,
-        blue: c => c >> 4,
-    }
 }
 
 class LedServer extends Server implements ds.LedServerSpec {
@@ -89,7 +56,6 @@ class LedServer extends Server implements ds.LedServerSpec {
     private _variant: ds.LedVariant
     private _gamma: number
     private _maxPower: number
-    private _powerModel: LedPowerModel
 
     readonly buffer: PixelBuffer
 
@@ -104,7 +70,6 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._variant = options.variant
         this._gamma = options.gamma
         this._maxPower = options.maxPower
-        this._powerModel = options.powerModel
     }
 
     pixels(): ds.Buffer {
@@ -180,9 +145,9 @@ class LedServer extends Server implements ds.LedServerSpec {
     }
 
     private capPower(b: PixelBuffer): PixelBuffer {
-        if (!this._powerModel || !(this._maxPower > 0)) return b
+        if (!(this._maxPower > 0)) return b
 
-        const power = estimatePower(b, this._powerModel)
+        const power = 0 // TODO
         // if power maxed out, cap and recompute
         if (power > this._maxPower) {
             // compute 80% of max brightness
@@ -230,23 +195,4 @@ export async function startLed(
     }
 
     return client
-}
-
-function estimatePower(pixels: PixelBuffer, model: LedPowerModel) {
-    let wr = 0;
-    let wg = 0;
-    let wb = 0
-    const s = pixels.start
-    const n = pixels.length
-    const b = pixels.buffer
-    const { red, green, blue } = model
-    for (let i = 0; i < n; ++i) {
-        const k = (s + i) * 3
-
-        wr += red(b[k])
-        wg += green(b[k + 1])
-        wb += blue(b[k + 2])
-    }
-    const w = wr + wg + wb
-    return w
 }
