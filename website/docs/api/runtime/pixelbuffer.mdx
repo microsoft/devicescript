@@ -71,40 +71,6 @@ fillSolid(pixels, 0x00_ff_00)
 await led.show()
 ```
 
-### `fillGradient`
-
-Helper function that does a linear interpolation of two colors accross the RGB space.
-
-```ts
-import { Led } from "@devicescript/core"
-import { fillGradient } from "@devicescript/runtime"
-
-const led = new Led()
-const pixels = await led.buffer()
-
-// highlight-next-line
-fillGradient(pixels, 0x00_ff_00, 0x00_00_ff)
-
-await led.show()
-```
-
-### `fillGradient`
-
-Fills the buffer by interpolating between two colors (for more colors, use a [palette](./palette)).
-
-```ts
-import { Led } from "@devicescript/core"
-import { fillRainbow } from "@devicescript/runtime"
-
-const led = new Led()
-const pixels = await led.buffer()
-
-// highlight-next-line
-fillGradient(pixels, 0xff0000, 0x0000ff, { circular: true })
-
-await led.show()
-```
-
 ### `fillRainbow`
 
 Fills the buffer by interpolating the hue of `hsv` colors.
@@ -124,6 +90,41 @@ await led.show()
 
 By default, the helper interpolates between `0` and `0xff`,
 but this can be changed with optional parameters.
+
+### `fillGradient`
+
+Fills with a linear interpolation of two colors accross the RGB space.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillGradient } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+// highlight-next-line
+fillGradient(pixels, 0x00_ff_00, 0x00_00_ff, { circular: true })
+
+await led.show()
+```
+
+### `fillPalette`
+
+Fills by interpolating the colors of a palette.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillPalette, Palette } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+const palette = Palette.arcade()
+
+// highlight-next-line
+fillPalette(pixels, palette)
+
+await led.show()
+```
 
 ### `fillBarGraph`
 
