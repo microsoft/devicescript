@@ -27,7 +27,7 @@ to account for how our eyes sense the light created by LEDs.
 ```ts skip
 const led = await startLed({
     // highlight-next-line
-    gamma: 2.8
+    gamma: 2.8,
 })
 ```
 
@@ -62,3 +62,15 @@ const led = await startLed({
 ```
 
 To work on the LEDs as it if was an image, use the [startLedDisplay](./display) helper.
+
+## Maximum power consumption
+
+A large number of LED consuming maximum power can lead to an impressive surge of
+power consumption. The LED driver allows to specify a maximum power (in watts)
+and a LED power consumption model. Given those information
+
+```ts skip
+const led = await startLed({
+    maxPower: 5, // watts
+})
+```

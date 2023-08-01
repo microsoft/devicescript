@@ -11,6 +11,7 @@ export interface LedServerOptions {
      * Number of LEDs
      */
     length: number
+
     /**
      * Brightness applied to pixels before being rendered.
      * This allocate twice the memory if less than 1 as an additional buffer is needed to compute the color.
@@ -43,16 +44,44 @@ export interface LedServerOptions {
      * Maximum supported power for LED strip
      */
     maxPower?: number
+    /**
+     * LED power consumption model
+     */
+    powerModel?: LedPowerModel
 }
 
-interface LedPowerModel {
+export interface LedPowerModel {
+    /**
+     * Estimate wattage from the red channel
+     * @param c 
+     * @returns 
+     */
     red: (c: number) => number
+    /**
+     * Estimate wattage from the green channel
+     * @param c 
+     * @returns 
+     */
     green: (c: number) => number
+    /**
+     * Estimate wattage from the blue channel
+     * @param c 
+     * @returns 
+     */
     blue: (c: number) => number
+}
+
+export function ws2812bPowerModel(): LedPowerModel {
+    return {
+        red: c => c >> 4,
+        green: c => c >> 4,
+        blue: c => c >> 4,
+    }
 }
 
 class LedServer extends Server implements ds.LedServerSpec {
     private _intensity: number
+    private _actualBrightness: number
     private _columns: number
     private _ledPerPixels: number
     private _waveLength: number
@@ -60,10 +89,9 @@ class LedServer extends Server implements ds.LedServerSpec {
     private _variant: ds.LedVariant
     private _gamma: number
     private _maxPower: number
-    private _power: number
+    private _powerModel: LedPowerModel
 
     readonly buffer: PixelBuffer
-    powerModel: LedPowerModel
 
     constructor(options: LedServerOptions & ServerOptions) {
         super(ds.Led.spec, options)
@@ -76,12 +104,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._variant = options.variant
         this._gamma = options.gamma
         this._maxPower = options.maxPower
-        this.powerModel = {
-            red: c => c >> 4,
-            green: c => c >> 4,
-            blue: c => c >> 4,
-        }
-        this._power = -1
+        this._powerModel = options.powerModel
     }
 
     pixels(): ds.Buffer {
@@ -98,7 +121,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._intensity = Math.constrain(value, 0, 1)
     }
     actualBrightness(): number {
-        return this._intensity
+        return this._actualBrightness ?? this._intensity
     }
     numPixels(): number {
         return this.buffer.length
@@ -122,38 +145,62 @@ class LedServer extends Server implements ds.LedServerSpec {
         return this._maxPower
     }
     set_maxPower(value: number): void {
-        this._maxPower = value
-    }
-
-    power(): number {
-        return this._power
+        // ignore
     }
 
     /**
      * Display buffer on hardware
      */
     async show(): Promise<void> {
-        let b = this.buffer
-        // full brightness so we can use the buffer as is
-        const g = this._gamma
-        if (this._intensity < 1 || (g && g !== 1)) {
-            const r = b.allocClone()
-            if (this._intensity < 1) fillFade(r, this._intensity)
-            if (g && g !== 1) r.correctGamma(this._gamma)
-            b = r
-        }
-
-        if (this._maxPower > 0) {
-            this._power = estimatePower(b, this.powerModel)
-            if (this._maxPower > this._power) {
-                if (b === this.buffer)
-                    b = b.allocClone()
-                fillFade(b, this._maxPower / this._power)
-                this._power = estimatePower(b, this.powerModel)
-            }
-        }
+        let b = this.render()
+        b = this.capPower(b)
 
         // TODO: render b to hardware
+    }
+
+    private render() {
+        let b = this.buffer
+        const brightness = this.actualBrightness()
+
+        // apply fade if needed
+        if (brightness < 1) {
+            if (b === this.buffer)
+                b = b.allocClone()
+            fillFade(b, this._intensity)
+        }
+
+        // apply gamma
+        const g = this._gamma
+        if (g && g !== 1) {
+            if (b === this.buffer)
+                b = b.allocClone()
+            b.correctGamma(this._gamma)
+        }
+        return b
+    }
+
+    private capPower(b: PixelBuffer): PixelBuffer {
+        if (!this._powerModel || !(this._maxPower > 0)) return b
+
+        const power = estimatePower(b, this._powerModel)
+        // if power maxed out, cap and recompute
+        if (power > this._maxPower) {
+            // compute 80% of max brightness
+            // gamma?
+            this._actualBrightness = (this._intensity * this._maxPower / power) * 0.8
+            this.render()
+            // power is not maxed, but residual brightness
+        } else if (this._actualBrightness) {
+            // update actualbrightness 
+            const alpha = 0.1
+            const threshold = 0.05
+            // towards actual brightness
+            this._actualBrightness = (1 - alpha) * this._actualBrightness + alpha * this._intensity
+            // when within 10% of brightness, clear flag
+            if (Math.abs(this._actualBrightness - this._intensity) < threshold)
+                this._actualBrightness = undefined
+        }
+        return b
     }
 }
 
@@ -169,9 +216,9 @@ export async function startLed(
 ): Promise<ds.Led> {
     const { length } = options
     const server = new LedServer(options)
-    const client = new ds.Led(startServer(server))
+    const client = new ds.Led(startServer(server));
 
-        ; (client as any)._buffer = server.buffer
+    ; (client as any)._buffer = server.buffer
     client.show = async function () {
         await server.show()
         if (length <= 64) await client.pixels.write(server.buffer.buffer)
