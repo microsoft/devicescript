@@ -11,7 +11,7 @@ to create multi-color gradients.
 These function allow to lookup and update the color of palette at indices.
 
 ```ts
-import { Palette } from "@devicescript/runtime"
+import { Palette } from "@devicescript/graphics"
 
 const palette = Palette.arcade()
 
@@ -24,17 +24,18 @@ const c = palette.at(2)
 palette.setAt(2, 0x00_00_ff)
 ```
 
-## `interpolate`
+## `interpolateColor`
 
 Interpolates a `[0, 1]` value into a color of the palette, regarless of the palette size.
 
 ```ts
-import { Palette } from "@devicescript/runtime"
+import { Palette } from "@devicescript/graphics"
+import { interpolateColor } from "@devicescript/runtime"
 
 const palette = Palette.arcade()
 
 // highlight-next-line
-const c = palette.interpolate(0.5)
+const c = interpolateColor(0.5)
 ```
 
 ## `correctGamma`
@@ -42,9 +43,10 @@ const c = palette.interpolate(0.5)
 For palette used with LEDs, you can preapply gamma correction.
 
 ```ts
-import { Palette } from "@devicescript/runtime"
+import { Palette } from "@devicescript/graphics"
+import { correctGamma } from "@devicescript/runtime"
 
 const palette = Palette.arcade()
 // highlight-next-line
-palette.correctGamma()
+correctGamma(palette)
 ```

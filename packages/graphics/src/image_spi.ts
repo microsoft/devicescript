@@ -1,7 +1,7 @@
 import * as ds from "@devicescript/core"
 import { SPI } from "@devicescript/spi"
 import { Image } from "./image"
-import { Palette } from "@devicescript/runtime"
+import { Palette } from "./palette"
 
 // sync with devs_objects.h
 export enum SpiImageFlags {

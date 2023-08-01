@@ -5,8 +5,7 @@ import {
     IndexedScreenServerSpec,
     LightBulb,
 } from "@devicescript/core"
-import { Display, Image } from "@devicescript/graphics"
-import { Palette } from "@devicescript/runtime"
+import { Display, Image, Palette } from "@devicescript/graphics"
 
 export interface IndexedScreenOptions { }
 

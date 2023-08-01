@@ -8,9 +8,9 @@ import {
     Image,
     SpiImageFlags,
     spiSendImage,
+    Palette
 } from "@devicescript/graphics"
 import { DriverError } from "./core"
-import { Palette } from "@devicescript/runtime"
 
 export interface UC8151Options extends FourWireOptions {
     /**

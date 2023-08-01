@@ -1,6 +1,5 @@
 import * as ds from "@devicescript/core"
-import { Display, Image } from "@devicescript/graphics"
-import { Palette } from "./palette"
+import { Display, Image, Palette } from "@devicescript/graphics"
 
 /**
  * Mounts a Display interface over a LED matrix to make it act as a screen.
