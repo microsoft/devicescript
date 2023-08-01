@@ -153,16 +153,15 @@ export function fillGradient(
     startColor: number,
     endColor: number
 ): void {
-    const start = pixels.start
-    const end = pixels.start + pixels.length
-    // check if any work needed
-    const steps = end - start
-    if (steps < 1) return
+    const length = pixels.length
+    if (!length) return
 
-    pixels.setAt(start, startColor)
-    pixels.setAt(end, endColor)
-    for (let i = start + 1; i < end - 1; ++i) {
-        const alpha = Math.idiv(0xff * i, steps)
+    pixels.setAt(0, startColor)
+    if (length === 1) return;
+
+    pixels.setAt(length - 1, endColor)
+    for (let i = 1; i < length - 1; ++i) {
+        const alpha = i / (length - 1)
         const c = blendRgb(startColor, alpha, endColor)
         pixels.setAt(i, c)
     }
@@ -243,17 +242,17 @@ export function fillSolid(pixels: PixelBuffer, c: number) {
 
 /**
  * Fades each color channels according to the brigthness value between 0 dark and 1 full brightness.
- * @param brightness
+ * @param alpha
  */
-export function fillFade(pixels: PixelBuffer, brightness: number) {
-    brightness = Math.max(0, Math.min(0xff, (brightness | 0) << 8))
+export function fillFade(pixels: PixelBuffer, alpha: number) {
+    alpha = Math.constrain(alpha << 8, 0, 0xff)
 
     const s = pixels.start * 3
     const e = (pixels.start + pixels.length) * 3
     const buf = pixels.buffer
 
     for (let i = s; i < e; ++i) {
-        buf[i] = (buf[i] * brightness) >> 8
+        buf[i] = (buf[i] * alpha) >> 8
     }
 }
 

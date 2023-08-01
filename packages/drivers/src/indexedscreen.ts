@@ -5,9 +5,10 @@ import {
     IndexedScreenServerSpec,
     LightBulb,
 } from "@devicescript/core"
-import { Display, Image, Palette } from "@devicescript/graphics"
+import { Display, Image } from "@devicescript/graphics"
+import { Palette } from "@devicescript/runtime"
 
-export interface IndexedScreenOptions {}
+export interface IndexedScreenOptions { }
 
 class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     readonly display: Display

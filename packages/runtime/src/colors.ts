@@ -137,7 +137,7 @@ function unpackB(rgb: number): number {
  * @returns
  */
 export function blendRgb(color: number, alpha: number, otherColor: number) {
-    alpha = Math.max(0, Math.min(0xff, alpha | 0))
+    alpha = Math.constrain(alpha * 0xff, 0, 0xff)
     const malpha = 0xff - alpha
     const r = (unpackR(color) * malpha + unpackR(otherColor) * alpha) >> 8
     const g = (unpackG(color) * malpha + unpackG(otherColor) * alpha) >> 8

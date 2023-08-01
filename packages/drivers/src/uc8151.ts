@@ -6,11 +6,11 @@ import { FourWireDriver, FourWireOptions } from "./st7735"
 import {
     Display,
     Image,
-    Palette,
     SpiImageFlags,
     spiSendImage,
 } from "@devicescript/graphics"
 import { DriverError } from "./core"
+import { Palette } from "@devicescript/runtime"
 
 export interface UC8151Options extends FourWireOptions {
     /**
@@ -27,8 +27,7 @@ export interface UC8151Options extends FourWireOptions {
 
 export class UC8151Driver
     extends FourWireDriver<UC8151Options>
-    implements Display
-{
+    implements Display {
     public readonly palette: Palette
     private resflag: number
 
