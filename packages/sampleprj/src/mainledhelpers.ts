@@ -1,6 +1,7 @@
 import { delay } from "@devicescript/core";
 import { startLed } from "@devicescript/drivers";
-import { fillFade, fillGradient, fillSolid, schedule, fillPalette, Palette, fillRainbow } from "@devicescript/runtime";
+import { Palette } from "@devicescript/graphics";
+import { fillFade, fillGradient, fillSolid, schedule, fillPalette, fillRainbow } from "@devicescript/runtime";
 
 const led = await startLed({
     length: 32,
@@ -29,7 +30,7 @@ schedule(async () => {
     fillGradient(pixels, 0xff0000, 0x0000ff, { circular: true, reversed: true })
     await show()
 
-    fillRainbow(pixels, )
+    fillRainbow(pixels,)
     await show()
 
     fillRainbow(pixels, { circular: true })
