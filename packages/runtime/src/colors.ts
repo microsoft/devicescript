@@ -101,18 +101,18 @@ export function hsv(hue: number, sat: number = 255, val: number = 255): number {
 /**
  * Fade the color by the brightness
  * @param color color to fade
- * @param brightness the amount of brightness to apply to the color between 0 and 1.
+ * @param alpha the amount of brightness to apply to the color between 0 and 1.
  */
-export function fade(color: number, brightness: number): number {
-    brightness = Math.max(0, Math.min(0xff, brightness << 8))
-    if (brightness < 0xff) {
+export function fade(color: number, alpha: number): number {
+    alpha = Math.constrain(alpha * 0xff, 0, 0xff)
+    if (alpha < 0xff) {
         let red = (color >> 16) & 0xff
         let green = (color >> 8) & 0xff
         let blue = color & 0xff
 
-        red = (red * brightness) >> 8
-        green = (green * brightness) >> 8
-        blue = (blue * brightness) >> 8
+        red = (red * alpha) >> 8
+        green = (green * alpha) >> 8
+        blue = (blue * alpha) >> 8
 
         color = rgb(red, green, blue)
     }

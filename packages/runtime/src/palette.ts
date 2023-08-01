@@ -71,19 +71,19 @@ export class Palette {
      * @returns 
      */
     interpolate(alpha: number, interpolator?: ColorInterpolator) {
-        const index = Math.constrain(alpha, 0, 1) * this.length
+        const index = Math.constrain(alpha, 0, 1) * (this.length - 1)
 
         const li = Math.floor(index)
         const lc = this.at(li)
         if (li === index) return lc
 
-        const ui = Math.ceil(index)
+        const ui = li + 1
         const uc = this.at(ui)
         const a = index - li
 
         const mixer = interpolator || blendRgb
 
-        return mixer(lc, alpha, uc)
+        return mixer(lc, a, uc)
     }
 
     /**

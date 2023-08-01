@@ -3,14 +3,14 @@ import { startLed } from "@devicescript/drivers";
 import { fillFade, fillGradient, fillSolid, schedule, fillPalette, Palette, fillPaletteCircular } from "@devicescript/runtime";
 
 const led = await startLed({
-    length: 16,
+    length: 32,
 })
 const pixels = await led.buffer()
-const palette = Palette.arcade()
+const palette = new Palette(hex`ff0000 00ff00 0000ff`)
 
 const show = async () => {
     await led.show()
-    await delay(1000)
+    await delay(2000)
 }
 
 schedule(async () => {
@@ -21,7 +21,7 @@ schedule(async () => {
     fillGradient(pixels, 0xff0000, 0x0000ff)
     await show()
 
-    fillFade(pixels, 0.9)
+    fillFade(pixels, 0.5)
     await show()
 
     fillFade(pixels, 0.5)

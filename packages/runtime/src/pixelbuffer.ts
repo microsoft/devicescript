@@ -245,7 +245,7 @@ export function fillSolid(pixels: PixelBuffer, c: number) {
  * @param alpha
  */
 export function fillFade(pixels: PixelBuffer, alpha: number) {
-    alpha = Math.constrain(alpha << 8, 0, 0xff)
+    alpha = Math.constrain(alpha * 0xff, 0, 0xff)
 
     const s = pixels.start * 3
     const e = (pixels.start + pixels.length) * 3
