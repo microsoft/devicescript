@@ -10,21 +10,17 @@ const palette = new Palette(hex`ff0000 00ff00 0000ff`)
 
 const show = async () => {
     await led.show()
-    await delay(2000)
+    await delay(1000)
 }
 
 schedule(async () => {
     fillSolid(pixels, 0x00ff00)
     await show()
 
-
     fillGradient(pixels, 0xff0000, 0x0000ff)
     await show()
 
-    fillFade(pixels, 0.5)
-    await show()
-
-    fillFade(pixels, 0.5)
+    fillFade(pixels, 0.2)
     await show()
 
     fillPalette(pixels, palette)
