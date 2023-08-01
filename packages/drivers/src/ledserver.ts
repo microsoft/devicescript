@@ -3,7 +3,6 @@ import {
     PixelBuffer,
     fillFade,
     pixelBuffer,
-    correctGamma,
 } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 
@@ -40,6 +39,16 @@ export interface LedServerOptions {
      * @see {@link https://cdn-learn.adafruit.com/downloads/pdf/led-tricks-gamma-correction.pdf}
      */
     gamma?: number
+    /**
+     * Maximum supported power for LED strip
+     */
+    maxPower?: number
+}
+
+interface LedPowerModel {
+    red: (c: number) => number
+    green: (c: number) => number
+    blue: (c: number) => number
 }
 
 class LedServer extends Server implements ds.LedServerSpec {
@@ -50,8 +59,11 @@ class LedServer extends Server implements ds.LedServerSpec {
     private _luminousIntensity: number
     private _variant: ds.LedVariant
     private _gamma: number
+    private _maxPower: number
+    private _power: number
 
     readonly buffer: PixelBuffer
+    powerModel: LedPowerModel
 
     constructor(options: LedServerOptions & ServerOptions) {
         super(ds.Led.spec, options)
@@ -63,6 +75,13 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._luminousIntensity = options.luminousIntensity
         this._variant = options.variant
         this._gamma = options.gamma
+        this._maxPower = options.maxPower
+        this.powerModel = {
+            red: c => c >> 4,
+            green: c => c >> 4,
+            blue: c => c >> 4,
+        }
+        this._power = -1
     }
 
     pixels(): ds.Buffer {
@@ -99,6 +118,16 @@ class LedServer extends Server implements ds.LedServerSpec {
     variant(): ds.LedVariant {
         return this._variant
     }
+    maxPower(): number {
+        return this._maxPower
+    }
+    set_maxPower(value: number): void {
+        this._maxPower = value
+    }
+
+    power(): number {
+        return this._power
+    }
 
     /**
      * Display buffer on hardware
@@ -113,6 +142,17 @@ class LedServer extends Server implements ds.LedServerSpec {
             if (g && g !== 1) r.correctGamma(this._gamma)
             b = r
         }
+
+        if (this._maxPower > 0) {
+            this._power = estimatePower(b, this.powerModel)
+            if (this._maxPower > this._power) {
+                if (b === this.buffer)
+                    b = b.allocClone()
+                fillFade(b, this._maxPower / this._power)
+                this._power = estimatePower(b, this.powerModel)
+            }
+        }
+
         // TODO: render b to hardware
     }
 }
@@ -143,4 +183,23 @@ export async function startLed(
     }
 
     return client
+}
+
+function estimatePower(pixels: PixelBuffer, model: LedPowerModel) {
+    let wr = 0;
+    let wg = 0;
+    let wb = 0
+    const s = pixels.start
+    const n = pixels.length
+    const b = pixels.buffer
+    const { red, green, blue } = model
+    for (let i = 0; i < n; ++i) {
+        const k = (s + i) * 3
+
+        wr += red(b[k])
+        wg += green(b[k + 1])
+        wb += blue(b[k + 2])
+    }
+    const w = wr + wg + wb
+    return w
 }
