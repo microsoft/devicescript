@@ -1,3 +1,4 @@
+import { Palette } from "@devicescript/graphics"
 import { interpolateColor } from "./palette"
 import { PixelBuffer } from "./pixelbuffer"
 
