@@ -15,6 +15,7 @@
         "isolatedModules": true,
         "noImplicitAny": true,
         "moduleDetection": "force",
+        "forceConsistentCasingInFileNames": true,
         "types": []
     },
     "include": ["**/*.ts", "../../core/src/*.ts"]

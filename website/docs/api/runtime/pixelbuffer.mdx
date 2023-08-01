@@ -50,6 +50,15 @@ const view = pixels.view(5, 10)
 view.clear()
 ```
 
+### `correctGamma`
+
+Applies gamma correction to compensate LED and eye perception
+
+```ts skip
+// highlight-next-line
+pixels.correctGamma()
+```
+
 ## Helpers
 
 Here are a few helpers built for `PixelBuffer`, but many other could be added!
@@ -71,9 +80,29 @@ fillSolid(pixels, 0x00_ff_00)
 await led.show()
 ```
 
+### `fillRainbow`
+
+Fills the buffer by interpolating the hue of `hsv` colors.
+
+```ts
+import { Led } from "@devicescript/core"
+import { fillRainbow } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+
+// highlight-next-line
+fillRainbow(pixels)
+
+await led.show()
+```
+
+By default, the helper interpolates between `0` and `0xff`,
+but this can be changed with optional parameters.
+
 ### `fillGradient`
 
-Helper function that does a linear interpolation of two colors accross the RGB space.
+Fills with a linear interpolation of two colors accross the RGB space.
 
 ```ts
 import { Led } from "@devicescript/core"
@@ -83,7 +112,26 @@ const led = new Led()
 const pixels = await led.buffer()
 
 // highlight-next-line
-fillGradient(pixels, 0x00_ff_00, 0x00_00_ff)
+fillGradient(pixels, 0x00_ff_00, 0x00_00_ff, { circular: true })
+
+await led.show()
+```
+
+### `fillPalette`
+
+Fills by interpolating the colors of a palette.
+
+```ts
+import { Led } from "@devicescript/core"
+import { Palette } from "@devicescript/graphics"
+import { fillPalette } from "@devicescript/runtime"
+
+const led = new Led()
+const pixels = await led.buffer()
+const palette = Palette.arcade()
+
+// highlight-next-line
+fillPalette(pixels, palette)
 
 await led.show()
 ```

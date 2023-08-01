@@ -14,9 +14,9 @@ declare module "@devicescript/core" {
 
         /**
          * Writes an image to the dots
-         * @param img
+         * @param image
          */
-        writeImage(img: Image): Promise<void>
+        writeImage(image: Image): Promise<void>
     }
 }
 
@@ -50,20 +50,20 @@ ds.DotMatrix.prototype.readImage = async function () {
     return img
 }
 
-ds.DotMatrix.prototype.writeImage = async function (img: Image) {
+ds.DotMatrix.prototype.writeImage = async function (image: Image) {
     const data = await this.dots.read()
     const columns = await this.columns.read()
     const rows = await this.rows.read()
 
     if (!data || isNaN(columns) || isNaN(rows)) return
 
-    const w = Math.min(img.width, columns)
-    const h = Math.min(img.height, rows)
+    const w = Math.min(image.width, columns)
+    const h = Math.min(image.height, rows)
     const n = data.length
     const columns_size = rows <= 8 ? 1 : (rows + 7) >> 3
     for (let row = 0; row < h; ++row) {
         for (let col = 0; col < w; ++col) {
-            const dot = !!img.get(col, row)
+            const dot = !!image.get(col, row)
             const bit = ((col * columns_size + (row >> 3)) << 3) + (row % 8)
             data.setBit(bit, dot)
         }

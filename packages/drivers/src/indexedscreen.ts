@@ -7,7 +7,7 @@ import {
 } from "@devicescript/core"
 import { Display, Image, Palette } from "@devicescript/graphics"
 
-export interface IndexedScreenOptions {}
+export interface IndexedScreenOptions { }
 
 class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     readonly display: Display

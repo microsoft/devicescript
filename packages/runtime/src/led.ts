@@ -28,8 +28,8 @@ declare module "@devicescript/core" {
 ds.Led.prototype.buffer = async function () {
     let b = (this as any as LedWithBuffer)._buffer
     if (!b) {
-        const n = await this.numPixels.read()
-        ;(this as any as LedWithBuffer)._buffer = b = pixelBuffer(n)
+        const n = await this.numPixels.read();
+        ; (this as any as LedWithBuffer)._buffer = b = pixelBuffer(n)
     }
     return b
 }

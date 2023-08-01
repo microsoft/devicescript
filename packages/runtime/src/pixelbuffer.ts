@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { blend, rgb } from "./colors"
+import { blendRgb, hsv, rgb } from "./colors"
 
 /**
  * A buffer of RGB colors
@@ -124,11 +124,31 @@ export class PixelBuffer {
      */
     view(start: number, length?: number): PixelBuffer {
         const rangeStart = this.start + (start << 0)
-        const rangeLength =
+        const rangeLength = Math.max(
+            0,
             length === undefined
                 ? this.length - start
                 : Math.min(length, this.length - start)
+        )
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
+    }
+
+
+    /**
+     * Applies a inplace gamma correction to the pixel colors
+     * @param pixels
+     * @param gamma
+     */
+    correctGamma(gamma: number = 2.7) {
+        const s = this.start * 3
+        const e = (this.start + this.length) * 3
+        const buf = this.buffer
+
+        for (let i = s; i < e; ++i) {
+            const c = buf[i]
+            const o = correctGammaChannel(c, gamma)
+            buf[i] = o
+        }
     }
 }
 
@@ -150,69 +170,14 @@ export function pixelBuffer(numPixels: number) {
 export function fillGradient(
     pixels: PixelBuffer,
     startColor: number,
-    endColor: number
-): void {
-    const start = pixels.start
-    const end = pixels.start + pixels.length
-    // check if any work needed
-    const steps = end - start
-    if (steps < 1) return
-
-    pixels.setAt(start, startColor)
-    pixels.setAt(end, endColor)
-    for (let i = start + 1; i < end - 1; ++i) {
-        const alpha = Math.idiv(0xff * i, steps)
-        const c = blend(startColor, alpha, endColor)
-        pixels.setAt(i, c)
-    }
-}
-
-/**
- * Renders a bar graph of value (absolute value) on a pixel buffer
- * @param pixels
- * @param value
- * @param high
- * @param options
- * @returns
- */
-export function fillBarGraph(
-    pixels: PixelBuffer,
-    value: number,
-    high: number,
+    endColor: number,
     options?: {
-        /**
-         * Color used when the range is empty
-         */
-        emptyRangeColor?: number
-        /**
-         * Color used when the value is 0
-         */
-        zeroColor?: number
+        reversed?: boolean
+        circular?: boolean
     }
-) {
-    if (high <= 0) {
-        const emptyRangeColor = options?.emptyRangeColor
-        pixels.clear()
-        pixels.setAt(0, isNaN(emptyRangeColor) ? 0xffff00 : emptyRangeColor)
-        return
-    }
-
-    value = Math.abs(value)
-    const n = pixels.length
-    const n1 = n - 1
-    let v = Math.idiv(value * n, high)
-    if (v === 0) {
-        const zeroColor = options?.zeroColor
-        pixels.setAt(0, isNaN(zeroColor) ? 0x666600 : zeroColor)
-        for (let i = 1; i < n; ++i) pixels.setAt(i, 0)
-    } else {
-        for (let i = 0; i < n; ++i) {
-            if (i <= v) {
-                const b = Math.idiv(i * 255, n1)
-                pixels.setRgbAt(i, b, 0, 255 - b)
-            } else pixels.setRgbAt(i, 0, 0, 0)
-        }
-    }
+): void {
+    const render = (alpha: number) => blendRgb(startColor, alpha, endColor)
+    fillMap(pixels, render, options)
 }
 
 /**
@@ -231,39 +196,115 @@ export function fillSolid(pixels: PixelBuffer, c: number) {
 
 /**
  * Fades each color channels according to the brigthness value between 0 dark and 1 full brightness.
- * @param brightness
+ * @param alpha
  */
-export function fillFade(pixels: PixelBuffer, brightness: number) {
-    brightness = Math.max(0, Math.min(0xff, (brightness | 0) << 8))
+export function fillFade(pixels: PixelBuffer, alpha: number) {
+    alpha = Math.constrain(alpha * 0xff, 0, 0xff)
 
     const s = pixels.start * 3
     const e = (pixels.start + pixels.length) * 3
     const buf = pixels.buffer
 
     for (let i = s; i < e; ++i) {
-        buf[i] = (buf[i] * brightness) >> 8
+        buf[i] = (buf[i] * alpha) >> 8
     }
 }
 
 /**
- * Applies a inplace gamma correction to the pixel colors
+ * Fills the buffer with colors of increasing Hue (or decreasing)
  * @param pixels
- * @param gamma
+ * @param startHue start hue channel between 0 and 255. eg: 255
+ * @param endHue end hue channel between 0 and 255. eg: 255
+ * @returns
  */
-export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
-    const s = pixels.start * 3
-    const e = (pixels.start + pixels.length) * 3
-    const buf = pixels.buffer
+export function fillRainbow(
+    pixels: PixelBuffer,
+    options?: {
+        startHue?: number,
+        endHue?: number,
+        reversed?: boolean
+        circular?: boolean
+        saturation?: number
+        brightness?: number
+    }
+) {
+    let { startHue, endHue, saturation, brightness } = options || {}
+    startHue = startHue ?? 0
+    endHue = endHue ?? 255
+    saturation = saturation ?? 240
+    brightness = brightness ?? 255
+    const dh = endHue - startHue
+    const render = (alpha: number) => hsv(startHue + alpha * dh, saturation, brightness)
+    fillMap(pixels, render, options)
+}
 
-    for (let i = s; i < e; ++i) {
-        const c = buf[i]
-        let o =
-            c === 0
-                ? 0
-                : c === 0xff
+/**
+ * Applies a gamma correction to a single color channel ([0,0xff])
+ * @param c 
+ * @param gamma 
+ * @returns 
+ */
+export function correctGammaChannel(c: number, gamma: number) {
+    let o =
+        c <= 0
+            ? 0
+            : c >= 0xff
                 ? 0xff
                 : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
-        if (c > 0 && o === 0) o = 1
-        buf[i] = o
+    if (c > 0 && o === 0) o = 1
+    return 0
+}
+
+
+/**
+ * General purpose helper to create a color fill function.
+ * @param pixels
+ * @param render
+ * @param options
+ * @internal
+ * @returns
+ */
+export function fillMap(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean; circular?: boolean }
+) {
+    if (!pixels.length) return
+    if (options?.circular) fillCircular(pixels, render, options)
+    else fillLinear(pixels, render, options)
+}
+
+function fillLinear(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean }
+) {
+    const n = pixels.length
+    const { reversed } = options || {}
+    for (let i = 0; i < n; ++i) {
+        let alpha = i / (n - 1)
+        if (i === n - 1) alpha = 1
+        if (reversed) alpha = 1 - alpha
+        const c = render(alpha)
+        pixels.setAt(i, c)
     }
+}
+
+function fillCircular(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean }
+) {
+    const n = pixels.length
+    const n2 = n >> 1
+    const { reversed } = options || {}
+    let c: number
+    for (let i = 0; i < n2; ++i) {
+        let alpha = (2 * i) / (n - 1)
+        if (reversed) alpha = 1 - alpha
+        const c = render(alpha)
+        pixels.setAt(i, c)
+        pixels.setAt(n - 1 - i, c)
+    }
+    if (n % 2 === 1) pixels.setAt(n2, c)
 }

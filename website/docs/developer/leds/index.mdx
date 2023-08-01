@@ -39,6 +39,14 @@ but hardware in progress.
 
 :::
 
+## Simulation and long strips (> 64 LEDs)
+
+For short LED strips, 64 LEDs or less, DeviceScript provides full simulation and device twin
+for hardware and simulated devices.
+
+For strips longer than 64 LEDs, the simulator device will work but the hardware device twin will
+not work anymore. This is a simple limitation that the data overflows the packets used in Jacdac.
+
 ## PixelBuffer and show
 
 The `Led` client has a [pixel buffer](/api/runtime/pixelbuffer), a 1D vector of colors,
@@ -47,10 +55,13 @@ that can be used to perform color operations, and a `show` function to render th
 A typical LED program would then look like this:
 
 ```ts
-import { Led } from "@devicescript/core"
+import { startLed } from "@devicescript/drivers"
 import { fillSolid } from "@devicescript/runtime"
 
-const led = new Led()
+const led = await startLed({
+    length: 32,
+})
+
 // retreive pixel buffer from led
 const pixels = await led.buffer()
 // do operations on pixels, like setting LEDs to green
@@ -59,7 +70,7 @@ fillSolid(pixels, 0x00ee00)
 await led.show()
 ```
 
-## showAll
+### showAll
 
 A convenience function `showAll` is provided to set the color of all LEDs.
 
@@ -75,6 +86,7 @@ await led.showAll(0x00ee00)
 ## LED Display
 
 You can mount a LED matrix as a [display](./leds/display).
+This can be helpful for matrix-shaped LEDs.
 
 ```ts
 import { Led } from "@devicescript/core"

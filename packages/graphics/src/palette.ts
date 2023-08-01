@@ -31,12 +31,15 @@ export class Palette {
     }
 
     /**
-     * Returns the 24bit RGB color at the given index
+     * Returns the 24bit RGB color at the given index. Supports negative indices like Array.at
      * @param index
      * @returns
      */
-    getAt(index: number) {
-        if (index < 0 || index >= this.length) return 0
+    at(index: number) {
+        index = index >> 0
+        if (index < 0) index += this.length
+        if (index < 0 || index >= this.length) return undefined
+
         return (
             (this.buffer[3 * index] << 16) |
             (this.buffer[3 * index + 1] << 8) |
@@ -50,6 +53,10 @@ export class Palette {
      * @param color 24bit RGB color
      */
     setAt(index: number, color: number) {
+        index = index >> 0
+        if (index < 0) index += this.length
+        if (index < 0 || index >= this.length) return
+
         this.buffer[3 * index] = color >> 16
         this.buffer[3 * index + 1] = color >> 8
         this.buffer[3 * index + 2] = color >> 0
