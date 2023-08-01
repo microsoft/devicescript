@@ -125,10 +125,12 @@ export class PixelBuffer {
      */
     view(start: number, length?: number): PixelBuffer {
         const rangeStart = this.start + (start << 0)
-        const rangeLength = Math.max(0,
+        const rangeLength = Math.max(
+            0,
             length === undefined
                 ? this.length - start
-                : Math.min(length, this.length - start))
+                : Math.min(length, this.length - start)
+        )
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
     }
 }
@@ -151,20 +153,14 @@ export function pixelBuffer(numPixels: number) {
 export function fillGradient(
     pixels: PixelBuffer,
     startColor: number,
-    endColor: number
-): void {
-    const length = pixels.length
-    if (!length) return
-
-    pixels.setAt(0, startColor)
-    if (length === 1) return;
-
-    pixels.setAt(length - 1, endColor)
-    for (let i = 1; i < length - 1; ++i) {
-        const alpha = i / (length - 1)
-        const c = blendRgb(startColor, alpha, endColor)
-        pixels.setAt(i, c)
+    endColor: number,
+    options?: {
+        reversed?: boolean
+        circular?: boolean
     }
+): void {
+    const render = (alpha: number) => blendRgb(startColor, alpha, endColor)
+    fillMap(pixels, render, options)
 }
 
 /**
@@ -187,7 +183,7 @@ export function fillBarGraph(
         /**
          * Color used when the value is 0
          */
-        zeroColor?: number,
+        zeroColor?: number
         /**
          * Palette to interpolate color from
          */
@@ -219,7 +215,6 @@ export function fillBarGraph(
                 } else {
                     const b = Math.idiv(i * 255, n1)
                     pixels.setRgbAt(i, b, 0, 255 - b)
-
                 }
             } else pixels.setRgbAt(i, 0, 0, 0)
         }
@@ -258,22 +253,30 @@ export function fillFade(pixels: PixelBuffer, alpha: number) {
 
 /**
  * Fills the buffer with colors of increasing Hue (or decreasing)
- * @param pixels 
+ * @param pixels
  * @param startHue start hue channel between 0 and 255. eg: 255
  * @param endHue end hue channel between 0 and 255. eg: 255
- * @returns 
+ * @returns
  */
-export function fillRainbow(pixels: PixelBuffer, startHue = 0, endHue = 0xff) {
-    const val = 255;
-    const sat = 240;
-    const n = pixels.length
-    if (!n) return
-    const dh = (endHue - startHue) / (n - 1)
-    for (let i = 0; i < n; ++i) {
-        const hue = startHue + i * dh
-        const c = hsv(hue, sat, val)
-        pixels.setAt(i, c)
+export function fillRainbow(
+    pixels: PixelBuffer,
+    options?: {
+        startHue?: number,
+        endHue?: number,
+        reversed?: boolean
+        circular?: boolean
+        saturation?: number
+        brightness?: number
     }
+) {
+    let { startHue, endHue, saturation, brightness } = options || {}
+    startHue = startHue ?? 0
+    endHue = endHue ?? 255
+    saturation = saturation ?? 240
+    brightness = brightness ?? 255
+    const dh = endHue - startHue
+    const render = (alpha: number) => hsv(startHue + alpha * dh, saturation, brightness)
+    fillMap(pixels, render, options)
 }
 
 /**
@@ -303,35 +306,70 @@ export function correctGamma(pixels: PixelBuffer, gamma: number = 2.7) {
  * Fills a pixel buffer with the interpolated colors of a palette.
  * @param interpolator color interpolation function. default is blendRgb
  */
-export function fillPalette(pixels: PixelBuffer, palette: Palette, interpolator?: ColorInterpolator) {
-    const n = pixels.length
-    if (!n) return
-
+export function fillPalette(
+    pixels: PixelBuffer,
+    palette: Palette,
+    options?: {
+        interpolator?: ColorInterpolator
+        reversed?: boolean
+        circular?: boolean
+    }
+) {
+    const { interpolator } = options || {}
     const mixer = interpolator || blendRgb
+    const render = (alpha: number) => palette.interpolate(alpha, mixer)
+    fillMap(pixels, render)
+}
+
+/**
+ * General purpose helper to create a color fill function.
+ * @param pixels
+ * @param render
+ * @param options
+ * @internal
+ * @returns
+ */
+export function fillMap(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean; circular?: boolean }
+) {
+    if (!pixels.length) return
+    if (options?.circular) fillCircular(pixels, render, options)
+    else fillLinear(pixels, render, options)
+}
+
+function fillLinear(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean }
+) {
+    const n = pixels.length
+    const { reversed } = options || {}
     for (let i = 0; i < n; ++i) {
-        const alpha = i / (n - 1)
-        const c = palette.interpolate(alpha, mixer)
+        let alpha = i / (n - 1)
+        if (i === n - 1) alpha = 1
+        if (reversed) alpha = 1 - alpha
+        const c = render(alpha)
         pixels.setAt(i, c)
     }
 }
 
-/**
- * Fill a range of LEDs with a sequence of entries from a palette, so that the entire palette smoothly covers the range of LEDs.
- * @param interpolator color interpolation function. default is blendRgb
- */
-export function fillPaletteCircular(pixels: PixelBuffer, palette: Palette, interpolator?: ColorInterpolator) {
+function fillCircular(
+    pixels: PixelBuffer,
+    render: (alpha: number) => number,
+    options?: { reversed?: boolean }
+) {
     const n = pixels.length
-    if (!n) return
-
-    const mixer = interpolator || blendRgb
     const n2 = n >> 1
+    const { reversed } = options || {}
     let c: number
     for (let i = 0; i < n2; ++i) {
-        const alpha = 2 * i / (n - 1)
-        const c = palette.interpolate(alpha, mixer)
+        let alpha = (2 * i) / (n - 1)
+        if (reversed) alpha = 1 - alpha
+        const c = render(alpha)
         pixels.setAt(i, c)
         pixels.setAt(n - 1 - i, c)
     }
-    if (n % 2 === 1)
-        pixels.setAt(n2, c)
+    if (n % 2 === 1) pixels.setAt(n2, c)
 }
