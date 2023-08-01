@@ -1,0 +1,38 @@
+# Palette
+
+A fixed length color palette.
+
+Palette are used with [displays](/developer/graphics/display)
+to keep the storage needed for images low. They can also be used with [LEDs](/developer/leds)
+to create multi-color gradients.
+
+## `at`, `setAt`
+
+These function allow to lookup and update the color of palette at indices.
+
+```ts
+import { Palette } from "@devicescript/runtime"
+
+const palette = Palette.arcade()
+
+// lookup color
+// highlight-next-line
+const c = palette.at(2)
+
+// update color
+// highlight-next-line
+palette.setAt(2, 0x00_00_ff)
+```
+
+## `interpolate`
+
+Interpolates a `[0, 1]` value into a color of the palette.
+
+```ts
+import { Palette } from "@devicescript/runtime"
+
+const palette = Palette.arcade()
+
+// highlight-next-line
+const c = palette.interpolate(0.5)
+```
