@@ -47,7 +47,6 @@ for hardware and simulated devices.
 For strips longer than 64 LEDs, the simulator device will work but the hardware device twin will
 not work anymore. This is a simple limitation that the data overflows the packets used in Jacdac.
 
-
 ## PixelBuffer and show
 
 The `Led` client has a [pixel buffer](/api/runtime/pixelbuffer), a 1D vector of colors,
@@ -56,10 +55,13 @@ that can be used to perform color operations, and a `show` function to render th
 A typical LED program would then look like this:
 
 ```ts
-import { Led } from "@devicescript/core"
+import { startLed } from "@devicescript/drivers"
 import { fillSolid } from "@devicescript/runtime"
 
-const led = new Led()
+const led = await startLed({
+    length: 32,
+})
+
 // retreive pixel buffer from led
 const pixels = await led.buffer()
 // do operations on pixels, like setting LEDs to green
