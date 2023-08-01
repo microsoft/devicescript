@@ -305,9 +305,9 @@ export function fillRainbow(
  */
 export function correctGammaChannel(c: number, gamma: number) {
     let o =
-        c === 0
+        c <= 0
             ? 0
-            : c === 0xff
+            : c >= 0xff
                 ? 0xff
                 : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
     if (c > 0 && o === 0) o = 1
