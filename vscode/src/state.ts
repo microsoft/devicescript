@@ -594,6 +594,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const { id } = board
         const args = ["flash", "--board", id, "--install", "--clean"]
+        if (this.isRemote) args.push("--remote")
         const python = await resolvePythonEnvironment()
         if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
@@ -649,55 +650,47 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     get isRemote() {
+        const config = vscode.workspace.getConfiguration("devicescript.connect")
         const { extensionKind } = this.context.extension
-        return extensionKind === vscode.ExtensionKind.Workspace
+        return extensionKind === vscode.ExtensionKind.Workspace || !!config.get("web")
     }
 
     async connect() {
         await this.devtools.start()
         if (!this.devtools.connected) return
 
-        const config = vscode.workspace.getConfiguration("devicescript.connect")
-
-        if (this.isRemote || !!config.get("web")) {
-            const darkMode = resolveDarkMode()
-            const connectUri = await resolveDevtoolsPath(
-                `connect?${darkMode}=1`
-            )
-            console.log({ connectUri })
-            await vscode.env.openExternal(connectUri)
-            return
-        }
-
-        const { simulatorScriptManagerId } = this
+        const { simulatorScriptManagerId, isRemote } = this
         const { transports } = this.transport
         const connecteds = transports.filter(
             tr => tr.connectionState === ConnectionState.Connected
         )
-        const serial = transports.find(t => t.type === "serial")
-        const usb = transports.find(t => t.type === "usb")
         const sim = !!this.bus.device(this.simulatorScriptManagerId, true)
-        const items: (vscode.QuickPickItem & { transport?: string })[] = [
-            {
-                label: "Hardware Connections",
-                kind: vscode.QuickPickItemKind.Separator,
-            },
-            {
-                transport: "serial",
-                label: "Serial",
+        let items: (vscode.QuickPickItem & { transport?: string })[] = []
+        items.push({
+            label: "Hardware Connections",
+            kind: vscode.QuickPickItemKind.Separator,
+        })
+        if (isRemote) {
+            items.push({
+                transport: "web",
+                label: "WebSerial/WebUSB",
                 detail: "ESP32, RP2040, ...",
-                description: serial
-                    ? `${serial.description || ""}(${serial.connectionState})`
-                    : "",
-            },
-            /*{
-                transport: "usb",
-                label: "USB",
-                detail: "micro:bit",
-                description: usb
-                    ? `${usb.description || ""}(${usb.connectionState})`
-                    : "",
-            },*/
+                description: "Connect through an external web page running client side."
+            })
+
+        } else {
+            const serial = transports.find(t => t.type === "serial")
+            items.push(
+                {
+                    transport: "serial",
+                    label: "Serial",
+                    detail: "ESP32, RP2040, ...",
+                    description: serial
+                        ? `${serial.description || ""}(${serial.connectionState})`
+                        : "",
+                })
+        }
+        items.push(
             !!connecteds.length && {
                 transport: "none",
                 label: "Disconnect",
@@ -728,14 +721,16 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: "Clean Flash...",
                 transport: "clean",
                 detail: "Erase the entire flash.",
-            },
-        ].filter(m => !!m)
+            }
+        )
+        items = items.filter(m => !!m)
         const res = await vscode.window.showQuickPick(items, {
             title: "Pick a DeviceScript connection",
         })
         if (res === undefined || !res.transport) return
 
-        if (res.transport === "flash") await this.flashFirmware()
+        if (res.transport === "web") await this.openExternalConnect()
+        else if (res.transport === "flash") await this.flashFirmware()
         else if (res.transport === "clean") await this.cleanFirmware()
         else if (res.transport === simulatorScriptManagerId)
             await this.startSimulator()
@@ -748,6 +743,15 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     resourceGroupId: CONNECTION_RESOURCE_GROUP,
                 },
             })
+    }
+
+    private async openExternalConnect() {
+        const darkMode = resolveDarkMode()
+        const connectUri = await resolveDevtoolsPath(
+            `connect?${darkMode}=1`
+        )
+        console.log({ connectUri })
+        await vscode.env.openExternal(connectUri)
     }
 
     async startSimulator(clearFlash?: boolean) {
