@@ -89,6 +89,9 @@
     "workspaceTrust": {
         "request": "never"
     },
+    "capabilities": {
+        "virtualWorkspaces": false
+    },
     "contributes": {
         "configuration": {
             "title": "DeviceScript",
