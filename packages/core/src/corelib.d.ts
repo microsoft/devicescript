@@ -215,11 +215,11 @@ interface Array<T> {
     [n: number]: T
     [Symbol.iterator](): IterableIterator<T>
 
-    /** 
+    /**
      * Returns the item located at the specified index.
      * @param index The zero-based index of the desired code unit. A negative index will count back from the last item.
      */
-    at(index: number): T | undefined;
+    at(index: number): T | undefined
 
     /**
      * Insert `count` `undefined` elements at `index`.
@@ -286,7 +286,7 @@ interface Array<T> {
      * @param end index to stop filling the array at. If end is negative, it is treated as
      * length+end.
      */
-    fill(value: number, start?: number, end?: number): this;
+    fill(value: number, start?: number, end?: number): this
 
     /**
      * Determines whether the specified callback function returns true for any element of an array.
@@ -346,7 +346,9 @@ interface Array<T> {
      * order, until it finds one where predicate returns true. If such an element is found, findLast
      * immediately returns that element value. Otherwise, findLast returns undefined.
      */
-    findLast(predicate: (value: T, index: number, array: T[]) => unknown): T | undefined;
+    findLast(
+        predicate: (value: T, index: number, array: T[]) => unknown
+    ): T | undefined
 
     /**
      * Returns the index of the last element in the array where predicate is true, and -1
@@ -355,7 +357,28 @@ interface Array<T> {
      * order, until it finds one where predicate returns true. If such an element is found,
      * findLastIndex immediately returns that element index. Otherwise, findLastIndex returns -1.
      */
-    findLastIndex(predicate: (value: T, index: number, array: T[]) => unknown): number
+    findLastIndex(
+        predicate: (value: T, index: number, array: T[]) => unknown
+    ): number
+
+    /**
+     * Sorts the elements of the array in place and returns the sorted array.
+     * @param compareFn The function used to determine the order of the elements.
+     * If omitted, the elements are sorted in lexicographic (alphabetical) order by converting them to strings.
+     * If provided, the function should return a negative value if the first argument should come before the second,
+     * a positive value if the first argument should come after the second, or 0 if they are equal.
+     */
+    sort(compareFn?: (a: T, b: T) => number): this
+
+    /**
+     * Returns a new array with the element at the given index replaced with the given value.
+     * @param index The zero-based index at which to change the array, converted to an integer.
+     *              If index is negative, index + array.length is used.
+     * @param value Any value to be assigned to the given index.
+     * @returns A new array with the element at the specified index replaced with the given value.
+     * @throws {RangeError} If index is out of bounds (index >= array.length or index < -array.length).
+     */
+    with(index: number, value: T): T[]
 
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
@@ -409,10 +432,10 @@ interface Array<T> {
 interface ArrayConstructor {
     new (arrayLength?: number): any[]
     new <T>(arrayLength: number): T[]
-    new <T>(...items: T[]): T[];
+    new <T>(...items: T[]): T[]
 
     (arrayLength?: number): any[]
-    <T>(...items: T[]): T[];
+    <T>(...items: T[]): T[]
 
     <T>(arrayLength: number): T[]
     isArray(arg: any): arg is any[]

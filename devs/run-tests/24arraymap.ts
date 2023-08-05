@@ -47,15 +47,15 @@ function testArrayEvery() {
 }
 
 function testArrayFill() {
-    assert([1, 2, 3].fill(4).join() === '4,4,4')
-    assert([1, 2, 3].fill(4, 1).join() === '1,4,4')
-    assert([1, 2, 3].fill(4, 1, 2).join() === '1,4,3')
-    assert([1, 2, 3].fill(4, 1, 1).join() === '1,2,3')
-    assert([1, 2, 3].fill(4, 3, 3).join() === '1,2,3')
-    assert([1, 2, 3].fill(4, -3, -2).join() === '4,2,3')
-    assert([1, 2, 3].fill(4, NaN, NaN).join() === '1,2,3')
-    assert([1, 2, 3].fill(4, 3, 5).join() === '1,2,3')
-    assert(Array(3).fill(4).join() === '4,4,4')
+    assert([1, 2, 3].fill(4).join() === "4,4,4")
+    assert([1, 2, 3].fill(4, 1).join() === "1,4,4")
+    assert([1, 2, 3].fill(4, 1, 2).join() === "1,4,3")
+    assert([1, 2, 3].fill(4, 1, 1).join() === "1,2,3")
+    assert([1, 2, 3].fill(4, 3, 3).join() === "1,2,3")
+    assert([1, 2, 3].fill(4, -3, -2).join() === "4,2,3")
+    assert([1, 2, 3].fill(4, NaN, NaN).join() === "1,2,3")
+    assert([1, 2, 3].fill(4, 3, 5).join() === "1,2,3")
+    assert(Array(3).fill(4).join() === "4,4,4")
 }
 function testArrayIndexOf() {
     let str = [1, 2, 2, 3]
@@ -152,6 +152,26 @@ function testArrayAt() {
     assert(str.at(-6) === undefined, "arrayAtUndefined")
 }
 
+function testArraySort() {
+    const arr = [3, 1, 2]
+    const sortedArr = arr.sort()
+    assert(arr === sortedArr, "sort")
+
+    const arr2 = [3, 1, 2]
+    const customSortedArr = arr2.sort((a, b) => b - a)
+    assert(customSortedArr[0] === 3, "custom sort")
+}
+
+function testArrayWith() {
+    const arr = [1, 2, 3]
+    const newArr = arr.with(1, 42)
+    assert(newArr !== arr, "with creates a new array")
+    assert(newArr[1] === 42, "with replaces element at index")
+    assert(newArr[0] === 1 && newArr[2] === 3, "with preserves other elements")
+}
+
+testArraySort()
+testArrayWith()
 testArraySome()
 testArrayEvery()
 testArrayFill()

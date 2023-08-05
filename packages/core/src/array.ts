@@ -1,10 +1,9 @@
 Array.prototype.at = function (index) {
     if (index < 0) {
         const length = this.length
-        return this[length + index];        
+        return this[length + index]
     }
-    return this[index];
-    
+    return this[index]
 }
 
 Array.prototype.map = function (f) {
@@ -40,11 +39,11 @@ Array.prototype.findIndex = function (f) {
 }
 
 Array.prototype.findLast = function (f) {
-    const length = this.length;
+    const length = this.length
     for (let i = length - 1; i >= 0; i--) {
         if (f(this[i], i, this)) return this[i]
     }
-    return undefined;
+    return undefined
 }
 
 Array.prototype.findLastIndex = function (f) {
@@ -84,7 +83,7 @@ Array.prototype.fill = function (value, start, end) {
     }
 
     let endIndex = end ?? length
-    if (endIndex >= length ) {
+    if (endIndex >= length) {
         endIndex = length
     }
 
@@ -97,11 +96,10 @@ Array.prototype.fill = function (value, start, end) {
     }
 
     for (let i = startIndex; i < endIndex; ++i) {
-
-        this[i] = value;
+        this[i] = value
     }
 
-    return this;
+    return this
 }
 
 Array.prototype.some = function (f) {
@@ -119,6 +117,39 @@ Array.prototype.includes = function (el, fromIndex) {
         if (el === this[i]) return true
     }
     return false
+}
+
+Array.prototype.sort = function (
+    compareFn?: (a: any, b: any) => number
+): any[] {
+    if (compareFn) {
+        return this.sort(compareFn)
+    }
+
+    return this.sort((a: any, b: any) => {
+        if (a < b) return -1
+        if (a > b) return 1
+        return 0
+    })
+}
+
+Array.prototype.with = function <T>(index: number, value: T): T[] {
+    if (isNaN(index) || typeof index !== "number") {
+        throw new TypeError("Index must be a number")
+    }
+
+    if (index < -this.length || index >= this.length) {
+        throw new RangeError("Index out of bounds")
+    }
+
+    if (index < 0) {
+        index = this.length + index
+    }
+
+    const newArray = [...this]
+    newArray[index] = value
+
+    return newArray
 }
 
 Array.prototype.pop = function () {
