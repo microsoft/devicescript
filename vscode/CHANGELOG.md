@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.13](https://github.com/microsoft/devicescript/compare/v2.14.12...v2.14.13)
+
+> 28 July 2023
+
+- fix for #591 (attempt) [`e4e2237`](https://github.com/microsoft/devicescript/commit/e4e22370e5f3e524c3cfc10c9a9aa0b2f85098d3)
+- adding more images [`87307b6`](https://github.com/microsoft/devicescript/commit/87307b6171cd1db5453ed7ba8a413803a299c982)
+
 #### [v2.14.12](https://github.com/microsoft/devicescript/compare/v2.14.11...v2.14.12)
 
 > 27 July 2023
