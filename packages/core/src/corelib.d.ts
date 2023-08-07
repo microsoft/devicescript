@@ -404,6 +404,18 @@ interface Array<T> {
      * @param separator A string used to separate one element of the array from the next in the resulting string. If omitted, the array elements are separated with a comma.
      */
     join(separator?: string): string
+
+    /**
+     * Sorts an array in place.
+     * This method mutates the array and returns a reference to the same array.
+     * @param compareFn Function used to determine the order of the elements. It is expected to return
+     * a negative value if the first argument is less than the second argument, zero if they're equal, and a positive
+     * value otherwise. If omitted, the elements are sorted in ascending, ASCII character order.
+     * ```ts
+     * [11,2,22,1].sort((a, b) => a - b)
+     * ```
+     */
+    sort(compareFn?: (a: T, b: T) => number): this
 }
 
 interface ArrayConstructor {
