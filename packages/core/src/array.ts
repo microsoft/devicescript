@@ -55,6 +55,25 @@ Array.prototype.findLastIndex = function (f) {
     return -1
 }
 
+Array.prototype.with = function <T>(index: number, value: T): T[] {
+    if (isNaN(index) || typeof index !== "number") {
+        throw new TypeError("Index must be a number")
+    }
+
+    if (index < -this.length || index >= this.length) {
+        throw new RangeError("Index out of bounds")
+    }
+
+    if (index < 0) {
+        index = this.length + index
+    }
+
+    const newArray = [...this]
+    newArray[index] = value
+
+    return newArray
+}
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length
