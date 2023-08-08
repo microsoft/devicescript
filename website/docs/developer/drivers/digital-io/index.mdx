@@ -1,15 +1,23 @@
 ---
 description: Digital GPIO
-title: Digital IO
+title: Digital IO (GPIO)
 sidebar_position: 49
 ---
 
-# Digital IO
+# Digital IO (GPIO)
 
 DeviceScript provides access to digital GPIO (General Purpose Input/Output) operations
 on pins that do **not** require precise real time timings.
 
 It is recommend to encapsulate the GPIO access into server implementation as they are rather low level.
+
+:::caution
+
+If your application needs consistent response times of under 10ms, you can either implement the driver
+natively in C using interrupts, or better yet offload it to an [external Jacdac module](/developer/drivers#jacdac-modules).
+
+:::
+
 
 ## Pin mappings
 
