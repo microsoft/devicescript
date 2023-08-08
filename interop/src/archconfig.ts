@@ -119,6 +119,12 @@ export interface DeviceConfig
      * If pin X (`pins.X`) is to be exposed as Y, then `$pins.Y == X`.
      */
     $pins?: Record<string, string>
+
+    /**
+     * Extra arguments to be passed to the flash tool.
+     * For example, `--flash_mode` for `esptool.py` (ESP32 boards).
+     */
+    flashToolArguments?: string[]
 }
 
 export function parseAnyInt(s: string | number) {
