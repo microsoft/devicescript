@@ -121,10 +121,10 @@ export interface DeviceConfig
     $pins?: Record<string, string>
 
     /**
-     * Extra arguments to be passed to the flash tool.
-     * For example, `--flash_mode` for `esptool.py` (ESP32 boards).
+     * Flash mode to specify to the flash tool.
+     * For example, `dio`. Applies to ESP32 devices only. If left unspecified, uses the default.
      */
-    flashToolArguments?: string[]
+    $flashIoMode?: string
 }
 
 export function parseAnyInt(s: string | number) {

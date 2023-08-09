@@ -285,7 +285,9 @@ export async function flashESP32(options: FlashESP32Options) {
         if (!moff)
             fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
 
-        const { code } = await runEsptool("write_flash", ...board.flashToolArguments, moff[1], cachePath)
+        const flashModeArgs: string[] = board.$flashIoMode ? ["--flash_mode", board.$flashIoMode] : [];
+
+        const { code } = await runEsptool("write_flash", ...flashModeArgs, moff[1], cachePath)
 
         if (code === 0) {
             log("flash OK, you can connect again to the device.")
