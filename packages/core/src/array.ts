@@ -171,7 +171,13 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
 
 Array.prototype.sort = function <T>(compareFn?: (a: T, b: T) => number) {
     if (!compareFn) {
-        compareFn = (a: any, b: any) => a - b
+        compareFn = (a: any, b: any) => {
+            a = a + ""
+            b = b + ""
+            if (a < b) return -1
+            else if (a > b) return 1
+            else return 0
+        }
     }
 
     for (let i = 1; i < this.length; i++) {
