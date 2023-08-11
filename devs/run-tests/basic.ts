@@ -234,6 +234,23 @@ function testBuffer() {
         33 23 // something
         12`
     isEq(b2.toString("hex"), b3.toString("hex"))
+
+    const buf2 = hex`01 02 03 04`.slice()
+    buf2.rotate(1)
+    isEq(buf2.toString("hex"), "02030401")
+    buf2.rotate(-1)
+    isEq(buf2.toString("hex"), "01020304")
+    buf2.rotate(1, 0, 2)
+    isEq(buf2.toString("hex"), "02010304")
+    buf2.rotate(-1, 0, 2)
+    isEq(buf2.toString("hex"), "01020304")
+    buf2.rotate(-10, 1, 3)
+    isEq(buf2.toString("hex"), "01020304")
+    buf2.rotate(-1, 1, 4)
+    isEq(buf2.toString("hex"), "01040203")
+    buf2.rotate(1, 1, 4)
+    buf2.rotate(-4, 1, 4)
+    isEq(buf2.toString("hex"), "01040203")
 }
 
 function three(a: number, b: number, c: number) {

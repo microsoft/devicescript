@@ -22,7 +22,7 @@ For a more highlevel description of runtime and bytecode, see [Runtime implement
 
     img_version_major = 2
     img_version_minor = 14
-    img_version_patch = 15
+    img_version_patch = 16
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -717,3 +717,4 @@ Only `true` and `false` values.
     decrypt = 216
     digest = 217
     ledStripSend = 218
+    rotate = 219
