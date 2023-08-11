@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.15](https://github.com/microsoft/devicescript/compare/v2.14.14...v2.14.15)
+
+> 11 August 2023
+
+- show Leds on hardware [`cf4a0e3`](https://github.com/microsoft/devicescript/commit/cf4a0e374d6dc034f9d30596972b17ac1edc02ed)
+- fix samples and silly crash [`c29a06c`](https://github.com/microsoft/devicescript/commit/c29a06cb12e8b36caffa26d7ee9c561df6de094d)
+- add ledStripSend; v2.14.15 [`785314d`](https://github.com/microsoft/devicescript/commit/785314d1b4ec2e558ad500a97398deb8cf08f863)
+
 #### [v2.14.14](https://github.com/microsoft/devicescript/compare/v2.14.13...v2.14.14)
 
 > 5 August 2023
