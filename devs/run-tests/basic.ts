@@ -503,6 +503,14 @@ function testInstanceOf() {
     const obj = {}
     isEq(obj instanceof Object, true)
     isEq(obj instanceof Error, false)
+
+    const json = JSON.parse("{}")
+    isEq(json instanceof Object, true)
+    isEq(json instanceof Error, false)
+
+    const foo = new Foo(12)
+    isEq(foo instanceof Object, true)
+    isEq(foo instanceof Foo, true)
 }
 
 class Foo {
