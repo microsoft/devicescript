@@ -153,16 +153,9 @@ function testArrayAt() {
 }
 
 function localeCompareHelper(a: string, b: string) {
-    let i = 0
-    let j = 0
-    while (i < a.length && j < b.length) {
-        if (a.charCodeAt(i) !== b.charCodeAt(j)) {
-            return a.charCodeAt(i) - b.charCodeAt(j)
-        }
-        i++
-        j++
-    }
-    return a.length - b.length
+    if (a < b) return -1
+    else if (a > b) return 1
+    else return 0
 }
 
 function testArraySort() {
