@@ -1015,7 +1015,10 @@ class Program implements TopOpWriter {
     private skipInit(decl: ts.VariableDeclaration) {
         if (this.isTopLevel(decl) && idName(decl.name)) {
             const cell = this.getCellAtLocation(decl)
-            return !(cell instanceof Variable)
+            if (!(cell instanceof Variable)) return true
+
+            const tags = getSymTags(this.getSymAtLocation(decl))
+            if (tags[TSDOC_WHEN_USED]) return true
         }
         if ((decl as PossiblyConstDeclaration).__ds_const_val) return true
         return false

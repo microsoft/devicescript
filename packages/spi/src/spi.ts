@@ -83,5 +83,7 @@ export class SPI {
 
 /**
  * The default SPI instance.
+ *
+ * @devsWhenUsed
  */
 export const spi = new SPI()
