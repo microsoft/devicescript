@@ -1,10 +1,37 @@
 import * as ds from "@devicescript/core"
-import {
-    PixelBuffer,
-    fillFade,
-    pixelBuffer,
-} from "@devicescript/runtime"
+import { PixelBuffer, fillFade, pixelBuffer } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
+import { SPI } from "@devicescript/spi"
+
+export interface LedHwConfigWS2812B {
+    type: ds.LedStripLightType.WS2812B_GRB
+
+    /**
+     * Pin where the strip is connected.
+     */
+    pin: ds.OutputPin
+}
+
+export interface LedHwConfigAPALike {
+    type: ds.LedStripLightType.APA102 | ds.LedStripLightType.SK9822
+
+    /**
+     * The SPI instance to use.
+     */
+    spi: SPI
+
+    /**
+     * D-pin.
+     */
+    pinData: ds.OutputPin
+
+    /**
+     * C-pin.
+     */
+    pinClk: ds.OutputPin
+}
+
+export type LedHwConfig = LedHwConfigWS2812B | LedHwConfigAPALike
 
 export interface LedServerOptions {
     /**
@@ -44,6 +71,11 @@ export interface LedServerOptions {
      * Maximum supported power for LED strip
      */
     maxPower?: number
+
+    /**
+     * Specifies the hardware configuration of the light strip.
+     */
+    hwConfig: LedHwConfig
 }
 
 class LedServer extends Server implements ds.LedServerSpec {
@@ -56,6 +88,7 @@ class LedServer extends Server implements ds.LedServerSpec {
     private _variant: ds.LedVariant
     private _gamma: number
     private _maxPower: number
+    private _hwConfig: LedHwConfig
 
     readonly buffer: PixelBuffer
 
@@ -70,6 +103,7 @@ class LedServer extends Server implements ds.LedServerSpec {
         this._variant = options.variant
         this._gamma = options.gamma
         this._maxPower = options.maxPower
+        this._hwConfig = options.hwConfig
     }
 
     pixels(): ds.Buffer {
@@ -120,7 +154,47 @@ class LedServer extends Server implements ds.LedServerSpec {
         let b = this.render()
         b = this.capPower(b)
 
-        // TODO: render b to hardware
+        const hw = this._hwConfig
+
+        if (hw.type === ds.LedStripLightType.WS2812B_GRB) {
+            if (b === this.buffer) b = b.allocClone()
+            const buf = b.buffer
+            const len = buf.length
+            for (let i = 0; i < len; i += 3) {
+                const r = buf[i]
+                const g = buf[i + 1]
+                buf[i] = g
+                buf[i + 1] = r
+            }
+            await ledStripSend(hw.pin, buf)
+        } else {
+            // 32+0.5*numPixels bits of zeroes at the end
+            const numPixels = b.length
+            const paddingWords = (32 + (numPixels >> 1) + 31) >> 5
+            const txbuf = Buffer.alloc(4 * (1 + numPixels + paddingWords))
+            let dst = 4
+            let off = b.start * 3
+            const buf = b.buffer
+            for (let i = 0; i < numPixels; ++i) {
+                // IBGR
+                txbuf[dst] = 0xff
+                txbuf[dst + 1] = buf[off + 2]
+                txbuf[dst + 2] = buf[off + 1]
+                txbuf[dst + 3] = buf[off]
+                dst += 4
+                off += 3
+            }
+
+            hw.spi.configure({
+                mosi: hw.pinData,
+                sck: hw.pinClk,
+                hz:
+                    hw.type === ds.LedStripLightType.SK9822
+                        ? 30_000_000
+                        : 15_000_000,
+            })
+            await hw.spi.write(null)
+        }
     }
 
     private render() {
@@ -129,16 +203,14 @@ class LedServer extends Server implements ds.LedServerSpec {
 
         // apply fade if needed
         if (brightness < 1) {
-            if (b === this.buffer)
-                b = b.allocClone()
+            if (b === this.buffer) b = b.allocClone()
             fillFade(b, this._intensity)
         }
 
         // apply gamma
         const g = this._gamma
         if (g && g !== 1) {
-            if (b === this.buffer)
-                b = b.allocClone()
+            if (b === this.buffer) b = b.allocClone()
             b.correctGamma(this._gamma)
         }
         return b
@@ -152,15 +224,17 @@ class LedServer extends Server implements ds.LedServerSpec {
         if (power > this._maxPower) {
             // compute 80% of max brightness
             // gamma?
-            this._actualBrightness = (this._intensity * this._maxPower / power) * 0.8
+            this._actualBrightness =
+                ((this._intensity * this._maxPower) / power) * 0.8
             this.render()
             // power is not maxed, but residual brightness
         } else if (this._actualBrightness) {
-            // update actualbrightness 
+            // update actualbrightness
             const alpha = 0.1
             const threshold = 0.05
             // towards actual brightness
-            this._actualBrightness = (1 - alpha) * this._actualBrightness + alpha * this._intensity
+            this._actualBrightness =
+                (1 - alpha) * this._actualBrightness + alpha * this._intensity
             // when within 10% of brightness, clear flag
             if (Math.abs(this._actualBrightness - this._intensity) < threshold)
                 this._actualBrightness = undefined
@@ -181,9 +255,9 @@ export async function startLed(
 ): Promise<ds.Led> {
     const { length } = options
     const server = new LedServer(options)
-    const client = new ds.Led(startServer(server));
+    const client = new ds.Led(startServer(server))
 
-    ; (client as any)._buffer = server.buffer
+    ;(client as any)._buffer = server.buffer
     client.show = async function () {
         await server.show()
         if (length <= 64) await client.pixels.write(server.buffer.buffer)
@@ -195,4 +269,12 @@ export async function startLed(
     }
 
     return client
+}
+
+type DsLedStrip = typeof ds & {
+    ledStripSend(pin: number, data: Buffer): Promise<void>
+}
+
+export async function ledStripSend(pin: ds.OutputPin, data: Buffer) {
+    await (ds as DsLedStrip).ledStripSend(pin.gpio, data)
 }
