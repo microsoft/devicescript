@@ -3,6 +3,9 @@
 
 void fun5_DeviceScript_spiConfigure(devs_ctx_t *ctx) {
 #if JD_SPI
+    static jd_spi_cfg_t last_spi_cfg;
+    static uint32_t last_ctx_no;
+
     jd_spi_cfg_t cfg = {
         .miso = devs_arg_int(ctx, 0),
         .mosi = devs_arg_int(ctx, 1),
@@ -10,6 +13,12 @@ void fun5_DeviceScript_spiConfigure(devs_ctx_t *ctx) {
         .mode = devs_arg_int(ctx, 3),
         .hz = devs_arg_int(ctx, 4),
     };
+
+    if (last_ctx_no == ctx->ctx_seq_no && memcmp(&cfg, &last_spi_cfg, sizeof(cfg)) == 0)
+        return;
+
+    last_ctx_no = ctx->ctx_seq_no;
+    last_spi_cfg = cfg;
 
     int r = jd_spi_init(&cfg);
     if (r)
@@ -25,7 +34,7 @@ static void spi_done(void) {
     devs_fiber_await_done(&is_done);
 }
 
-void throw_spi_error(devs_ctx_t *ctx, void *userdata) {
+static void throw_spi_error(devs_ctx_t *ctx, void *userdata) {
     devs_throw_range_error(ctx, "SPI error: %d", (int)(intptr_t)userdata);
 }
 #endif
