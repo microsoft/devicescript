@@ -154,8 +154,9 @@ class LedServer extends Server implements ds.LedServerSpec {
         let b = this.render()
         b = this.capPower(b)
 
-        const hw = this._hwConfig
+        if (ds.isSimulator()) return
 
+        const hw = this._hwConfig
         if (hw.type === ds.LedStripLightType.WS2812B_GRB) {
             if (b === this.buffer) b = b.allocClone()
             const buf = b.buffer
