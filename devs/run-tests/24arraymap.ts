@@ -183,7 +183,7 @@ function testArraySort() {
     const mixed = [5, "apple", 2, "banana", 9, "cherry"]
     mixed.sort((a, b) => {
         if (typeof a === "string" && typeof b === "string") {
-            localeCompareHelper(a, b)
+            return localeCompareHelper(a, b)
         } else if (typeof a === "string") {
             return 1 // Strings come after numbers
         } else if (typeof b === "string") {
