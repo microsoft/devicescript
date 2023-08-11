@@ -193,7 +193,7 @@ class LedServer extends Server implements ds.LedServerSpec {
                         ? 30_000_000
                         : 15_000_000,
             })
-            await hw.spi.write(null)
+            await hw.spi.write(txbuf)
         }
     }
 
