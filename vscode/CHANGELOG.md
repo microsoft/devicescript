@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.14](https://github.com/microsoft/devicescript/compare/v2.14.13...v2.14.14)
+
+> 5 August 2023
+
+- Document/implement LED operations [`#595`](https://github.com/microsoft/devicescript/pull/595)
+- better connect dialog for remote scenario [`ba05db1`](https://github.com/microsoft/devicescript/commit/ba05db13c5505afb8663bcd65bfa8a4179e7d918)
+- hide gateway by default [`09ab30b`](https://github.com/microsoft/devicescript/commit/09ab30b899dd037eda6e296b30928d0fefd6b60b)
+- add info link to nvm [`c816704`](https://github.com/microsoft/devicescript/commit/c816704ea0007abf98aa45710d971e7fb2794548)
+
 #### [v2.14.13](https://github.com/microsoft/devicescript/compare/v2.14.12...v2.14.13)
 
 > 28 July 2023
