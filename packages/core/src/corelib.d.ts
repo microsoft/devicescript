@@ -215,11 +215,11 @@ interface Array<T> {
     [n: number]: T
     [Symbol.iterator](): IterableIterator<T>
 
-    /** 
+    /**
      * Returns the item located at the specified index.
      * @param index The zero-based index of the desired code unit. A negative index will count back from the last item.
      */
-    at(index: number): T | undefined;
+    at(index: number): T | undefined
 
     /**
      * Insert `count` `undefined` elements at `index`.
@@ -286,7 +286,7 @@ interface Array<T> {
      * @param end index to stop filling the array at. If end is negative, it is treated as
      * length+end.
      */
-    fill(value: number, start?: number, end?: number): this;
+    fill(value: number, start?: number, end?: number): this
 
     /**
      * Determines whether the specified callback function returns true for any element of an array.
@@ -346,7 +346,9 @@ interface Array<T> {
      * order, until it finds one where predicate returns true. If such an element is found, findLast
      * immediately returns that element value. Otherwise, findLast returns undefined.
      */
-    findLast(predicate: (value: T, index: number, array: T[]) => unknown): T | undefined;
+    findLast(
+        predicate: (value: T, index: number, array: T[]) => unknown
+    ): T | undefined
 
     /**
      * Returns the index of the last element in the array where predicate is true, and -1
@@ -355,7 +357,9 @@ interface Array<T> {
      * order, until it finds one where predicate returns true. If such an element is found,
      * findLastIndex immediately returns that element index. Otherwise, findLastIndex returns -1.
      */
-    findLastIndex(predicate: (value: T, index: number, array: T[]) => unknown): number
+    findLastIndex(
+        predicate: (value: T, index: number, array: T[]) => unknown
+    ): number
 
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
@@ -404,15 +408,27 @@ interface Array<T> {
      * @param separator A string used to separate one element of the array from the next in the resulting string. If omitted, the array elements are separated with a comma.
      */
     join(separator?: string): string
+
+    /**
+     * Sorts an array in place using insertion sort -> O(n^2) complexity.
+     * This method mutates the array and returns a reference to the same array.
+     * @param compareFn Function used to determine the order of the elements. It is expected to return
+     * a negative value if the first argument is less than the second argument, zero if they're equal, and a positive
+     * value otherwise. If omitted, the elements are sorted in ascending, ASCII character order.
+     * ```ts
+     * [11,2,22,1].sort((a, b) => a - b)
+     * ```
+     */
+    sort(compareFn?: (a: T, b: T) => number): this
 }
 
 interface ArrayConstructor {
     new (arrayLength?: number): any[]
     new <T>(arrayLength: number): T[]
-    new <T>(...items: T[]): T[];
+    new <T>(...items: T[]): T[]
 
     (arrayLength?: number): any[]
-    <T>(...items: T[]): T[];
+    <T>(...items: T[]): T[]
 
     <T>(arrayLength: number): T[]
     isArray(arg: any): arg is any[]
