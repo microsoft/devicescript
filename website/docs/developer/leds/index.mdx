@@ -21,23 +21,24 @@ const led = new Led()
 You can start a driver for WS2812 or AP102 using [startLed](./leds/driver).
 
 ```ts
-import { LedVariant } from "@devicescript/core"
+import { LedVariant, LedStripLightType } from "@devicescript/core"
 import { startLed } from "@devicescript/drivers"
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { spi } from "@devicescript/spi"
 
 // highlight-start
 const led = await startLed({
     length: 32,
     variant: LedVariant.Ring,
+    hwConfig: {
+        type: LedStripLightType.SK9822,
+        pinClk: pins.A1_D1,
+        pinData: pins.A0_D0,
+        spi: spi,
+    },
 })
 // highlight-end
 ```
-
-:::tip
-
-Support for hardware strips is still under constructions. Currently, simulation is supported
-but hardware in progress.
-
-:::
 
 ## Simulation and long strips (> 64 LEDs)
 
@@ -55,11 +56,14 @@ that can be used to perform color operations, and a `show` function to render th
 A typical LED program would then look like this:
 
 ```ts
+import { LedStripLightType } from "@devicescript/core"
 import { startLed } from "@devicescript/drivers"
 import { fillSolid } from "@devicescript/runtime"
+import { pins } from "@dsboard/adafruit_qt_py_c3"
 
 const led = await startLed({
     length: 32,
+    hwConfig: { type: LedStripLightType.WS2812B_GRB, pin: pins.A0_D0 },
 })
 
 // retreive pixel buffer from led

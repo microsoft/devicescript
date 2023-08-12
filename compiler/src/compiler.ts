@@ -591,7 +591,10 @@ class Program implements TopOpWriter {
     private retValExpr: ts.Expression
     private retValRefs = 0
 
-    constructor(public mainFileName: string, public host: Host) {
+    constructor(
+        public mainFileName: string,
+        public host: Host
+    ) {
         this.flags = host.getFlags?.() ?? {}
         this.isLibrary = this.flags.library || false
         this.serviceSpecs = {}
@@ -3051,6 +3054,12 @@ class Program implements TopOpWriter {
         )
             return true
         if (this.isBuiltInObj(this.nodeName(expr.expression))) return true
+
+        const nat = getSymTags(this.getSymAtLocation(expr.expression))[
+            TSDOC_NATIVE
+        ]
+        if (nat && nat.endsWith(".prototype")) return true
+
         return false
     }
 
@@ -4046,7 +4055,8 @@ class Program implements TopOpWriter {
                             !pkt.fields[0].startRepeats &&
                             !isBytes(pkt.fields[0]))
                     )
-                        return -1 // inline field
+                        // inline field
+                        return -1
                     else {
                         const r = specWriter.currSize >> 2
                         for (const f of pkt.fields) {

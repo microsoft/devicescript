@@ -188,6 +188,30 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
     return initialValue
 }
 
+Array.prototype.sort = function <T>(compareFn?: (a: T, b: T) => number) {
+    if (!compareFn) {
+        compareFn = (a: any, b: any) => {
+            a = a + ""
+            b = b + ""
+            if (a < b) return -1
+            else if (a > b) return 1
+            else return 0
+        }
+    }
+
+    for (let i = 1; i < this.length; i++) {
+        const current = this[i]
+        let j = i - 1
+        while (j >= 0 && compareFn(this[j], current) > 0) {
+            this[j + 1] = this[j]
+            j--
+        }
+        this[j + 1] = current
+    }
+
+    return this
+}
+
 Buffer.prototype.set = function (other: Buffer, trgOff?: number) {
     if (!trgOff) trgOff = 0
     this.blitAt(trgOff, other, 0, other.length)

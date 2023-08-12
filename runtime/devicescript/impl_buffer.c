@@ -158,6 +158,49 @@ void meth4_Buffer_blitAt(devs_ctx_t *ctx) {
     memcpy(dst + dst_offset, src + src_offset, len);
 }
 
+void meth3_Buffer_rotate(devs_ctx_t *ctx) {
+    unsigned dlen;
+    uint8_t *dst = wr_buffer_data(ctx, devs_arg_self(ctx), &dlen);
+    if (dst == NULL)
+        return;
+
+    int32_t offset = devs_arg_int(ctx, 0);
+    int32_t start = devs_arg_int_defl(ctx, 1, 0);
+    int32_t stop = devs_arg_int_defl(ctx, 2, dlen);
+    int32_t length = stop - start;
+
+    if (start < 0 || start + length > (int)dlen || start + length < start) {
+        devs_throw_range_error(ctx, "invalid rotation range");
+        return;
+    }
+
+    // make offset positive
+    offset %= length;
+    if (offset < 0)
+        offset += length;
+
+    if (offset == 0 || length == 0)
+        return; // nothing to do
+
+    uint8_t *data = dst + start;
+
+    uint8_t *n_first = data + offset;
+    uint8_t *first = data;
+    uint8_t *next = n_first;
+    uint8_t *last = data + length;
+
+    while (first != next) {
+        uint8_t tmp = *first;
+        *first++ = *next;
+        *next++ = tmp;
+        if (next == last) {
+            next = n_first;
+        } else if (first == n_first) {
+            n_first = next;
+        }
+    }
+}
+
 int devs_clamp_size(int v, int max) {
     if (v < 0)
         return 0;

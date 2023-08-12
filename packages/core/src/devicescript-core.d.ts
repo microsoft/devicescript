@@ -469,6 +469,14 @@ declare module "@devicescript/core" {
             set(from: Buffer, targetOffset?: number): void
             concat(other: Buffer): Buffer
             slice(from?: number, to?: number): Buffer
+
+            /**
+             * Rotate buffer left in place.
+             * @param offset number of bytes to shift; use negative value to shift right
+             * @param from start offset in buffer. Default is 0.
+             * @param to end offset in buffer. Defaults to buffer length.
+             */
+            rotate(shift: number, from?: number, to?: number): void
         }
 
         /**

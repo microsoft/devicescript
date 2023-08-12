@@ -161,6 +161,49 @@ function testArrayAt() {
     assert(str.at(-6) === undefined, "arrayAtUndefined")
 }
 
+function localeCompareHelper(a: string, b: string) {
+    if (a < b) return -1
+    else if (a > b) return 1
+    else return 0
+}
+
+function testArraySort() {
+    msg("testArraySort")
+    const arr = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+    arr.sort()
+    assert(arr.join() === "1,1,2,3,3,4,5,5,5,6,9", "sort1")
+
+    const numbers = [9, 3, 7, 1, 5]
+    numbers.sort((a, b) => a - b)
+    assert(numbers.join() === "1,3,5,7,9", "sort2")
+
+    const words = ["apple", "banana", "cherry", "date"]
+    words.sort()
+    assert(words.join() === "apple,banana,cherry,date", "sort3")
+
+    const people = [
+        { name: "Alice", age: 30 },
+        { name: "Bob", age: 25 },
+        { name: "Charlie", age: 35 },
+    ]
+    people.sort((a, b) => a.age - b.age)
+    assert(people.map(p => p.name).join() === "Bob,Alice,Charlie", "sort4")
+
+    const mixed = [5, "apple", 2, "banana", 9, "cherry"]
+    mixed.sort((a, b) => {
+        if (typeof a === "string" && typeof b === "string") {
+            return localeCompareHelper(a, b)
+        } else if (typeof a === "string") {
+            return 1 // Strings come after numbers
+        } else if (typeof b === "string") {
+            return -1 // Numbers come before strings
+        } else {
+            return a - b // Compare numbers
+        }
+    })
+    assert(mixed.join() === "2,5,9,apple,banana,cherry", "sort5")
+}
+
 testArraySome()
 testArrayEvery()
 testArrayFill()
@@ -175,3 +218,4 @@ testGenerics()
 testArrayIncludes()
 testArrayAt()
 testArrayWith()
+testArraySort()
