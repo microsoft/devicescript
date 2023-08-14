@@ -52,6 +52,31 @@ value_t prop_DsPacketSpec_response(devs_ctx_t *ctx, value_t self) {
     return devs_undefined;
 }
 
+value_t prop_DsPacketSpec_type(devs_ctx_t *ctx, value_t self) {
+    SELF();
+
+    int r = 0;
+
+    switch (spec->code & DEVS_PACKETSPEC_CODE_MASK) {
+    case DEVS_PACKETSPEC_CODE_REGISTER:
+        r = DEVS_BUILTIN_STRING_REGISTER;
+        break;
+    case DEVS_PACKETSPEC_CODE_COMMAND:
+        r = DEVS_BUILTIN_STRING_ACTION;
+        break;
+    case DEVS_PACKETSPEC_CODE_REPORT:
+        r = DEVS_BUILTIN_STRING_REPORT;
+        break;
+    case DEVS_PACKETSPEC_CODE_EVENT:
+        r = DEVS_BUILTIN_STRING_EVENT;
+        break;
+    }
+
+    if (r == 0)
+        return devs_undefined;
+    return devs_builtin_string(r);
+}
+
 void methX_DsPacketSpec_encode(devs_ctx_t *ctx) {
     const devs_packet_spec_t *spec = getspec(ctx, devs_arg_self(ctx));
     if (spec == NULL)
@@ -69,11 +94,11 @@ void methX_DsPacketSpec_encode(devs_ctx_t *ctx) {
     if (tp == DEVS_PACKETSPEC_CODE_REGISTER)
         ctx->packet.service_command |= JD_CMD_GET_REGISTER;
     else if (tp == DEVS_PACKETSPEC_CODE_EVENT)
-        TODO();
+        ctx->packet.service_command |= JD_CMD_EVENT_MASK;
 
     devs_packet_encode(ctx, spec);
     devs_ret(ctx, devs_jd_pkt_capture(ctx, DEVS_ROLE_FIRST_SPEC + idx));
-    
+
 #if 0
     devs_packet_t *pkt = devs_value_to_gc_obj(ctx, ctx->ret_val);
     if (pkt) {

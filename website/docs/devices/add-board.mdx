@@ -62,7 +62,7 @@ which is leveraged by the simulator dashboard.
 :::
 
 -   [ ] configure the status light LED. DeviceScript supports monochrome LEDs, RGB LEDs,
-        ws2812, APA102 and more (refer to the schema information).
+        WS2812B, APA102, SK9822 and more (refer to the schema information).
 
 ```json
     "led": {
@@ -71,7 +71,7 @@ which is leveraged by the simulator dashboard.
     },
 ```
 
--   [ ] configure the `console.log` pin
+-   [ ] configure the system logging pin
 
 ```json
     "log": {
@@ -80,7 +80,7 @@ which is leveraged by the simulator dashboard.
     },
 ```
 
--   [ ] configure I2C pins
+-   [ ] configure I2C pins, add `$connector` only if there is a standardized connector
 
 ```json
     "i2c": {
@@ -104,7 +104,7 @@ which is leveraged by the simulator dashboard.
 -   [ ] Update the board description
 -   [ ] If available, provide a URL where the board can be purchased
 
-Build the projet to test the board definition.
+Build the project to test the board definition.
 
 ```bash
 npm run build

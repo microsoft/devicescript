@@ -147,6 +147,7 @@ value_t prop_DsPacketSpec_parent(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacketSpec_name(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacketSpec_code(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacketSpec_response(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketSpec_type(devs_ctx_t *ctx, value_t self);
 void methX_DsPacketSpec_encode(devs_ctx_t *ctx);
 // impl_register.c
 void meth0_DsRegister_read(devs_ctx_t *ctx);
@@ -163,6 +164,7 @@ void meth2_DsRole_sendCommand(devs_ctx_t *ctx);
 value_t prop_DsServiceSpec_classIdentifier(devs_ctx_t *ctx, value_t self);
 value_t prop_DsServiceSpec_name(devs_ctx_t *ctx, value_t self);
 void meth1_DsServiceSpec_lookup(devs_ctx_t *ctx);
+void meth1_DsServiceSpec_byCode(devs_ctx_t *ctx);
 void meth1_DsServiceSpec_assign(devs_ctx_t *ctx);
 // impl_socket.c
 void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx);
@@ -237,9 +239,9 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {N(SPIXFER), 50039},                                           //
     {N(SPISENDIMAGE), 50040},                                      //
     {N(SUSPEND), 50051},                                           //
-    {N(_SOCKETOPEN), 50137},                                       //
-    {N(_SOCKETCLOSE), 50138},                                      //
-    {N(_SOCKETWRITE), 50139},                                      //
+    {N(_SOCKETOPEN), 50139},                                       //
+    {N(_SOCKETCLOSE), 50140},                                      //
+    {N(_SOCKETWRITE), 50141},                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t TypeError_prototype_entries[] = { //
@@ -393,53 +395,55 @@ static const devs_builtin_proto_entry_t DsPacketSpec_prototype_entries[] = { //
     {N(NAME), 50120},                                                        //
     {N(CODE), 50121},                                                        //
     {N(RESPONSE), 50122},                                                    //
-    {N(ENCODE), 50123},                                                      //
+    {N(TYPE), 50123},                                                        //
+    {N(ENCODE), 50124},                                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50124},                                                      //
-    {N(WRITE), 50125},                                                     //
+    {N(READ), 50125},                                                      //
+    {N(WRITE), 50126},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50129},                                                 //
+    {N(__FUNC__), 50130},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50126},                                                        //
-    {N(NAME), 50127},                                                        //
-    {N(CODE), 50128},                                                        //
+    {N(ROLE), 50127},                                                        //
+    {N(NAME), 50128},                                                        //
+    {N(CODE), 50129},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISBOUND), 50130},                                               //
-    {N(SPEC), 50131},                                                  //
-    {N(SENDCOMMAND), 50132},                                           //
+    {N(ISBOUND), 50131},                                               //
+    {N(SPEC), 50132},                                                  //
+    {N(SENDCOMMAND), 50133},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
-    {N(CLASSIDENTIFIER), 50133},                                              //
-    {N(NAME), 50134},                                                         //
-    {N(LOOKUP), 50135},                                                       //
-    {N(ASSIGN), 50136},                                                       //
+    {N(CLASSIDENTIFIER), 50134},                                              //
+    {N(NAME), 50135},                                                         //
+    {N(LOOKUP), 50136},                                                       //
+    {N(BYCODE), 50137},                                                       //
+    {N(ASSIGN), 50138},                                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50140},                                                //
-    {N(BYTELENGTH), 50141},                                            //
-    {N(CHARCODEAT), 50142},                                            //
-    {N(CHARAT), 50143},                                                //
-    {N(SLICE), 50144},                                                 //
-    {N(INDEXOF), 50146},                                               //
-    {N(TOLOWERCASE), 50147},                                           //
-    {N(TOUPPERCASE), 50148},                                           //
+    {N(LENGTH), 50142},                                                //
+    {N(BYTELENGTH), 50143},                                            //
+    {N(CHARCODEAT), 50144},                                            //
+    {N(CHARAT), 50145},                                                //
+    {N(SLICE), 50146},                                                 //
+    {N(INDEXOF), 50148},                                               //
+    {N(TOLOWERCASE), 50149},                                           //
+    {N(TOUPPERCASE), 50150},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_entries[] = { //
-    {N(FROMCHARCODE), 50145},                                //
+    {N(FROMCHARCODE), 50147},                                //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
@@ -549,8 +553,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 149;
-const devs_builtin_function_t devs_builtin_functions[149] = {
+uint16_t devs_num_builtin_functions = 151;
+const devs_builtin_function_t devs_builtin_functions[151] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -674,6 +678,7 @@ const devs_builtin_function_t devs_builtin_functions[149] = {
     {N(NAME), 0, PROP, {.prop = prop_DsPacketSpec_name}},
     {N(CODE), 0, PROP, {.prop = prop_DsPacketSpec_code}},
     {N(RESPONSE), 0, PROP, {.prop = prop_DsPacketSpec_response}},
+    {N(TYPE), 0, PROP, {.prop = prop_DsPacketSpec_type}},
     {N(ENCODE), 0, 0, {.meth = methX_DsPacketSpec_encode}},
     {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(WRITE), 0, 0, {.meth = methX_DsRegister_write}},
@@ -687,6 +692,7 @@ const devs_builtin_function_t devs_builtin_functions[149] = {
     {N(CLASSIDENTIFIER), 0, PROP, {.prop = prop_DsServiceSpec_classIdentifier}},
     {N(NAME), 0, PROP, {.prop = prop_DsServiceSpec_name}},
     {N(LOOKUP), 1, 0, {.meth = meth1_DsServiceSpec_lookup}},
+    {N(BYCODE), 1, 0, {.meth = meth1_DsServiceSpec_byCode}},
     {N(ASSIGN), 1, 0, {.meth = meth1_DsServiceSpec_assign}},
     {N(_SOCKETOPEN), 2, NO_SELF, {.meth = fun2_DeviceScript__socketOpen}},
     {N(_SOCKETCLOSE), 0, NO_SELF, {.meth = fun0_DeviceScript__socketClose}},

@@ -17,12 +17,11 @@ Many opcodes (both expressions and statements) can also throw an exception.
 
 For a more highlevel description of runtime and bytecode, see [Runtime implementation page](/language/runtime).
 
-
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 14
-    img_version_patch = 16
+    img_version_minor = 15
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -718,3 +717,9 @@ Only `true` and `false` values.
     digest = 217
     ledStripSend = 218
     rotate = 219
+    register = 220
+    event = 221
+    action = 222
+    report = 223
+    type = 224
+    byCode = 225

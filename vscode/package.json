@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.14.16",
+    "version": "2.15.0",
     "publisher": "devicescript",
     "description": "TypeScript for microcontrollers.",
     "author": {

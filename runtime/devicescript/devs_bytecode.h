@@ -111,9 +111,9 @@
     "\x06\x0f\x0e"
 
 #define DEVS_IMG_VERSION_MAJOR 2
-#define DEVS_IMG_VERSION_MINOR 14
-#define DEVS_IMG_VERSION_PATCH 16
-#define DEVS_IMG_VERSION 0x20e0010
+#define DEVS_IMG_VERSION_MINOR 15
+#define DEVS_IMG_VERSION_PATCH 0
+#define DEVS_IMG_VERSION 0x20f0000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0xf1296e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -266,7 +266,7 @@
 #define DEVS_BUILTIN_OBJECT_GPIO 42
 #define DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE 43
 
-#define DEVS_BUILTIN_STRING___MAX 219
+#define DEVS_BUILTIN_STRING___MAX 225
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -487,6 +487,12 @@
 #define DEVS_BUILTIN_STRING_DIGEST 217
 #define DEVS_BUILTIN_STRING_LEDSTRIPSEND 218
 #define DEVS_BUILTIN_STRING_ROTATE 219
+#define DEVS_BUILTIN_STRING_REGISTER 220
+#define DEVS_BUILTIN_STRING_EVENT 221
+#define DEVS_BUILTIN_STRING_ACTION 222
+#define DEVS_BUILTIN_STRING_REPORT 223
+#define DEVS_BUILTIN_STRING_TYPE 224
+#define DEVS_BUILTIN_STRING_BYCODE 225
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -537,7 +543,8 @@
         "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", "equals", "isReadOnly",    \
         "fillCircle", "blitRow", "blit", "_i2cTransaction", "_twinMessage", "spiSendImage",        \
         "gpio", "label", "mode", "capabilities", "value", "setMode", "fillRandom", "encrypt",      \
-        "decrypt", "digest", "ledStripSend", "rotate"
+        "decrypt", "digest", "ledStripSend", "rotate", "register", "event", "action", "report",    \
+        "type", "byCode"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

@@ -24,6 +24,10 @@ typedef struct {
     // ...
 } devs_gc_object_t;
 
+// this is either:
+// - devs_map_t
+// - devs_builtin_proto_t
+// - devs_service_spec_t
 struct devs_maplike {
     devs_gc_object_t _gc;
 };
