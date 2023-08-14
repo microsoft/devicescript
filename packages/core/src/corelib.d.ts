@@ -362,6 +362,16 @@ interface Array<T> {
     ): number
 
     /**
+     * Returns a new array with the element at the given index replaced with the given value.
+     * @param index The zero-based index at which to change the array, converted to an integer.
+     *              If index is negative, index + array.length is used.
+     * @param value Any value to be assigned to the given index.
+     * @returns A new array with the element at the specified index replaced with the given value.
+     * @throws {RangeError} If index is out of bounds (index >= array.length or index < -array.length).
+     */
+    with(index: number, value: T): T[]
+
+    /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
      * @param callbackfn A function that accepts up to four arguments. The reduce method calls the callbackfn function one time for each element in the array.
      * @param initialValue If initialValue is specified, it is used as the initial value to start the accumulation. The first call to the callbackfn function provides this value as an argument instead of an array value.

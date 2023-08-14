@@ -97,6 +97,15 @@ function testArrayFindLastIndex() {
     assert(str.findLastIndex(x => x.startsWith("c")) === 3, "findLastIndexTrue")
     assert(str.findLastIndex(x => x === "z") === -1, "findLastIndexFalse")
 }
+
+function testArrayWith() {
+    const arr = [1, 2, 3]
+    const newArr = arr.with(1, 42)
+    assert(newArr !== arr, "with creates a new array")
+    assert(newArr[1] === 42, "with replaces element at index")
+    assert(newArr[0] === 1 && newArr[2] === 3, "with preserves other elements")
+}
+
 function swap<T>(arr: T[], i: number, j: number): void {
     let temp: T = arr[i]
     arr[i] = arr[j]
@@ -208,4 +217,5 @@ testArrayFindLastIndex()
 testGenerics()
 testArrayIncludes()
 testArrayAt()
+testArrayWith()
 testArraySort()
