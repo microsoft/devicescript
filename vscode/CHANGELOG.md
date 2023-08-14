@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.14.16](https://github.com/microsoft/devicescript/compare/v2.14.15...v2.14.16)
+
+> 11 August 2023
+
+- set prototype in JSON.parse; fixes #578 [`#578`](https://github.com/microsoft/devicescript/issues/578)
+- fix #536: tree-shaking of devsNative protos [`#536`](https://github.com/microsoft/devicescript/issues/536)
+- Add Buffer.rotate; see #596 [`d4d6bd1`](https://github.com/microsoft/devicescript/commit/d4d6bd1a63a6a7c54acb4c25241d73075cb1fd01)
+- document led hw support [`a7262f0`](https://github.com/microsoft/devicescript/commit/a7262f03c4261e6790f4ebafa9b076ab65ec6789)
+- no led show on simulator [`960c0d7`](https://github.com/microsoft/devicescript/commit/960c0d7861b7f732ba450e3828b7d8f372782e6b)
+
 #### [v2.14.15](https://github.com/microsoft/devicescript/compare/v2.14.14...v2.14.15)
 
 > 11 August 2023
