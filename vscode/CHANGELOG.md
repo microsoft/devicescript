@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.0](https://github.com/microsoft/devicescript/compare/v2.14.16...v2.15.0)
+
+> 14 August 2023
+
+- Array sort [`#603`](https://github.com/microsoft/devicescript/pull/603)
+- allow sending events from DS; fixes #373 [`#373`](https://github.com/microsoft/devicescript/issues/373)
+- update add-board docs [`7d4ae14`](https://github.com/microsoft/devicescript/commit/7d4ae148bf494a139682ef2ba5ce12df40a1a6a3)
+
 #### [v2.14.16](https://github.com/microsoft/devicescript/compare/v2.14.15...v2.14.16)
 
 > 11 August 2023
