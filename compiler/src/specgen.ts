@@ -114,6 +114,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
             SRV_CODAL_MESSAGE_BUS,
             SRV_DEVS_DBG,
             SRV_TCP,
+            SRV_GPIO
         ].indexOf(info.classIdentifier) > -1
     )
 }
@@ -437,6 +438,7 @@ unlisted: true
 The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is used internally by the runtime
 and is not directly programmable in DeviceScript.
 
+{@import optional ../clients-custom/${info.shortId}.mdp}
 `
     }
 
