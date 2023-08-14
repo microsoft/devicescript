@@ -150,6 +150,7 @@ export function pktName(pkt: jdspec.PacketInfo): string {
 export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     let r = ""
     let srv = ""
+    let lkp = ""
 
     for (const en of Object.values(info.enums)) {
         const enPref = enumName(info, en.name)
@@ -190,6 +191,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             ? "SensorServerSpec"
             : "BaseServerSpec"
     srv += `interface ${clname}ServerSpec extends ${ibase} {\n`
+    lkp += `interface ${clname}LookupSpec extends ServiceSpec {\n`
 
     if (noCtorSpec(info))
         r +=
@@ -200,14 +202,16 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             wrapComment("devs", "Create new service client.") +
             "    constructor(roleName?: string)\n"
 
-    r +=
-        wrapComment("devs", `Static specification for ${info.name}`) +
-        "    static spec: ServiceSpec\n"
+    if (info.shortId != "_sensor")
+        r +=
+            wrapComment("devs", `Static specification for ${info.name}`) +
+            `    static spec: ${clname}LookupSpec\n`
 
     let codes =
         wrapComment("devs", `Spec-code definitions for ${info.name}`) +
         `enum ${clname}Codes {\n`
 
+    let lastName = ""
     info.packets.forEach(pkt => {
         if (pkt.derived || pkt.pipeType) return
         const cmt = addComment(pkt)
@@ -237,12 +241,14 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                     const args = pktFields(info, pkt)
                     srv += `    set_${nameOfPkt}${opt}(${args}): AsyncValue<void>\n`
                 }
+                lkp += `    lookup(name: "${nameOfPkt}"): RegisterSpec<${argtp}>\n`
             }
         } else if (pkt.kind == "event") {
             enumPref = "Event"
             enumMask = PacketSpecCode.EVENT
             kw = "readonly "
             tp = "Event"
+            lkp += `    lookup(name: "${nameOfPkt}"): EventSpec<${argtp}>\n`
             // skip events for srv for now
         } else if (pkt.kind == "command") {
             enumPref = "Cmd"
@@ -257,9 +263,13 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             )
             r += `    ${commandSig(info, pkt).sig}\n`
             srv += `    ${commandSig(info, pkt, true).sig}\n`
+            lkp += `    lookup(name: "${nameOfPkt}"): ActionSpec<${argtp}>\n`
+            lastName = nameOfPkt
         } else if (pkt.kind == "report") {
             enumPref = "Report"
             enumMask = PacketSpecCode.REPORT
+            if (lastName != nameOfPkt)
+                lkp += `    lookup(name: "${nameOfPkt}"): ReportSpec<${argtp}>\n`
         }
 
         if (enumPref) {
@@ -282,8 +292,10 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
 
     r += "}\n\n" + codes
     srv += "}\n"
+    lkp += "}\n"
 
     r += srv
+    r += lkp
 
     return r.replace(/ *$/gm, "")
 }

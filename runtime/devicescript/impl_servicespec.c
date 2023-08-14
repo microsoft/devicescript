@@ -29,6 +29,14 @@ void meth1_DsServiceSpec_lookup(devs_ctx_t *ctx) {
     devs_ret(ctx, devs_spec_lookup(ctx, spec, devs_arg(ctx, 0)));
 }
 
+void meth1_DsServiceSpec_byCode(devs_ctx_t *ctx) {
+    const devs_service_spec_t *spec = getspec(ctx, devs_arg_self(ctx));
+    if (!spec)
+        return;
+    const devs_packet_spec_t *pspec = devs_pkt_spec_by_code(ctx, spec, devs_arg_int(ctx, 0));
+    devs_ret(ctx, devs_value_from_packet_spec(ctx, pspec));
+}
+
 void meth1_DsServiceSpec_assign(devs_ctx_t *ctx) {
     const devs_service_spec_t *spec = getspec(ctx, devs_arg_self(ctx));
     if (!spec)
