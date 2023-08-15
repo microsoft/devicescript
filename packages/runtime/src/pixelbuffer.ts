@@ -163,7 +163,7 @@ export class PixelBuffer {
 
     /**
      * Rotates in place the colors by the given shift amount
-     * @param shift
+     * @param shift number of pixels to shift, use negative to shift right
      */
     rotate(shift: number) {
         shift = shift | 0
