@@ -6,10 +6,10 @@ interface WorkItem {
 }
 
 /**
- * A SerialWorker executes queued tasks sequentially, without interleaving,
+ * A SequentialWorker executes queued tasks sequentially, without interleaving,
  * in given order (modulo specified delays).
  */
-export class SerialWorker {
+export class SequentialWorker {
     private timeouts: WorkItem[]
     private timeoutWorkerId: ds.Fiber
 

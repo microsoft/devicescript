@@ -1,14 +1,14 @@
 import * as ds from "@devicescript/core"
-import { SerialWorker } from "@devicescript/runtime"
+import { SequentialWorker } from "@devicescript/runtime"
 
 type DsServer = typeof ds & {
     _onServerPacket(pkt: ds.Packet): Promise<void>
     _serverSend(serviceIndex: number, pkt: ds.Packet): Promise<void>
 }
 
-export interface ServerOptions {}
+export interface ServerOptions { }
 
-let eventWorker: SerialWorker
+let eventWorker: SequentialWorker
 
 export class Server implements ds.ServerInterface {
     serviceIndex: number
@@ -19,7 +19,7 @@ export class Server implements ds.ServerInterface {
     constructor(
         public spec: ds.ServiceSpec,
         options?: ServerOptions
-    ) {}
+    ) { }
 
     async _send(pkt: ds.Packet) {
         if (this.debug) console.debug("Out SRV", pkt, pkt.spec)
@@ -36,7 +36,7 @@ export class Server implements ds.ServerInterface {
     }
 
     async sendEvent(pkt: ds.Packet) {
-        if (!eventWorker) eventWorker = new SerialWorker()
+        if (!eventWorker) eventWorker = new SequentialWorker()
         const self = this
         let prep = false
         const sendp = async () => {
@@ -75,7 +75,7 @@ export class ControlServer extends Server implements ds.ControlServerSpec {
         r.unshift(flags, pktCount, reserved)
         return r
     }
-    noop() {}
+    noop() { }
 
     identify(): ds.AsyncValue<void> {
         // TODO?
@@ -168,7 +168,7 @@ function attachName(s: ds.BaseServerSpec, name: string) {
 export function startServer(s: ds.ServerInterface, name?: string) {
     if (!servers) {
         servers = [new ControlServer()]
-        ;(ds as DsServer)._onServerPacket = _onServerPacket
+            ; (ds as DsServer)._onServerPacket = _onServerPacket
         setInterval(async () => {
             const iserv = servers[0] as ds.ControlServerSpec
             const spec = ds.Control.spec.lookup("announce")
