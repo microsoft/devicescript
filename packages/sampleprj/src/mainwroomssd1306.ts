@@ -12,8 +12,8 @@ configureHardware({
     }
 })
 
-
-const ssdDisplay = new SSD1306Driver({ height: 64, width: 128 })
+// double check i2c addr
+const ssdDisplay = new SSD1306Driver({ height: 64, width: 128, devAddr: 0x3d })
 
 const characterScreen = await startCharacterScreen(ssdDisplay)
 await characterScreen.message.write("Hello world!")
