@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@devicescript/test"
 import {
     encodeURIComponent,
-    pixelBuffer,
     rgb,
     schedule,
     setStatusLight,
@@ -10,6 +9,7 @@ import {
     Set,
     fillGradient,
     fillBarGraph,
+    PixelBuffer,
 } from "."
 import { delay } from "@devicescript/core"
 
@@ -28,26 +28,36 @@ describe("rgb", () => {
     })
 })
 
-describe("colorbuffer", () => {
+describe("pixelbuffer", () => {
     test("setpixelcolor", () => {
-        const buf = pixelBuffer(3)
+        const buf = PixelBuffer.alloc(3)
         buf.setAt(1, 0x123456)
         expect(buf.at(1)).toBe(0x123456)
     })
     test("setpixelcolor negative", () => {
-        const buf = pixelBuffer(3)
+        const buf = PixelBuffer.alloc(3)
         buf.setAt(-1, 0x123456)
         expect(buf.at(-1)).toBe(0x123456)
     })
     test("setbargraph", () => {
-        const buf = pixelBuffer(4)
+        const buf = PixelBuffer.alloc(4)
         fillBarGraph(buf, 5, 10)
         console.log(buf.buffer)
     })
     test("gradient", () => {
-        const buf = pixelBuffer(4)
+        const buf = PixelBuffer.alloc(4)
         fillGradient(buf, 0xff0000, 0x00ff00)
         console.log(buf.buffer)
+    })
+    test("rotate", () => {
+        const buf = PixelBuffer.alloc(3)
+        buf.setAt(1, 0x123456)
+        buf.rotate(1)
+        expect(buf.at(2)).toBe(0x123456)
+        buf.rotate(1)
+        expect(buf.at(0)).toBe(0x123456)
+        buf.rotate(-1)
+        expect(buf.at(2)).toBe(0x123456)
     })
 })
 

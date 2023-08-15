@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { PixelBuffer, fillSolid, pixelBuffer } from "./pixelbuffer"
+import { PixelBuffer, fillSolid } from "./pixelbuffer"
 
 interface LedWithBuffer {
     _buffer: PixelBuffer
@@ -28,8 +28,8 @@ declare module "@devicescript/core" {
 ds.Led.prototype.buffer = async function () {
     let b = (this as any as LedWithBuffer)._buffer
     if (!b) {
-        const n = await this.numPixels.read();
-        ; (this as any as LedWithBuffer)._buffer = b = pixelBuffer(n)
+        const n = await this.numPixels.read()
+        ;(this as any as LedWithBuffer)._buffer = b = PixelBuffer.alloc(n)
     }
     return b
 }
