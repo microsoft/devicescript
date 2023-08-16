@@ -5,6 +5,6 @@ export class Number {
      */
     static isInteger(number: unknown): boolean {
         if (typeof number !== "number" || isNaN(number)) return false
-        return number === (number | 0)
+        return number === Math.round(number)
     }
 }
