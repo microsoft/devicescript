@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@devicescript/test"
 import {
     encodeURIComponent,
-    pixelBuffer,
     rgb,
     schedule,
     setStatusLight,
@@ -11,6 +10,7 @@ import {
     fillGradient,
     fillBarGraph,
     Number,
+    PixelBuffer,
 } from "."
 import { delay } from "@devicescript/core"
 
@@ -30,26 +30,40 @@ describe("rgb", () => {
     })
 })
 
-describe("colorbuffer", () => {
+describe("pixelbuffer", () => {
     test("setpixelcolor", () => {
-        const buf = pixelBuffer(3)
+        const buf = PixelBuffer.alloc(3)
         buf.setAt(1, 0x123456)
         expect(buf.at(1)).toBe(0x123456)
     })
     test("setpixelcolor negative", () => {
-        const buf = pixelBuffer(3)
+        const buf = PixelBuffer.alloc(3)
         buf.setAt(-1, 0x123456)
         expect(buf.at(-1)).toBe(0x123456)
     })
     test("setbargraph", () => {
-        const buf = pixelBuffer(4)
+        const buf = PixelBuffer.alloc(4)
         fillBarGraph(buf, 5, 10)
         console.log(buf.buffer)
     })
     test("gradient", () => {
-        const buf = pixelBuffer(4)
+        const buf = PixelBuffer.alloc(4)
         fillGradient(buf, 0xff0000, 0x00ff00)
         console.log(buf.buffer)
+    })
+    test("rotate", () => {
+        const buf = PixelBuffer.alloc(3)
+        buf.setAt(1, 0x123456)
+        console.log(buf)
+        buf.rotate(-1)
+        console.log(buf)
+        expect(buf.at(2)).toBe(0x123456)
+        buf.rotate(-1)
+        console.log(buf)
+        expect(buf.at(0)).toBe(0x123456)
+        buf.rotate(1)
+        console.log(buf)
+        expect(buf.at(2)).toBe(0x123456)
     })
 })
 
@@ -228,7 +242,7 @@ describe("number", () => {
         check(0); // true
         check(1); // true
         check(-100000); // true
-        //check(99999999999999999999999); // true
+        check(99999999999999999999999); // true
 
         checkNot(0.1); // false
         checkNot(Math.PI); // false
@@ -244,7 +258,7 @@ describe("number", () => {
         check(5.0); // true
         checkNot(5.000000000000001); // false
         check(5.0000000000000001); // true, because of loss of precision
-        //check(4500000000000000.1); // true, because of loss of precision
+        check(4500000000000000.1); // true, because of loss of precision
 
     })
 })
