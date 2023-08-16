@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { PixelBuffer, fillFade, pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer, fillFade } from "@devicescript/runtime"
 import { Server, ServerOptions, startServer } from "@devicescript/server"
 import { SPI } from "@devicescript/spi"
 
@@ -94,7 +94,7 @@ class LedServer extends Server implements ds.LedServerSpec {
 
     constructor(options: LedServerOptions & ServerOptions) {
         super(ds.Led.spec, options)
-        this.buffer = pixelBuffer(options.length)
+        this.buffer = PixelBuffer.alloc(options.length)
         this._intensity = options.intensity ?? 1
         this._columns = options.columns
         this._ledPerPixels = options.ledsPerPixel
