@@ -16,10 +16,10 @@ const pixels = await led.buffer()
 It can also be allocated using `pixelBuffer`.
 
 ```ts
-import { pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer } from "@devicescript/runtime"
 
 // highlight-next-line
-const pixels = pixelBuffer(32)
+const pixels = PixelBuffer.alloc(32)
 ```
 
 ## Usage
