@@ -31,7 +31,7 @@ jobs:
                   key: ${{env.EM_VERSION}}-${{ runner.os }}
             - uses: actions/setup-node@v3
               with:
-                  node-version: "14"
+                  node-version: "14.18.2"
                   cache: yarn
                   registry-url: 'https://registry.npmjs.org'
             - uses: mymindstorm/setup-emsdk@v12
