@@ -192,6 +192,7 @@ declare module "@devicescript/core" {
         readonly classIdentifier: number
         assign(packet: Packet): void
         lookup(name: string): PacketSpec
+        byCode(code: number): PacketSpec
     }
 
     export class PacketSpec<T = any> {
@@ -199,8 +200,14 @@ declare module "@devicescript/core" {
         readonly name: string
         readonly code: number
         readonly response?: PacketSpec
+        readonly type: "action" | "register" | "report" | "event"
         encode(v: T): Packet
     }
+
+    export type EventSpec<T = any> = PacketSpec<T> & { type: "event" }
+    export type RegisterSpec<T = any> = PacketSpec<T> & { type: "register" }
+    export type ActionSpec<T = any> = PacketSpec<T> & { type: "action" }
+    export type ReportSpec<T = any> = PacketSpec<T> & { type: "report" }
 
     export interface ServerInterface {
         serviceIndex: number
@@ -365,21 +372,6 @@ declare module "@devicescript/core" {
     export function deviceIdentifier(which: "self" | "server"): string
 
     /**
-     * Internal, used in server impl.
-     * @deprecated
-     */
-    export function _onServerPacket(pkt: Packet): Promise<void>
-
-    /**
-     * Internal, used in server impl.
-     * @deprecated
-     */
-    export function _serverSend(
-        serviceIndex: number,
-        pkt: Packet
-    ): Promise<void>
-
-    /**
      * Throw an exception if the condition is not met.
      */
     export function assert(cond: boolean, msg?: string): void
@@ -469,6 +461,14 @@ declare module "@devicescript/core" {
             set(from: Buffer, targetOffset?: number): void
             concat(other: Buffer): Buffer
             slice(from?: number, to?: number): Buffer
+
+            /**
+             * Rotate buffer left in place.
+             * @param offset number of bytes to shift; use negative value to shift right
+             * @param from start offset in buffer. Default is 0.
+             * @param to end offset in buffer. Defaults to buffer length.
+             */
+            rotate(shift: number, from?: number, to?: number): void
         }
 
         /**

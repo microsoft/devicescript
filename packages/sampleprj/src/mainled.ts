@@ -1,22 +1,26 @@
-import { delay, Led, LedVariant } from "@devicescript/core"
+import { delay, Led, LedVariant, LedStripLightType } from "@devicescript/core"
 import { startLed } from "@devicescript/drivers"
 import { startLedDisplay } from "@devicescript/runtime"
+import { pins } from "@dsboard/adafruit_qt_py_c3"
 
 const jdled = new Led()
 const led = await startLed({
     length: 12,
     columns: 3,
     variant: LedVariant.Ring,
+    hwConfig: { type: LedStripLightType.WS2812B_GRB, pin: pins.A0_D0 },
 })
 const led2 = await startLed({
     length: 256,
     variant: LedVariant.Strip,
+    hwConfig: { type: LedStripLightType.WS2812B_GRB, pin: pins.A1_D1 },
 })
 const ledm = await startLed({
     columns: 16,
     length: 256,
     variant: LedVariant.Matrix,
     gamma: 2.7,
+    hwConfig: { type: LedStripLightType.WS2812B_GRB, pin: pins.A2_D2 },
 })
 const display = await startLedDisplay(ledm)
 

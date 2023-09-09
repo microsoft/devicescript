@@ -27,6 +27,17 @@ export class PixelBuffer {
     }
 
     /**
+     * Create a color buffer that allows you to manipulate a range of pixels
+     * @param numPixels number of pixels
+     */
+    static alloc(numPixels: number): PixelBuffer {
+        if (numPixels <= 0) throw new RangeError("invalid number of pixels")
+        numPixels = numPixels | 0
+        const buf = ds.Buffer.alloc(numPixels * 3)
+        return new PixelBuffer(buf, 0, numPixels)
+    }
+
+    /**
      * Set a pixel color in the buffer
      * @param pixeloffset pixel offset. if negative starts from the end
      * @param color RGB color
@@ -133,7 +144,6 @@ export class PixelBuffer {
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
     }
 
-
     /**
      * Applies a inplace gamma correction to the pixel colors
      * @param pixels
@@ -150,16 +160,19 @@ export class PixelBuffer {
             buf[i] = o
         }
     }
-}
 
-/**
- * Create a color buffer that allows you to manipulate a range of pixels
- * @param numPixels number of pixels
- */
-export function pixelBuffer(numPixels: number) {
-    numPixels = numPixels | 0
-    const buf = ds.Buffer.alloc(numPixels * 3)
-    return new PixelBuffer(buf, 0, numPixels)
+    /**
+     * Rotates in place the colors by the given shift amount
+     * @param shift number of pixels to shift, use negative to shift right
+     */
+    rotate(shift: number) {
+        shift = shift | 0
+        this.buffer.rotate(
+            shift * 3,
+            this.start * 3,
+            (this.start + this.length) * 3
+        )
+    }
 }
 
 /**
@@ -220,8 +233,8 @@ export function fillFade(pixels: PixelBuffer, alpha: number) {
 export function fillRainbow(
     pixels: PixelBuffer,
     options?: {
-        startHue?: number,
-        endHue?: number,
+        startHue?: number
+        endHue?: number
         reversed?: boolean
         circular?: boolean
         saturation?: number
@@ -234,27 +247,27 @@ export function fillRainbow(
     saturation = saturation ?? 240
     brightness = brightness ?? 255
     const dh = endHue - startHue
-    const render = (alpha: number) => hsv(startHue + alpha * dh, saturation, brightness)
+    const render = (alpha: number) =>
+        hsv(startHue + alpha * dh, saturation, brightness)
     fillMap(pixels, render, options)
 }
 
 /**
  * Applies a gamma correction to a single color channel ([0,0xff])
- * @param c 
- * @param gamma 
- * @returns 
+ * @param c
+ * @param gamma
+ * @returns
  */
 export function correctGammaChannel(c: number, gamma: number) {
     let o =
         c <= 0
             ? 0
             : c >= 0xff
-                ? 0xff
-                : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
+            ? 0xff
+            : Math.round(Math.pow(c / 255.0, gamma) * 255.0)
     if (c > 0 && o === 0) o = 1
     return 0
 }
-
 
 /**
  * General purpose helper to create a color fill function.

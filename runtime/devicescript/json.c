@@ -270,7 +270,8 @@ fail:
 
 static value_t parse_object(parser_t *state) {
     devs_ctx_t *ctx = state->ctx;
-    devs_map_t *arr = devs_map_try_alloc(ctx, 0);
+    devs_map_t *arr =
+        devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE));
     if (!arr)
         return devs_undefined;
     value_t ret = devs_value_from_gc_obj(ctx, arr);

@@ -16,10 +16,10 @@ const pixels = await led.buffer()
 It can also be allocated using `pixelBuffer`.
 
 ```ts
-import { pixelBuffer } from "@devicescript/runtime"
+import { PixelBuffer } from "@devicescript/runtime"
 
 // highlight-next-line
-const pixels = pixelBuffer(32)
+const pixels = PixelBuffer.alloc(32)
 ```
 
 ## Usage
@@ -57,6 +57,14 @@ Applies gamma correction to compensate LED and eye perception
 ```ts skip
 // highlight-next-line
 pixels.correctGamma()
+```
+
+### `rotate`
+
+Shifts the colors in the buffer by the given offset. Use a negative offset to shift right.
+
+```ts skip
+pixels.rotate(-1)
 ```
 
 ## Helpers

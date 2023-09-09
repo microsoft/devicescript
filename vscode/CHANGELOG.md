@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.0](https://github.com/microsoft/devicescript/compare/v2.14.16...v2.15.0)
+
+> 14 August 2023
+
+- Array sort [`#603`](https://github.com/microsoft/devicescript/pull/603)
+- allow sending events from DS; fixes #373 [`#373`](https://github.com/microsoft/devicescript/issues/373)
+- update add-board docs [`7d4ae14`](https://github.com/microsoft/devicescript/commit/7d4ae148bf494a139682ef2ba5ce12df40a1a6a3)
+
+#### [v2.14.16](https://github.com/microsoft/devicescript/compare/v2.14.15...v2.14.16)
+
+> 11 August 2023
+
+- set prototype in JSON.parse; fixes #578 [`#578`](https://github.com/microsoft/devicescript/issues/578)
+- fix #536: tree-shaking of devsNative protos [`#536`](https://github.com/microsoft/devicescript/issues/536)
+- Add Buffer.rotate; see #596 [`d4d6bd1`](https://github.com/microsoft/devicescript/commit/d4d6bd1a63a6a7c54acb4c25241d73075cb1fd01)
+- document led hw support [`a7262f0`](https://github.com/microsoft/devicescript/commit/a7262f03c4261e6790f4ebafa9b076ab65ec6789)
+- no led show on simulator [`960c0d7`](https://github.com/microsoft/devicescript/commit/960c0d7861b7f732ba450e3828b7d8f372782e6b)
+
+#### [v2.14.15](https://github.com/microsoft/devicescript/compare/v2.14.14...v2.14.15)
+
+> 11 August 2023
+
+- show Leds on hardware [`cf4a0e3`](https://github.com/microsoft/devicescript/commit/cf4a0e374d6dc034f9d30596972b17ac1edc02ed)
+- fix samples and silly crash [`c29a06c`](https://github.com/microsoft/devicescript/commit/c29a06cb12e8b36caffa26d7ee9c561df6de094d)
+- add ledStripSend; v2.14.15 [`785314d`](https://github.com/microsoft/devicescript/commit/785314d1b4ec2e558ad500a97398deb8cf08f863)
+
+#### [v2.14.14](https://github.com/microsoft/devicescript/compare/v2.14.13...v2.14.14)
+
+> 5 August 2023
+
+- Document/implement LED operations [`#595`](https://github.com/microsoft/devicescript/pull/595)
+- better connect dialog for remote scenario [`ba05db1`](https://github.com/microsoft/devicescript/commit/ba05db13c5505afb8663bcd65bfa8a4179e7d918)
+- hide gateway by default [`09ab30b`](https://github.com/microsoft/devicescript/commit/09ab30b899dd037eda6e296b30928d0fefd6b60b)
+- add info link to nvm [`c816704`](https://github.com/microsoft/devicescript/commit/c816704ea0007abf98aa45710d971e7fb2794548)
+
 #### [v2.14.13](https://github.com/microsoft/devicescript/compare/v2.14.12...v2.14.13)
 
 > 28 July 2023

@@ -55,6 +55,25 @@ Array.prototype.findLastIndex = function (f) {
     return -1
 }
 
+Array.prototype.with = function <T>(index: number, value: T): T[] {
+    if (isNaN(index) || typeof index !== "number") {
+        throw new TypeError("Index must be a number")
+    }
+
+    if (index < -this.length || index >= this.length) {
+        throw new RangeError("Index out of bounds")
+    }
+
+    if (index < 0) {
+        index = this.length + index
+    }
+
+    const newArray = [...this]
+    newArray[index] = value
+
+    return newArray
+}
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length
@@ -167,6 +186,30 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
         initialValue = callbackfn(initialValue, this[i], i)
     }
     return initialValue
+}
+
+Array.prototype.sort = function <T>(compareFn?: (a: T, b: T) => number) {
+    if (!compareFn) {
+        compareFn = (a: any, b: any) => {
+            a = a + ""
+            b = b + ""
+            if (a < b) return -1
+            else if (a > b) return 1
+            else return 0
+        }
+    }
+
+    for (let i = 1; i < this.length; i++) {
+        const current = this[i]
+        let j = i - 1
+        while (j >= 0 && compareFn(this[j], current) > 0) {
+            this[j + 1] = this[j]
+            j--
+        }
+        this[j + 1] = current
+    }
+
+    return this
 }
 
 Buffer.prototype.set = function (other: Buffer, trgOff?: number) {

@@ -146,6 +146,17 @@ void fun2_DeviceScript__serverSend(devs_ctx_t *ctx) {
     if (pkt == NULL)
         return;
 
+    if (service_idx == 0x100) {
+        static uint8_t event_cnt;
+        ++event_cnt;
+        if ((pkt->service_command & ~JD_CMD_EVENT_CODE_MASK) != JD_CMD_EVENT_MASK)
+            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_EVENT, devs_arg(ctx, 1));
+        else
+            pkt->service_command |= (event_cnt & JD_CMD_EVENT_COUNTER_MASK)
+                                    << JD_CMD_EVENT_COUNTER_SHIFT;
+        return;
+    }
+
     if (service_idx > 0x30) {
         devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_SERVICEINDEX);
         return;

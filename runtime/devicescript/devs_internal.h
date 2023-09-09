@@ -383,3 +383,13 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
 void devs_track_exception(devs_ctx_t *ctx);
 
 #define DEVS_CHECK_CTX_FREE(ctx) JD_ASSERT(!devs_in_vm_loop(ctx))
+
+#ifndef JD_LED_STRIP
+#define JD_LED_STRIP 0
+#endif
+
+// external APIs
+#if JD_LED_STRIP
+int devs_led_strip_send(devs_ctx_t *ctx, uint8_t pin, const uint8_t *data, unsigned size,
+                        cb_t donefn);
+#endif

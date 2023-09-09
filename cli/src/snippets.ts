@@ -11,6 +11,7 @@ export interface SnippetsOptions {
 }
 
 const snipFolder = "devs/snippets"
+const MAX_SNIPPETS_PER_FILE = 30
 
 export async function snippets(options: SnippetsOptions) {
     const files = await glob(options.include, {
@@ -55,7 +56,7 @@ export async function snippets(options: SnippetsOptions) {
             await writeFile(fullname, snip)
             imports += `import "./${mod}"\n`
             numsnip++
-            if (numsnip % 100 == 0) {
+            if (numsnip % MAX_SNIPPETS_PER_FILE == 0) {
                 allImports.push(imports)
                 imports = ""
             }
