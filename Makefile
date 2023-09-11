@@ -73,7 +73,7 @@ bump:
 	node scripts/bump.mjs
 
 release:
-	yarn bumprelease
+	node scripts/bump.mjs --cloud
 
 gdb gdb-dap gd:
 	lldb runtime/built/jdcli -- -n -X 8082
