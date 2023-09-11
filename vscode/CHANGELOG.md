@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.1](https://github.com/microsoft/devicescript/compare/v2.15.0...v2.15.1)
+
+> 14 August 2023
+
+- Array 'With' method implementation [`#605`](https://github.com/microsoft/devicescript/pull/605)
+- fix for https://github.com/microsoft/devicescript/issues/604 [`43d7869`](https://github.com/microsoft/devicescript/commit/43d78699e2bf05e92674979d5115670de9b2c136)
+- fix test suite chunking [`cf17631`](https://github.com/microsoft/devicescript/commit/cf17631685cc38841ef1d1be0ce7a757ead13230)
+- fixed docs link [`fa37857`](https://github.com/microsoft/devicescript/commit/fa3785781d9f75e73fd3f14f0b2be1a583f574fa)
+
 #### [v2.15.0](https://github.com/microsoft/devicescript/compare/v2.14.16...v2.15.0)
 
 > 14 August 2023

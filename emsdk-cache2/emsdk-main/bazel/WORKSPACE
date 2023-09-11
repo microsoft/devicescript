@@ -1,0 +1,13 @@
+workspace(name = "emsdk")
+
+load(":deps.bzl", "deps")
+
+deps()
+
+load(":emscripten_deps.bzl", "emscripten_deps")
+
+emscripten_deps()
+
+load(":toolchains.bzl", "register_emscripten_toolchains")
+
+register_emscripten_toolchains()
