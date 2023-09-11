@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.2](https://github.com/microsoft/devicescript/compare/v2.15.1...v2.15.2)
+
+> 11 September 2023
+
+- Number.isInteger implementation [`#608`](https://github.com/microsoft/devicescript/pull/608)
+- pixelBuffer -&gt; PixelBuffer.alloc [`#609`](https://github.com/microsoft/devicescript/pull/609)
+- generate back link to device page in dsboard jsdocs [`8b97b87`](https://github.com/microsoft/devicescript/commit/8b97b871b9004b74a1840993f34d5e0c45e61282)
+- added devkicc + ssd1306 sample [`64ecea6`](https://github.com/microsoft/devicescript/commit/64ecea623d2824c2278a4b5d2dcd1c77102021c9)
+- rename event worker to avoid confusion with UART [`fc94f8a`](https://github.com/microsoft/devicescript/commit/fc94f8a96b9a18ba221c2d578e8845bf1ed083da)
+
 #### [v2.15.1](https://github.com/microsoft/devicescript/compare/v2.15.0...v2.15.1)
 
 > 14 August 2023
