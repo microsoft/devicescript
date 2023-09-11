@@ -13,7 +13,7 @@ on:
 jobs:
     build:
         env:
-            EM_VERSION: 3.1.30
+            EM_VERSION: 3.1.45
             EM_CACHE_FOLDER: "emsdk-cache"
 
         runs-on: ubuntu-latest
@@ -31,18 +31,13 @@ jobs:
                   key: ${{env.EM_VERSION}}-${{ runner.os }}
             - uses: actions/setup-node@v3
               with:
-                  node-version: "14.18.2"
+                  node-version: "16"
                   cache: yarn
                   registry-url: 'https://registry.npmjs.org'
             - uses: mymindstorm/setup-emsdk@v12
               with:
                   version: ${{env.EM_VERSION}}
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: "16"
-                  cache: yarn
-                  registry-url: 'https://registry.npmjs.org'
             - run: yarn install --frozen-lockfile
             - name: regenerate bytecode files (if needed)
               run: make bytecode-gen-ci
