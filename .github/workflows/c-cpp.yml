@@ -38,6 +38,12 @@ jobs:
               with:
                   version: ${{env.EM_VERSION}}
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+            # setup node again, in case emsdk messed it up
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+                  cache: yarn
+                  registry-url: 'https://registry.npmjs.org'
             - run: yarn install --frozen-lockfile
             - name: regenerate bytecode files (if needed)
               run: make bytecode-gen-ci
