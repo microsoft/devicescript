@@ -87,8 +87,8 @@
         "boot": "0,45,46",
         "debug": "39-42",
         "flash": "26-32,35-37",
-        "input": "io,46",
-        "io": "0-18,21,33-45,47,48",
+        "input": "io",
+        "io": "0-18,21,33-48",
         "usb": "19,20"
       },
       "repoUrl": "https://github.com/microsoft/devicescript-esp32"
