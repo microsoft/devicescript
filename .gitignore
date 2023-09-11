@@ -21,3 +21,4 @@ __pycache__
 devs/snippets
 local.env
 .env.local
+emsdk-cache*
