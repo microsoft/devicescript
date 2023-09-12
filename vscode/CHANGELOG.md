@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.3](https://github.com/microsoft/devicescript/compare/v2.15.2...v2.15.3)
+
+> 11 September 2023
+
+- remove emsdk cache files [`dab4af5`](https://github.com/microsoft/devicescript/commit/dab4af55392a52bd1a88325d0a76c3dbd3292818)
+- don't release through yarn [`2f19a3a`](https://github.com/microsoft/devicescript/commit/2f19a3a8300aed6e31d3ceb18be811417f22d41b)
+
 #### [v2.15.2](https://github.com/microsoft/devicescript/compare/v2.15.1...v2.15.2)
 
 > 11 September 2023
