@@ -121,6 +121,46 @@
     "productId": "0x3ff6ffeb",
     "url": "https://www.espressif.com/en/products/socs/esp32"
   },
+  "esp32_c3fh4_rgb": {
+    "$description": "A tiny ESP32-C3 board with 5x5 LED array.",
+    "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32_c3fh4_rgb-0x0.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
+    "archId": "esp32c3",
+    "devName": "ESP32-C3FH4-RGB",
+    "i2c": {
+      "$connector": "Qwiic",
+      "pinSCL": 1,
+      "pinSDA": 0
+    },
+    "id": "esp32_c3fh4_rgb",
+    "led": {
+      "isMono": true,
+      "pin": 10
+    },
+    "log": {
+      "pinTX": 21
+    },
+    "pins": {
+      "LEDS": 8,
+      "P2": 2,
+      "P20": 20,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7
+    },
+    "productId": "0x3a90885c",
+    "url": "https://github.com/01Space/ESP32-C3FH4-RGB",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/01space/esp32c3fh4rgbv10.catalog.jpg"
+  },
   "esp32_devkit_c": {
     "$description": "There are currently issues with serial chip on these, best avoid. ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",

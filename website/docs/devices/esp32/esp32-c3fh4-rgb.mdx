@@ -1,0 +1,113 @@
+---
+description: ESP32-C3FH4-RGB
+---
+# ESP32-C3FH4-RGB
+
+
+A tiny ESP32-C3 board with 5x5 LED array.
+
+
+![ESP32-C3FH4-RGB picture](https://microsoft.github.io/jacdac-docs/images/devices/01space/esp32c3fh4rgbv10.catalog.jpg)
+
+## Features
+
+-  I2C on 0/1 using Qwiic connector
+-  LED on pin 10  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin 21 at 115200 8N1
+-  Service: buttonBOOT (button)
+
+## Stores
+
+-  [https://github.com/01Space/ESP32-C3FH4-RGB](https://github.com/01Space/ESP32-C3FH4-RGB)
+-  [https://usa.banggood.com/ESP32-C3-Development-Board-RISC-V-WiFi-Bluetooth-IoT-Development-Board-Compatible-with-Python-p-1914005.html?imageAb=2&akmClientCountry=America&a=1694552315.7453&akmClientCountry=America&cur_warehouse=CN](https://usa.banggood.com/ESP32-C3-Development-Board-RISC-V-WiFi-Bluetooth-IoT-Development-Board-Compatible-with-Python-p-1914005.html?imageAb=2&akmClientCountry=America&a=1694552315.7453&akmClientCountry=America&cur_warehouse=CN)
+
+## Pins
+
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **LEDS** |  GPIO8 |  boot,  io |
+| **P2** |  GPIO2 |  analogIn,  boot,  io |
+| **P20** |  GPIO20 |  bootUart,  io |
+| **P3** |  GPIO3 |  analogIn,  io |
+| **P4** |  GPIO4 |  analogIn,  debug,  io |
+| **P5** |  GPIO5 |  debug,  io |
+| **P6** |  GPIO6 |  debug,  io |
+| **P7** |  GPIO7 |  debug,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **i2c.pinSCL** |  GPIO1 |  i2c.pinSCL,  analogIn,  io |
+| **i2c.pinSDA** |  GPIO0 |  i2c.pinSDA,  analogIn,  io |
+| **led.pin** |  GPIO10 |  led.pin,  io |
+| **log.pinTX** |  GPIO21 |  log.pinTX,  bootUart,  io |
+
+
+
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "ESP32-C3FH4-RGB".
+
+```ts
+import { pins, board } from "@dsboard/esp32_c3fh4_rgb"
+```
+
+## Firmware update
+
+In Visual Studio Code,
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash --board esp32_c3fh4_rgb
+```
+
+
+- [Firmware](https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32_c3fh4_rgb-0x0.bin)
+
+## Configuration
+
+```json title="esp32_c3fh4_rgb.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32_c3fh4_rgb",
+    "devName": "ESP32-C3FH4-RGB",
+    "productId": "0x3a90885c",
+    "$description": "A tiny ESP32-C3 board with 5x5 LED array.",
+    "archId": "esp32c3",
+    "url": "https://github.com/01Space/ESP32-C3FH4-RGB",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
+    "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 1,
+        "pinSDA": 0
+    },
+    "led": {
+        "isMono": true,
+        "pin": 10
+    },
+    "log": {
+        "pinTX": 21
+    },
+    "pins": {
+        "LEDS": 8,
+        "P2": 2,
+        "P20": 20,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7
+    }
+}
+```
