@@ -45,6 +45,25 @@ The last comment block of each slide will be treated as slide notes. It will be 
 transition: fade-out
 ---
 
+# Typical Tiny IoT Programming
+
+All the joys of C/C++ (buffer overflows, memory mgmt., …)​
+
+- Low-level, concurrent, reactive programming​
+
+- Debugging​
+
+- printf() via serial port or gdb (but timings!)​
+
+- Working with hardware is awkward (temperature sensor in the freezer?!)​
+
+CI-testing hardware even more awkward
+
+---
+transition: fade-out
+---
+
+
 # What is Slidev?
 
 Slidev is a slides maker and presenter designed for developers, consist of the following features
@@ -418,11 +437,6 @@ database "MySql" {
 </div>
 
 [Learn More](https://sli.dev/guide/syntax.html#diagrams)
-
----
-src: ./pages/multiple-entries.md
-hide: false
----
 
 ---
 layout: center
