@@ -50,3 +50,10 @@ and needs to be added as `devDependency`.
 
 -   click **Install** to install @devicescript/cli
 -   try running `npm update` or `yarn update` to fix the installation
+
+## missing "devicescript" section {#missing-devicescript-section}
+
+Importing a npm package designed for node.js or the browser is not yet supported. The reason is that it would most likely not work
+as the DeviceScript runtime environment is radically different from the browser or even node.js.
+
+Instead you should try to import packages [specifically built for devicescript](/developer/packages/custom).
