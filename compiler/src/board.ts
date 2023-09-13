@@ -174,6 +174,7 @@ select "${devName}".
         `\`\`\`ts
 import { pins, board } from "@dsboard/${devId}"
 \`\`\``,
+        `\n{@import optional ./${id}-examples.mdp}`,
         `\n## Firmware update
 
 In Visual Studio Code,

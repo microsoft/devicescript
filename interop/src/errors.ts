@@ -6,5 +6,5 @@ export const errors: Record<string, string> = {
   "I2C device not found or malfunctioning": "i2c-device-not-found-or-malfunctioning",
   "Unable to locate Node.JS v16+.": "terminal-nodemissing",
   "Install @devicescript/cli package": "terminal-notinstalled",
-  'missing "devicescript" section': "missing-devicescript-section"
+  "missing \"devicescript\" section": "missing-devicescript-section"
 };
