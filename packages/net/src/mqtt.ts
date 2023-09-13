@@ -546,7 +546,7 @@ export class MQTTClient {
             if (cnt++ < 100 && this.readyState === MQTTState.Sending)
                 await delay(20)
             else {
-                this.log("drop pkt")
+                this.log("drop pk, still sending previous message")
                 return false
             }
         }
