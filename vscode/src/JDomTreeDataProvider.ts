@@ -69,6 +69,8 @@ import {
     SRV_SETTINGS,
     SettingsClient,
     bufferToString,
+    toFullHex,
+    ControlAnnounceFlags,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -423,6 +425,11 @@ ${spec.description}`,
                     })
             )
 
+        const statusLight = new JDomStatusLightTreeItem(
+            this,
+            device,
+            this.props
+        )
         const powers = device.services({ serviceClass: SRV_POWER })
         const roleManagers = device.services({ serviceClass: SRV_ROLE_MANAGER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
@@ -451,6 +458,7 @@ ${spec.description}`,
                 ...roleManagers.map(
                     srv => new JDomRoleManagerTreeItem(this, srv, props)
                 ),
+                statusLight,
                 new JDomServicesTreeItem(this),
             ].filter(e => !!e)
         )
@@ -875,6 +883,48 @@ class JDomCustomTreeItem extends JDomTreeItem {
             .forEach(register =>
                 this.subscribe(register, REPORT_UPDATE, this.handleChange)
             )
+    }
+}
+
+class JDomStatusLightTreeItem extends JDomTreeItem {
+    constructor(parent: JDomTreeItem, device: JDDevice, props: TreeItemProps) {
+        super(parent, device, {
+            ...props,
+            label: "status light",
+            idPrefix: props.idPrefix + "statuslight_",
+            contextValue: props.idPrefix + "statuslight",
+            iconPath: "lightbulb",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
+    }
+
+    get device() {
+        return this.node as JDDevice
+    }
+
+    protected update(): boolean {
+        const { device } = this
+        if (!device) return false
+        const { statusLight, statusLightFlags } = device
+        const oldDescription = this.description
+        if (!statusLight) {
+            this.description = "none"
+            this.tooltip = toMarkdownString(
+                `Status light is not present or not supported.`
+            )
+        } else {
+            const flags: any = {
+                [ControlAnnounceFlags.StatusLightNone]: "none",
+                [ControlAnnounceFlags.StatusLightMono]: "monochrome",
+                [ControlAnnounceFlags.StatusLightRgbNoFade]: "rgb, no fade",
+                [ControlAnnounceFlags.StatusLightRgbFade]: "rgb, fade",
+            }
+            this.description = toFullHex([statusLight.color])
+            this.tooltip = toMarkdownString(`
+- flags: ${flags[statusLightFlags] || "unknown"}
+- color: ${this.description}`)
+        }
+        return oldDescription !== this.description
     }
 }
 
