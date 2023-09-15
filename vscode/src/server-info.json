@@ -320,18 +320,6 @@
             "snippet": "const { temperature, humidity, pressure, airQualityIndex } = await startBME680()\n"
         },
         {
-            "label": "Hall sensor",
-            "detail": "Starts an analog Hall sensor\r",
-            "startName": "startHallSensor",
-            "classIdentifiers": [
-                522667846
-            ],
-            "imports": {
-                "startHallSensor": "@devicescript/drivers"
-            },
-            "snippet": "const hallsensor = startHallSensor()\n"
-        },
-        {
             "label": "Pico Bricks for Raspberry Pi Pico",
             "detail": "Drivers for the {@link https://shop.robotistan.com/products/pico-bricks | Pico Bricks } shield for Raspberry Pi Pico ({@link https://github.com/Robotistan/PicoBricks/tree/main/Documents | datasheets}).\r",
             "startName": "PicoBricks",

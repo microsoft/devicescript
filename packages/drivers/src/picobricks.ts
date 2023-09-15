@@ -67,8 +67,9 @@ export class PicoBricks {
      * @returns
      */
     startMotor(id?: "MOTOR1" | "MOTOR2") {
+        const pin1 = id === "MOTOR2" ? pins.GP21 : pins.GP22
         return startMotor({
-            pin1: id === "MOTOR2" ? pins.GP21 : pins.GP22,
+            pin1,
         })
     }
 
@@ -78,8 +79,9 @@ export class PicoBricks {
      * @returns
      */
     startServo(id?: "SV1" | "SV2") {
+        const pin = id === "SV2" ? pins.GP22 : pins.GP21
         return startServo({
-            pin: id === "SV2" ? pins.GP22 : pins.GP21,
+            pin,
         })
     }
 
