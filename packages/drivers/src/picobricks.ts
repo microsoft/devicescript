@@ -16,6 +16,7 @@ import { SSD1306Driver } from "@devicescript/drivers"
 /**
  * Drivers for the {@link https://shop.robotistan.com/products/pico-bricks | Pico Bricks } shield for Raspberry Pi Pico ({@link https://github.com/Robotistan/PicoBricks/tree/main/Documents | datasheets}).
  *
+ * @devsPart Pico Bricks for Raspberry Pi Pico
  * @devsWhenUsed
  */
 export class PicoBricks {

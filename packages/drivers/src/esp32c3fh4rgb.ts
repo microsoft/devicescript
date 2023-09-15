@@ -2,7 +2,6 @@ import { pins, board } from "@dsboard/esp32_c3fh4_rgb"
 import { Led, LedStripLightType, LedVariant } from "@devicescript/core"
 import { startLed } from "@devicescript/drivers"
 import { configureHardware } from "@devicescript/servers"
-import { ServerOptions } from "@devicescript/server"
 
 /**
  * Driver for the ESP32-C3FH4-RGB board
@@ -47,7 +46,7 @@ export class Esp32C3FH4RGB {
     /**
      * Start built-in ButtonBOOT
      */
-    async startButtonBOOT(roleName?: string) {
+    startButtonBOOT(roleName?: string) {
         return board.startButtonBOOT(roleName)
     }
 }

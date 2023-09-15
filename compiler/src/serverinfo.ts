@@ -33,11 +33,42 @@ export function serverInfo(host: Host) {
                 stmt.name.text.startsWith("start")
             ) {
                 customServer(stmt)
+            } else if (
+                ts.isClassDeclaration(stmt) &&
+                ts.isIdentifier(stmt.name)
+            ) {
+                customDriver(stmt)
             }
         }
     }
 
     return info
+
+    function extractDetails(stmt: ts.Statement) {
+        return stmt
+            .getFullText()
+            .replace(/\s*\/\*\*\s+(\*\s*)*/, "")
+            .replace(/\n[^]*/, "")
+    }
+
+    function customDriver(stmt: ts.ClassDeclaration) {
+        const sym = checker.getSymbolAtLocation(stmt.name)
+        const tags = getSymTags(sym, "")
+        if (!tags[TSDOC_PART]) return
+
+        const snippet = `const shield = new ${sym.name}()\n`
+        const detail = extractDetails(stmt)
+
+        info.servers.push({
+            label: tags[TSDOC_PART] ?? sym.name.slice("start".length),
+            detail,
+            startName: sym.name,
+            imports: {
+                [sym.name]: "@devicescript/drivers",
+            },
+            snippet,
+        })
+    }
 
     function customServer(stmt: ts.FunctionDeclaration) {
         const sym = checker.getSymbolAtLocation(stmt.name)
@@ -57,10 +88,7 @@ export function serverInfo(host: Host) {
                 return spec
             })
 
-        const detail = stmt
-            .getFullText()
-            .replace(/\s*\/\*\*\s+(\*\s*)*/, "")
-            .replace(/\n[^]*/, "")
+        const detail = extractDetails(stmt)
 
         let tp = checker
             .getTypeAtLocation(stmt.name)

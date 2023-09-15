@@ -8,8 +8,9 @@ import { pins } from "@dsboard/seeed_xiao_esp32c3"
 
 /**
  *
- * Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeeduino XIAO Expansion Board } for Raspberry Pi Pico.
+ * Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board } for Raspberry Pi Pico.
  *
+ * @devsPart Seeed Studio XIAO Expansion Board
  * @devsWhenUsed
  */
 export class XiaoExpansionBoard {

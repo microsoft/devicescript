@@ -73,6 +73,18 @@
             "snippet": "const motion = startMotion({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Motor",
+            "detail": "A DC motor.",
+            "startName": "startMotor",
+            "classIdentifiers": [
+                385895640
+            ],
+            "imports": {
+                "startMotor": "@devicescript/servers"
+            },
+            "snippet": "const motor = startMotor({\n    pin1: pins.${1},\n})\n"
+        },
+        {
             "label": "Light bulb",
             "detail": "A light bulb controller.",
             "startName": "startLightBulb",
@@ -229,8 +241,20 @@
             "snippet": "const hidMouse = startHidMouse({\n})\n"
         },
         {
+            "label": "Gamepad",
+            "detail": "A two axis directional gamepad with optional buttons.",
+            "startName": "startGamepad",
+            "classIdentifiers": [
+                277836886
+            ],
+            "imports": {
+                "startGamepad": "@devicescript/servers"
+            },
+            "snippet": "const gamepad = startGamepad({\n})\n"
+        },
+        {
             "label": "Sensirion SHTC3",
-            "detail": "Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.",
+            "detail": "Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.\r",
             "startName": "startSHTC3",
             "classIdentifiers": [
                 337754823,
@@ -243,7 +267,7 @@
         },
         {
             "label": "Sensirion SHT30",
-            "detail": "Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)",
+            "detail": "Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)\r",
             "startName": "startSHT30",
             "classIdentifiers": [
                 337754823,
@@ -256,7 +280,7 @@
         },
         {
             "label": "AHT20",
-            "detail": "Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.",
+            "detail": "Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.\r",
             "startName": "startAHT20",
             "classIdentifiers": [
                 337754823,
@@ -269,7 +293,7 @@
         },
         {
             "label": "LITEON LTR-390UV-01",
-            "detail": "Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.",
+            "detail": "Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.\r",
             "startName": "startLTR390",
             "classIdentifiers": [
                 527306128,
@@ -278,11 +302,11 @@
             "imports": {
                 "startLTR390": "@devicescript/drivers"
             },
-            "snippet": "const { uvindex, illuminance } = await startLTR390()\n"
+            "snippet": "const { uvIndex, illuminance } = await startLTR390()\n"
         },
         {
             "label": "Bosch BME68",
-            "detail": "Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x77`.",
+            "detail": "Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x76` (default) or `0x77`.\r",
             "startName": "startBME680",
             "classIdentifiers": [
                 337754823,
@@ -294,6 +318,24 @@
                 "startBME680": "@devicescript/drivers"
             },
             "snippet": "const { temperature, humidity, pressure, airQualityIndex } = await startBME680()\n"
+        },
+        {
+            "label": "Pico Bricks for Raspberry Pi Pico",
+            "detail": "Drivers for the {@link https://shop.robotistan.com/products/pico-bricks | Pico Bricks } shield for Raspberry Pi Pico ({@link https://github.com/Robotistan/PicoBricks/tree/main/Documents | datasheets}).\r",
+            "startName": "PicoBricks",
+            "imports": {
+                "PicoBricks": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new PicoBricks()\n"
+        },
+        {
+            "label": "Seeed Studio XIAO Expansion Board",
+            "detail": "Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board } for Raspberry Pi Pico.\r",
+            "startName": "XiaoExpansionBoard",
+            "imports": {
+                "XiaoExpansionBoard": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new XiaoExpansionBoard()\n"
         }
     ]
 }
