@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.4](https://github.com/microsoft/devicescript/compare/v2.15.3...v2.15.4)
+
+> 12 September 2023
+
+- update boards (c3fh4-rgb) [`47e9b87`](https://github.com/microsoft/devicescript/commit/47e9b87048fd21760c961827cb4a5722596a3859)
+- updated jacdac specs [`cca3c5c`](https://github.com/microsoft/devicescript/commit/cca3c5cde7b749042b6c68e78b91e330f6d90cae)
+
 #### [v2.15.3](https://github.com/microsoft/devicescript/compare/v2.15.2...v2.15.3)
 
 > 11 September 2023
