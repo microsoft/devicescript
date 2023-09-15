@@ -16,6 +16,7 @@ export * from "./uc8151"
 export * from "./trafficlight"
 export * from "./ledserver"
 export * from "./accelerometer"
+export * from "./hall"
 
 export * from "./esp32c3fh4rgb"
 export * from "./picobricks"
