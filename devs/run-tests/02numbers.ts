@@ -242,10 +242,16 @@ function testEnumToString() {
     assert(enumTest + "" === "1", "enum tostring in concatenation")
 }
 
+function testToFixed() {
+    const numObj = 12345.6789;
+
+    assert(numObj.toFixed(5) === '12346') // '12346'; rounding, no fractional part
+}
+
 testComma()
 testNums()
 testNaN()
 testUnaryPlus()
 testEnumToString()
-
+testToFixed()
 

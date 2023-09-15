@@ -197,6 +197,19 @@ interface StringConstructor {
 declare var String: StringConstructor
 
 interface Boolean {}
+
+interface NumberConstructor {
+    (number: Number): number
+    readonly prototype: Number
+}
+
+declare var Number: NumberConstructor
+
+interface Number {
+
+    // todo
+    toFixed(digits?: number): string
+}
 interface Number {}
 
 interface RegExp {}
