@@ -24,6 +24,10 @@ export class XiaoExpansionBoard {
         })
     }
 
+    /**
+     * Starts a server for the OLED display.
+     * @returns 
+     */
     async startDisplay() {
         const disp = new SSD1306Driver({
             devAddr: 0x3c,
