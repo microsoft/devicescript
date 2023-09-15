@@ -18,5 +18,7 @@ export * from "./ledserver"
 export * from "./accelerometer"
 
 export * from "./esp32c3fh4rgb"
+export * from "./picobricks"
+export * from "./xiaoexpansionboard"
 
 configureHardware({ scanI2C: false })

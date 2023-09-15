@@ -6,6 +6,8 @@ import { ServerOptions } from "@devicescript/server"
 
 /**
  * Driver for the ESP32-C3FH4-RGB board
+ *
+ * @devsWhenUsed
  */
 export class Esp32C3FH4RGB {
     constructor() {
