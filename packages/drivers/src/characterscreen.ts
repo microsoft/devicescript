@@ -152,5 +152,5 @@ export async function startCharacterScreen(
         ...options,
     })
 
-    return new CharacterScreen(startServer(server))
+    return new CharacterScreen(startServer(server, options))
 }

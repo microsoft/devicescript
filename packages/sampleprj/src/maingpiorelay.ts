@@ -37,7 +37,7 @@ export function startRelay(
     options?: ServerOptions & { variant?: RelayVariant }
 ): Relay {
     const server = new GPIORelayServer(pin, options)
-    return new Relay(startServer(server))
+    return new Relay(startServer(server, options))
 }
 
 const p0 = ds.gpio(0)

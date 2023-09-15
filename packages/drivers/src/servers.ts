@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { SensorServer, startServer } from "@devicescript/server"
+import { SensorServer, ServerOptions, startServer } from "@devicescript/server"
 
 class SimpleSensorServer extends SensorServer {
     errorFraction: number
@@ -68,7 +68,9 @@ function simRole(pref: string) {
     }
 }
 
-export function startSimpleServer(options: SimpleSensorOptions) {
+export function startSimpleServer(
+    options: SimpleSensorOptions & ServerOptions
+) {
     if (ds.isSimulator() && !options.simOk) {
         if (!simRoles) simRoles = {}
         let name = options.name
@@ -91,7 +93,7 @@ export function startSimpleServer(options: SimpleSensorOptions) {
             num++
         }
     }
-    return startServer(new SimpleSensorServer(options), options.name)
+    return startServer(new SimpleSensorServer(options), options)
 }
 
 export function startTemperature(options: SimpleSensorBaseOptions) {

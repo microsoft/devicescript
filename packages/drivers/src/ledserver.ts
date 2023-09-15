@@ -256,7 +256,7 @@ export async function startLed(
 ): Promise<ds.Led> {
     const { length } = options
     const server = new LedServer(options)
-    const client = new ds.Led(startServer(server))
+    const client = new ds.Led(startServer(server, options))
 
     ;(client as any)._buffer = server.buffer
     client.show = async function () {

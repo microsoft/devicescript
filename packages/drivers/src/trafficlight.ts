@@ -54,5 +54,5 @@ class TrafficLightServer extends Server implements TrafficLightServerSpec {
  */
 export async function startTrafficLight(options: TrafficLightOptions & ServerOptions) {
     const server = new TrafficLightServer(options)
-    return new ds.TrafficLight(startServer(server))
+    return new ds.TrafficLight(startServer(server, options))
 }

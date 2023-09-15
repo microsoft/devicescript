@@ -319,7 +319,7 @@ export async function startAccelerometer(
     options: AccelerometerOptions & SensorServerOptions
 ): Promise<ds.Accelerometer> {
     const server = new AccelerometerServer(driver, options)
-    const client = new ds.Accelerometer(startServer(server))
+    const client = new ds.Accelerometer(startServer(server, options))
     return client
 }
 
@@ -331,10 +331,10 @@ export async function startIMU(
     options: AccelerometerOptions & GyroscopeOptions & SensorServerOptions
 ) {
     const accelerometer = new ds.Accelerometer(
-        startServer(new AccelerometerServer(driver, options))
+        startServer(new AccelerometerServer(driver, options), options)
     )
     const gyroscope = new ds.Accelerometer(
-        startServer(new GyroscopeServer(driver, options))
+        startServer(new GyroscopeServer(driver, options), options)
     )
     return { accelerometer, gyroscope }
 }

@@ -17,4 +17,6 @@ export * from "./trafficlight"
 export * from "./ledserver"
 export * from "./accelerometer"
 
+export * from "./esp32c3fh4rgb"
+
 configureHardware({ scanI2C: false })

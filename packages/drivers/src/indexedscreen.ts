@@ -7,7 +7,7 @@ import {
 } from "@devicescript/core"
 import { Display, Image, Palette } from "@devicescript/graphics"
 
-export interface IndexedScreenOptions { }
+export interface IndexedScreenOptions {}
 
 class IndexedScreenServer extends Server implements IndexedScreenServerSpec {
     readonly display: Display
@@ -104,7 +104,7 @@ export async function startIndexedScreen(
         ...options,
     })
     // start client that expose it on the bus
-    const client = new IndexedScreen(startServer(server))
+    const client = new IndexedScreen(startServer(server, options))
 
     return {
         palette: display.palette,

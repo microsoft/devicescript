@@ -141,5 +141,5 @@ export async function startDotMatrix(
         ...options,
     })
 
-    return new DotMatrix(startServer(server))
+    return new DotMatrix(startServer(server, options))
 }
