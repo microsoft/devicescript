@@ -9,7 +9,7 @@ The `startPotentiometer` starts a Hall (analog) sensor server and returns a [cli
 
 ```ts
 import { gpio } from "@devicescript/core"
-import { startPotentiometer } from "@devicescript/drivers"
+import { startPotentiometer } from "@devicescript/servers"
 
 const sensor = startPotentiometer({
     pin: ds.gpio(3),
