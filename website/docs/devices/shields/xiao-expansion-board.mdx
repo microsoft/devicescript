@@ -7,7 +7,6 @@ title: Xiao ESP32-C3 Expansion Board
 -   Device: [Seeed Xiao ESP32-C3](/devices/esp32/seeed-xiao-esp32c3) or [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
 -   [Home](https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/)
 
-
 ![Photograph of shield](/img/shields/xiao-expansion-board.jpg)
 
 ## DeviceScript import
@@ -21,4 +20,8 @@ select "Seeed Xiao ESP32-C3 Expansion board".
 ```ts
 import { XiaoExpansionBoard } from "@devicescript/drivers"
 const shield = new XiaoExpansionBoard()
+
+const display = await shield.startDisplay()
+const buzzer = await shield.startBuzzer()
+const button = await shield.startButton()
 ```
