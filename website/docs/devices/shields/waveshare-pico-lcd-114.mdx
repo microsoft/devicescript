@@ -1,0 +1,26 @@
+---
+title: WaveShare Pico-LCD
+---
+
+# WaveShare Pico-LCD
+
+-   Device: [Raspberry Pi Pico W](/devices/rp2040/pico-w)
+-   [Home](https://www.waveshare.com/pico-lcd-1.14.htm)
+
+![WaveShare Image](/img/shields/waveshare-pico-lcd-114.png)
+
+## DeviceScript import
+
+You must import `WaveSharePicoLCD114` to access the shield services.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and
+select "PicoBricks".
+
+```ts
+import { WaveSharePicoLCD114 } from "@devicescript/drivers"
+const shield = new WaveSharePicoLCD114()
+
+const gamepad = await shield.startGamepad()
+const display = await shield.startDisplay()
+```

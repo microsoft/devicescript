@@ -20,5 +20,6 @@ export * from "./accelerometer"
 export * from "./esp32c3fh4rgb"
 export * from "./picobricks"
 export * from "./xiaoexpansionboard"
+export * from "./wavesharepicolcd114"
 
 configureHardware({ scanI2C: false })

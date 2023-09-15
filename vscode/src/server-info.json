@@ -336,6 +336,15 @@
                 "XiaoExpansionBoard": "@devicescript/drivers"
             },
             "snippet": "const shield = new XiaoExpansionBoard()\n"
+        },
+        {
+            "label": "WaveShare Pico LCD114 for Raspberry Pi Pico",
+            "detail": "Driver for WaveShare Pico-LCD-1.14 inch.\r",
+            "startName": "WaveSharePicoLCD114",
+            "imports": {
+                "WaveSharePicoLCD114": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new WaveSharePicoLCD114()\n"
         }
     ]
 }
