@@ -10,5 +10,5 @@ import { PotentiometerConfig, startPotentiometer } from "@devicescript/servers"
  */
 export function startHallSensor(cfg: PotentiometerConfig) {
     // todo Hall variant
-    return startPotentiometer({ ...cfg })
+    return startPotentiometer(cfg)
 }
