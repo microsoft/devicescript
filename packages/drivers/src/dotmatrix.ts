@@ -30,7 +30,7 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
             display: Display
             columns: number
             rows: number
-        } & BitMatrixOptions &
+        } & DotMatrixOptions &
             ServerOptions
     ) {
         super(ds.DotMatrix.spec, options)
@@ -123,7 +123,7 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
     }
 }
 
-export interface BitMatrixOptions {
+export interface DotMatrixOptions {
     columns: number
     rows: number
     cellWidth?: number
@@ -134,7 +134,7 @@ export interface BitMatrixOptions {
  */
 export async function startDotMatrix(
     display: Display,
-    options: BitMatrixOptions & ServerOptions
+    options: DotMatrixOptions & ServerOptions
 ) {
     const server = new DotMatrixServer({
         display,
