@@ -1,0 +1,21 @@
+---
+title: Xiao ESP32-C3 Expansion Board
+---
+
+import xiaoUrl from "@site/static/img/shields/xiao-expansion-board.jpg"
+
+# Seeed Xiao ESP32-C3 Expansion board
+
+<img src={xiaoUrl} alt="Photograph of shield" style={{ width: "20rem" }} />
+
+-   Device: [Seeed Xiao ESP32-C3](/devices/seeed-xiao-esp32c3) or [Adafruit QT Py C3](/devices/adafruit-qt-py-c3)
+-   [Home](https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/)
+
+## Getting started
+
+Import the `XiaoExpansionBoard` to acces the services supported on the shield.
+
+```ts
+import { XiaoExpansionBoard } from "@devicescript/drivers"
+const shield = new XiaoExpansionBoard()
+```
