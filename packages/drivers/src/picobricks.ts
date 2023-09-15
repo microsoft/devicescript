@@ -63,25 +63,44 @@ export class PicoBricks {
     }
 
     /**
-     * Starts one of the motors
+     * Starts a motor on MOTOR1
      * @returns
      */
-    startMotor(id?: "MOTOR1" | "MOTOR2") {
-        const pin1 = id === "MOTOR2" ? pins.GP21 : pins.GP22
+    startMotor1() {
         return startMotor({
-            pin1,
+            pin1: pins.GP21,
         })
     }
 
     /**
-     * Starts one of the two servos
+     * Starts a motor on MOTOR2
+     * @returns
+     */
+    startMotor2() {
+        return startMotor({
+            pin1: pins.GP22,
+        })
+    }
+
+    /**
+     * Starts a servo on SV1
      * @param id
      * @returns
      */
-    startServo(id?: "SV1" | "SV2") {
-        const pin = id === "SV2" ? pins.GP22 : pins.GP21
+    startServo1() {
         return startServo({
-            pin,
+            pin: pins.GP21,
+        })
+    }
+
+    /**
+     * Starts a servo on SV2
+     * @param id
+     * @returns
+     */
+    startServo2() {
+        return startServo({
+            pin: pins.GP22,
         })
     }
 
