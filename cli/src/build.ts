@@ -501,7 +501,7 @@ export async function saveLibFiles(
     const customServices =
         buildConfig.services.filter(srv => srv.catalog !== undefined) || []
     // generate source files
-    for (const lang of ["ts", "c"]) {
+    await Promise.all(["ts", "c"].map(async(lang) => {
         const converter = converters()[lang]
         let constants = ""
         for (const srv of customServices) {
@@ -509,10 +509,10 @@ export async function saveLibFiles(
         }
         const dir = join(pref, GENDIR, lang)
         await mkdirp(dir)
-        await writeFile(join(dir, `constants.${lang}`), constants, {
+        return writeFile(join(dir, `constants.${lang}`), constants, {
             encoding: "utf-8",
         })
-    }
+    }))
     // json specs
     {
         const dir = join(pref, GENDIR)
@@ -528,13 +528,13 @@ export async function saveLibFiles(
 }
 
 export async function buildAll(options: BuildOptions) {
-    for (const file of await glob("src/main*.ts")) {
+    await Promise.all((await glob("src/main*.ts")).map((file) => {
         log(`build ${file}`)
-        await build(file, {
+        return build(file, {
             ...options,
             outDir: BINDIR + "/" + file.slice(8, -3),
         })
-    }
+    }))
 }
 
 export async function build(file: string, options: BuildOptions) {
