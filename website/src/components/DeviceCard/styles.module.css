@@ -1,5 +1,4 @@
 .device__photo {
-  border-radius: 0.5rem;
+  border-radius: 0;
   height: unset;
-  --ifm-avatar-photo-size: 10rem;
 }

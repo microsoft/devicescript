@@ -12,19 +12,18 @@ export default function DeviceCard(props: {
     const { image, imageAlt, description, title, href } = props
     const bhref = useBaseUrl(href)
     return (
-        <div className="avatar">
-            <a
+        <a href={bhref} className="avatar margin-vert--md">
+            <img
                 className={`avatar__photo-link avatar__photo avatar__photo--xl ${styles.device__photo}`}
-                href={bhref}
-            >
-                <img alt={imageAlt || `photograph of ${title}`} src={image} />
-            </a>
+                alt={imageAlt || `photograph of ${title}`}
+                src={image}
+            />
             <div className="avatar__intro">
                 <div className="avatar__name">{title}</div>
-                {description && (
+                {description ? (
                     <small className="avatar__subtitle">{description}</small>
-                )}
+                ) : null}
             </div>
-        </div>
+        </a>
     )
 }

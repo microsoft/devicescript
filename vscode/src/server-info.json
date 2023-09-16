@@ -345,6 +345,15 @@
                 "WaveSharePicoLCD114": "@devicescript/drivers"
             },
             "snippet": "const shield = new WaveSharePicoLCD114()\n"
+        },
+        {
+            "label": "Pimoroni Pico Badger",
+            "detail": "Support for Badger 2040 W (Pico W Aboard)",
+            "startName": "PimoroniBadger2040W",
+            "imports": {
+                "PimoroniBadger2040W": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new PimoroniBadger2040W()\n"
         }
     ]
 }

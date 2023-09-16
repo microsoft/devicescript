@@ -1,4 +1,3 @@
 
-- [![photograph of MSR Brain RP2040 59 v0.1](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/rp2040devicescript59v01.avatar.jpg) MSR Brain RP2040 59 v0.1](/devices/rp2040/msr59)
-- [![photograph of Raspberry Pi Pico](https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picov00.avatar.jpg) Raspberry Pi Pico](/devices/rp2040/pico)
-- [![photograph of Raspberry Pi Pico W](https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picowv00.avatar.jpg) Raspberry Pi Pico W](/devices/rp2040/pico-w)
+<DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picov00.preview.jpg" href="/devices/rp2040/pico" title="Raspberry Pi Pico" description="RP2040 board from Raspberry Pi." />
+<DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picowv00.preview.jpg" href="/devices/rp2040/pico-w" title="Raspberry Pi Pico W" description="RP2040 board from Raspberry Pi with a WiFi chip." />
