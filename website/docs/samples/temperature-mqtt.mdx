@@ -1,17 +1,104 @@
 ---
 sidebar_position: 4.1
+description: Temperature logging to Adafruit.io using QT Py and SHCT3
 ---
 
 # Temperature + MQTT
 
 This sample uses an ESP32-C3 board [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
 and a [SHTC3 sensor](https://www.adafruit.com/product/4636) to publish a temperature reading to
-the [Adafruit.io MQTT APIs](https://www.mqtt-dashboard.com/) every minute.
+the [Adafruit.io MQTT APIs](https://io.adafruit.com/api/docs/) every minute.
 
-To make this work, you will to get an account with https://io.adafruit.com
+![A photograph of the Adafruit QT Py and SHTC3 breakout](/img/samples/temperature-mqtt.jpg)
+
+## Reading temperature
+
+We start by configuring the script for the QT Py and adding a scheduled interval to read the temperature
+from the SHTC3 sensor every 60 seconds.
+
+```ts
+// hardware configuration and drivers
+import "@dsboard/adafruit_qt_py_c3"
+import { startSHTC3 } from "@devicescript/drivers"
+import { schedule } from "@devicescript/runtime"
+
+// mounting a temperature server for the SHTC3 sensor
+const { temperature } = await startSHTC3()
+
+schedule(
+    async () => {
+        // read data from temperature sensor
+        const value = await temperature.reading.read()
+    },
+    { timeout: 1000, interval: 60000 }
+)
+```
+
+## Configuration and Secrets
+
+To connect to Adafruit.io, you will to get an account with https://io.adafruit.com
 and store your username and password in the [settings](/developer/settings)
 as the `IO_USERNAME` and `IO_KEY` keys (make sure your key is in `env.local`).
 Also create a feed and update the feed key in the example below.
+
+```ts
+// highlight-next-line
+import { readSetting } from "@devicescript/settings"
+
+// TODO: update feed key
+const feed = "temperature"
+// highlight-next-line
+const username = await readSetting("IO_USERNAME")
+// this secret is stored in the .env.local and uploaded to the device settings
+// highlight-next-line
+const password = await readSetting("IO_KEY")
+```
+
+## Starting the MQTT client
+
+Following the [Adafruit documentation](https://io.adafruit.com/api/docs/mqtt.html#feed-topic-format), 
+we start a MQTT connection and craft a topic that will route the data to our account.
+
+In the 
+
+```ts skip
+// highlight-next-line
+import { startMQTTClient } from "@devicescript/net"
+
+...
+
+// highlight-start
+const mqtt = await startMQTTClient({
+    host: `io.adafruit.com`,
+    proto: "tls",
+    port: 8883,
+    username,
+    password,
+})
+const topic = `${username}/feeds/${feed}/json`
+// highlight-end
+```
+
+## Publish data
+
+With the MQTT client and the topic, we can add a call to `mqtt.publish` in the scheduled worker
+to upload the data to Adafruit (note that `{ value }` expands to JSON `{ "value": value }` automatically)
+
+```ts skip
+schedule(
+    async () => {        
+        ...
+        // publish data to Adafruit
+        // highlight-next-line
+        await mqtt.publish(topic, { value })
+    },
+    { timeout: 1000, interval: 60000 }
+)
+```
+
+## All together
+
+Putting all the pieces together we get the following program.
 
 ```ts
 // hardware configuration and drivers
@@ -52,7 +139,7 @@ schedule(
 )
 ```
 
-## Filtering data
+## Extra points: Filtering data
 
 You could use [observables](/developer/observables) to smooth the sensor
 data. For example, apply an exponentially moving average
