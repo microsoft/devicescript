@@ -731,8 +731,7 @@
         "pinFault": 13,
         "service": "power"
       }
-    ],
-    "img": "https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg"
+    ]
   },
   "msr59": {
     "$description": "Prototype board",
@@ -783,8 +782,7 @@
         "pinFault": 25,
         "service": "power"
       }
-    ],
-    "img": "https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/rp2040devicescript59v01.catalog.jpg"
+    ]
   },
   "pico": {
     "$description": "RP2040 board from Raspberry Pi.",

@@ -21,5 +21,6 @@ export * from "./esp32c3fh4rgb"
 export * from "./picobricks"
 export * from "./xiaoexpansionboard"
 export * from "./wavesharepicolcd114"
+export * from "./pimoronipicobadger"
 
 configureHardware({ scanI2C: false })

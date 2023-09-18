@@ -1,0 +1,29 @@
+---
+title: Pimoroni Badger RP2040
+---
+
+# Pimoroni Badger RP2040
+
+-   Device: [Raspberry Pi Pico W](/devices/rp2040/pico-w)
+-   [Home](https://shop.pimoroni.com/products/badger-2040-w)
+
+![Pimoroni Badger RP2040 image](/img/shields/pimoroni-pico-badger.jpg)
+
+## DeviceScript import
+
+You must import `PimoroniBadger2040W` to access the shield services.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and
+select "PimoroniBadger2040W".
+
+```ts
+import { font8, scaledFont } from "@devicescript/graphics"
+import { PimoroniBadger2040W } from "@devicescript/drivers"
+
+const board = new PimoroniBadger2040W()
+const disp = await board.startDisplay()
+const f = scaledFont(font8(), 3)
+disp.image.print("Hello world!", 10, 10, 1, f)
+await disp.show()
+```

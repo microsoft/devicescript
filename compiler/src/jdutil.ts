@@ -626,6 +626,7 @@ export function ellipse(text: string, maxChars: number, suffix = "...") {
 }
 
 export function ellipseFirstSentence(text: string) {
+    if (!text) return text
     const i = text.indexOf(".")
     if (i < 0) return text
     else return text.slice(0, i + 1)
