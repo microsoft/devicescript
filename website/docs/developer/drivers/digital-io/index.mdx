@@ -104,7 +104,7 @@ await p1.setMode(GPIOMode.Input)
 
 // polling read pin
 setInterval(async () => {
-    // higlight-next-line
+    // highlight-next-line
     const v = p1.value
     console.log({ poll: v })
 }, 1000)

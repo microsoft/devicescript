@@ -14,16 +14,16 @@ completion experience.
 
 ```ts
 import { CharacterScreen } from "@devicescript/core"
-// higlight-next-line
+// highlight-next-line
 import { ValueDashboard } from "@devicescript/runtime"
 
 const screen = new CharacterScreen()
-// higlight-start
+// highlight-start
 const dashboard = new ValueDashboard(screen, {
     temperature: { digits: 1, unit: "C" },
     humi: { digits: 0, unit: "%" },
 })
-// higlight-end
+// highlight-end
 ```
 
 Once the dashboard is setup, you can update the `values` record and call `show` to render again.
