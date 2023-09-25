@@ -33,6 +33,7 @@ export class Esp32C3FH4RGB {
             (this._led = await startLed({
                 length: 25,
                 columns: 5,
+                intensity: 0.1,
                 variant: LedVariant.Matrix,
                 hwConfig: {
                     type: LedStripLightType.WS2812B_GRB,
