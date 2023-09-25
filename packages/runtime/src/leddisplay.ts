@@ -15,7 +15,7 @@ export async function startLedDisplay(
     if (!palette) {
         const waveLength = await led.waveLength.read()
         if (waveLength) palette = Palette.monochrome()
-        else palette = Palette.arcade()
+        else palette = Palette.leds()
     }
 
     const buffer = await led.buffer()
@@ -27,15 +27,14 @@ export async function startLedDisplay(
 
     const image = Image.alloc(width, height, bpp)
 
-    const init = async () => { }
+    const init = async () => {}
 
     const show = async () => {
         for (let x = 0; x < width; ++x) {
             for (let y = 0; y < height; ++y) {
                 const ci = image.get(x, y)
                 const c = palette.at(ci)
-                if (c !== undefined)
-                    buffer.setAt(y * width + x, c)
+                if (c !== undefined) buffer.setAt(y * width + x, c)
             }
         }
         await led.show()

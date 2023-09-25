@@ -17,6 +17,17 @@ export class Palette {
     }
 
     /**
+     * A better color palette for LED strips
+     * @returns
+     */
+    static leds() {
+        return new Palette(hex`
+            000000 ffffff ff0000 00ff00 0000ff ffff00 ff00ff 00ffff
+            ffa500 adff2f 008080 800080 ffc0cb 4b0082 ffd8a8 e0e0ff
+        `)
+    }
+
+    /**
      * Allocates a 1bpp monochrome palette
      * @returns
      */
