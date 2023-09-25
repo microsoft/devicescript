@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.8](https://github.com/microsoft/devicescript/compare/v2.15.6...v2.15.8)
+
+> 25 September 2023
+
+- move flash/clean to title commands [`966a659`](https://github.com/microsoft/devicescript/commit/966a6590794d5f3e23fa25b3f1b6a3c46d6b915e)
+- updated sample [`5dde23b`](https://github.com/microsoft/devicescript/commit/5dde23b65e84859c2d7e6267be78e042ac30aee8)
+- macro typo [`6b0f258`](https://github.com/microsoft/devicescript/commit/6b0f2580ba76c42d9f9e0534c1394b88b657571a)
+
 #### [v2.15.6](https://github.com/microsoft/devicescript/compare/v2.15.5...v2.15.6)
 
 > 25 September 2023
