@@ -339,6 +339,14 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "extension.devicescript.device.flash",
+                    "when": "!inDebugMode && view == extension.devicescript.jdom"
+                },
+                {
+                    "command": "extension.devicescript.device.clean",
+                    "when": "!inDebugMode && view == extension.devicescript.jdom"
+                },
+                {
                     "command": "extension.devicescript.watch.clear",
                     "when": "view =~ /extension\\.devicescript\\.(dbg)?watch/",
                     "group": "navigation"
@@ -522,6 +530,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.device.clean",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.simulator.start",
                     "when": "workbenchState != empty"
                 },
@@ -649,6 +661,11 @@
             {
                 "command": "extension.devicescript.device.flash",
                 "title": "Flash Firmware...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.device.clean",
+                "title": "Clean Flash...",
                 "category": "DeviceScript"
             },
             {

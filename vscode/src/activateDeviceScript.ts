@@ -152,6 +152,15 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 )
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.device.clean",
+            (device?: JDomDeviceTreeItem | JDDevice) =>
+                extensionState.cleanFirmware(
+                    device instanceof JDomDeviceTreeItem
+                        ? device.device
+                        : device
+                )
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => extensionState.connect()
         ),

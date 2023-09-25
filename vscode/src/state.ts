@@ -580,14 +580,15 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async cleanFirmware(device?: JDDevice) {
-        const board = await this.resolveBoardDefinition(device)
-        if (!board) return
         if (
             !(await showConfirmBox(
-                `The entire flash on ${board.devName} will be erased. There is NO undo. Confirm?`
+                `The entire flash will be erased. There is NO undo. Confirm?`
             ))
         )
             return
+
+        const board = await this.resolveBoardDefinition(device)
+        if (!board) return
 
         // force disconnect
         await this.disconnect()
@@ -652,7 +653,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     get isRemote() {
         const config = vscode.workspace.getConfiguration("devicescript.connect")
         const { extensionKind } = this.context.extension
-        return extensionKind === vscode.ExtensionKind.Workspace || !!config.get("web")
+        return (
+            extensionKind === vscode.ExtensionKind.Workspace ||
+            !!config.get("web")
+        )
     }
 
     async connect() {
@@ -675,20 +679,19 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 transport: "web",
                 label: "WebSerial/WebUSB",
                 detail: "ESP32, RP2040, ...",
-                description: "Connect through an external web page running client side."
+                description:
+                    "Connect through an external web page running client side.",
             })
-
         } else {
             const serial = transports.find(t => t.type === "serial")
-            items.push(
-                {
-                    transport: "serial",
-                    label: "Serial",
-                    detail: "ESP32, RP2040, ...",
-                    description: serial
-                        ? `${serial.description || ""}(${serial.connectionState})`
-                        : "",
-                })
+            items.push({
+                transport: "serial",
+                label: "Serial",
+                detail: "ESP32, RP2040, ...",
+                description: serial
+                    ? `${serial.description || ""}(${serial.connectionState})`
+                    : "",
+            })
         }
         items.push(
             !!connecteds.length && {
@@ -707,20 +710,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 description: `Simulator`,
                 detail: `A virtual DeviceScript interpreter running in a separate process.`,
                 transport: simulatorScriptManagerId,
-            },
-            {
-                label: "Firmware Tools",
-                kind: vscode.QuickPickItemKind.Separator,
-            },
-            {
-                label: "Flash Firmware...",
-                transport: "flash",
-                detail: "Flash the DeviceScript runtime on new devices.",
-            },
-            {
-                label: "Clean Flash...",
-                transport: "clean",
-                detail: "Erase the entire flash.",
             }
         )
         items = items.filter(m => !!m)
@@ -730,8 +719,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (res === undefined || !res.transport) return
 
         if (res.transport === "web") await this.openExternalConnect()
-        else if (res.transport === "flash") await this.flashFirmware()
-        else if (res.transport === "clean") await this.cleanFirmware()
         else if (res.transport === simulatorScriptManagerId)
             await this.startSimulator()
         else
@@ -747,9 +734,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     private async openExternalConnect() {
         const darkMode = resolveDarkMode()
-        const connectUri = await resolveDevtoolsPath(
-            `connect?${darkMode}=1`
-        )
+        const connectUri = await resolveDevtoolsPath(`connect?${darkMode}=1`)
         console.log({ connectUri })
         await vscode.env.openExternal(connectUri)
     }
@@ -900,8 +885,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     .register(ControlReg.DeviceDescription)
                 await description.refresh(true)
 
-                return `${description.stringValue || ""} (${runtimeVersion || "?"
-                    })`
+                return `${description.stringValue || ""} (${
+                    runtimeVersion || "?"
+                })`
             }
             const items: DeviceQuickItem[] = await Promise.all(
                 services.map(
