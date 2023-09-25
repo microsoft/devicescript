@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.5](https://github.com/microsoft/devicescript/compare/v2.15.4...v2.15.5)
+
+> 15 September 2023
+
+- add more shields [`ce4e9b1`](https://github.com/microsoft/devicescript/commit/ce4e9b15e98969a706163f9f03b7c094b3e3f3b4)
+- adding shield docs [`2ef0b0d`](https://github.com/microsoft/devicescript/commit/2ef0b0d081c26a49fd416de0d35043ac1b344a92)
+- added waveshare shield [`2190c91`](https://github.com/microsoft/devicescript/commit/2190c91d971e2dc75d2885e467219c16266af50b)
+
 #### [v2.15.4](https://github.com/microsoft/devicescript/compare/v2.15.3...v2.15.4)
 
 > 12 September 2023
