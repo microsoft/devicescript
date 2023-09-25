@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.6](https://github.com/microsoft/devicescript/compare/v2.15.5...v2.15.6)
+
+> 25 September 2023
+
+- Optimizing Performance and Resource Utilization Through Concurrent Async Execution ✈ [`#623`](https://github.com/microsoft/devicescript/pull/623)
+- updated devices docs [`afa5ce6`](https://github.com/microsoft/devicescript/commit/afa5ce65f6180c6f85e704029ad34eb02eb62f07)
+- add pimoroni pico badger [`3c3ead7`](https://github.com/microsoft/devicescript/commit/3c3ead790276840605d1bb5b37af7651493c1f02)
+- added images [`66a2e96`](https://github.com/microsoft/devicescript/commit/66a2e962b2e7e8b661e23358fc05203b10a83cac)
+
 #### [v2.15.5](https://github.com/microsoft/devicescript/compare/v2.15.4...v2.15.5)
 
 > 15 September 2023
