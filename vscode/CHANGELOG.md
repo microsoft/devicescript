@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.9](https://github.com/microsoft/devicescript/compare/v2.15.8...v2.15.9)
+
+> 25 September 2023
+
+- apply sim route after external resoluation [`4f7f744`](https://github.com/microsoft/devicescript/commit/4f7f744f58e7ba2a2d5325fa63388594bdc303af)
+
 #### [v2.15.8](https://github.com/microsoft/devicescript/compare/v2.15.6...v2.15.8)
 
 > 25 September 2023

@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/server",
-    "version": "2.15.9",
+    "version": "2.15.10",
     "private": true,
     "dependencies": {},
     "devDependencies": {
