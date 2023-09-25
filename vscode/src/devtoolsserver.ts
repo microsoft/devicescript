@@ -60,7 +60,8 @@ function normalizeUsedFiles(dir: vscode.Uri, usedFiles: string[]) {
 const PROJECT_FOLDER_KEY = "devicescript.devtools.projectFolder"
 
 export async function resolveDevtoolsPath(route?: string) {
-    const target = vscode.Uri.parse(`http://localhost:8081/${route || ""}`)
+    let target = vscode.Uri.parse(`http://localhost:8081/`)
+    if (route) target = Utils.joinPath(target, route)
     const external = await vscode.env.asExternalUri(target)
     return external
 }
