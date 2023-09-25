@@ -919,7 +919,10 @@ class JDomStatusLightTreeItem extends JDomTreeItem {
                 [ControlAnnounceFlags.StatusLightRgbNoFade]: "rgb, no fade",
                 [ControlAnnounceFlags.StatusLightRgbFade]: "rgb, fade",
             }
-            this.description = toFullHex([statusLight.color])
+            this.description =
+                statusLight.color !== undefined
+                    ? toFullHex([statusLight.color])
+                    : "?"
             this.tooltip = toMarkdownString(`
 - flags: ${flags[statusLightFlags] || "unknown"}
 - color: ${this.description}`)
