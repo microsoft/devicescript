@@ -733,9 +733,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     private async openExternalConnect() {
-        const darkMode = resolveDarkMode()
-        const connectUri = await resolveDevtoolsPath(`connect?${darkMode}=1`)
-        console.log({ connectUri })
+        const connectUri = await resolveDevtoolsPath(`connect`)
         await vscode.env.openExternal(connectUri)
     }
 
