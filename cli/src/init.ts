@@ -217,7 +217,7 @@ to the VS Code extension
 
 const optionalFiles: FileSet = {
     ".devcontainer/devcontainer.json": {
-        image: "mcr.microsoft.com/devcontainers/universal:2",
+        image: " mcr.microsoft.com/devcontainers/javascript-node:18",
         features: {
             "ghcr.io/devcontainers/features/node:1": {},
             "ghcr.io/devcontainers/features/github-cli:1": {},
