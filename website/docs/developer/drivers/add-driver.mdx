@@ -1,0 +1,56 @@
+---
+title: Add a driver
+sidebar_position: 199
+---
+
+# Add a driver
+
+New drivers can be integrated into the [devicescript GitHub repository](https://github.com/microsoft/devicescript/tree/main/packages/drivers/src) or published as a npm package.
+
+To get started and understand what needs to be done, [look at existing drivers](https://github.com/microsoft/devicescript/tree/main/packages/drivers/src).
+
+## How to
+
+-   create a new TypeScript file in the `developer/drivers` folder
+-   add a new class and decorate it with description, `@url`, `@devsPart` and `@devsWhenUsed`. Typically you can use the sensor name as the class name to make it easier for search.
+
+```ts skip
+/**
+ * Support for Badger 2040 W (Pico W Aboard)
+ *
+ * @url https://shop.pimoroni.com/products/badger-2040-w
+ * @devsPart Pimoroni Pico Badger
+ * @devsWhenUsed
+ */
+export class PimoroniBadger2040W { ... }
+```
+
+The documentation summary will be used as a title and DeviceScript will automatically extract this class using the @devsPart information.
+
+-   add additional hardware configuration in the constructor
+
+```ts skip
+    constructor() {
+        configureHardware({
+            i2c: {
+                pinSDA: pins.GP4,
+                pinSCL: pins.GP5,
+            }
+        })
+    }
+```
+
+-   add helper function to start mount server on sensors
+
+```ts skip
+    startLED() {
+        return startLightBulb({
+            pin: pins.GP22,
+            dimmable: true,
+        })
+    }
+```
+
+-   add a documentation page under `website/docs/api/drivers`
+-   add a sample under `website/docs/samples`, the picture can be added to `website/static/pics/samples`
+-   prepare a pull request and send away!
