@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/spi",
-    "version": "2.15.10",
+    "version": "2.15.11",
     "private": true,
     "dependencies": {},
     "devDependencies": {
