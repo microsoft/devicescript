@@ -1,0 +1,51 @@
+---
+title: SH110X
+---
+
+# SH110X
+
+Driver for SH110X OLED displays at I2C address `0x3C` (or `0x3D`).
+
+```ts
+import { SH110XDriver } from "@devicescript/drivers"
+```
+
+-   [Datasheet](https://www.pololu.com/file/0J1813/SH1106.pdf)
+
+![Photo of a SH1106 screen](./sh1106.jpg)
+
+## Hardware configuration
+
+-   Configure the I2C connection through the [board configuration](/developer/board-configuration)
+-   Check that you are using the proper I2C address
+
+## Display
+
+Similar to the SSD1306 driver, the SH110X driver implements the Display interface
+allowing the display to be used in various ways, for instance, as a dot matrix,
+character screen, or indexed screen in which the screen can be manipulated on a per pixel basis.
+
+See [Display](/developer/graphics/display) for more info.
+
+Using the Display interface is the recommended way of using these type of displays.
+
+:::caution Use Correct Driver in Display Examples
+
+Using the SSD1306 driver with a SH110X screen or vice versa will result in unexpected results.
+
+:::
+
+## Driver
+
+You can also use the SH110X driver directly. However, it will not be usable from a simulator.
+
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/sh110x.ts)
+
+```ts
+import { SH110XDriver } from "@devicescript/drivers"
+
+const sh = new SH110XDriver({ width: 128, height: 64 })
+await sh.init()
+sh.image.print("Hello world!", 3, 10)
+await sh.show()
+```
