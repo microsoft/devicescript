@@ -1,5 +1,4 @@
-import { sleep } from "@devicescript/core"
-import { startAccelerometer, AccelerometerDriver, Vector3D, I2CDriver } from "@devicescript/drivers"
+import { AccelerometerDriver, Vector3D, I2CDriver } from "@devicescript/drivers"
 
 // datasheet: https://semic-boutique.com/wp-content/uploads/2021/01/da213B.pdf
 // ref: https://github.com/alibaba/AliOS-Things/blob/master/components/sensor/drv/drv_acc_mir3_da213B.c
@@ -19,8 +18,10 @@ function read16(buf: Buffer, pos = 0) {
 }
 
 export class DA213BDriver extends I2CDriver implements AccelerometerDriver {
+    static instance: DA213BDriver
     constructor(addr=DA213B_ADDRESS) {
         super(addr)
+        DA213BDriver.instance = this
     }
 
     override async initDriver(): Promise<void> {
@@ -61,10 +62,8 @@ export class DA213BDriver extends I2CDriver implements AccelerometerDriver {
 
     subscribe(cb: (sample: Vector3D) => Promise<void>): void {
         setInterval(async () => {
-            const s = await this.readSample()
+            const s = await DA213BDriver.instance.readSample()
             await cb(s as Vector3D)
         }, 50)
     }
 }
-
-
