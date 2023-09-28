@@ -7,17 +7,17 @@ description: Reading from the IMU
 
 Here we use the IMU to read the orientation of the device, DA213B for example.
 
-
 ```ts
-import { startIMU, startAccelerometer, DA213BDriver } from "@devicescript/drivers"
+import {
+    startIMU,
+    startAccelerometer,
+    DA213BDriver,
+} from "@devicescript/drivers"
 
 const driver = new DA213BDriver()
 const acc = await startAccelerometer(driver, {})
 
-acc.reading.subscribe((reading) => {
+acc.reading.subscribe(reading => {
     console.log(`x: ${reading[0]}, y: ${reading[0]}, z: ${reading[0]}`)
 })
-
 ```
-
-

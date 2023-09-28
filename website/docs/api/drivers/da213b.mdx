@@ -1,0 +1,29 @@
+# DA213B
+
+Driver for DA213B accelerometer at address `0x27`.
+
+-   Services: [accelerometer](/api/clients/accelerometer/)
+-   [Datasheet](https://semic-boutique.com/wp-content/uploads/2021/01/da213B.pdf)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/da213b.ts)
+
+## Usage
+
+```ts
+import {
+    startIMU,
+    startAccelerometer,
+    DA213BDriver,
+} from "@devicescript/drivers"
+
+const driver = new DA213BDriver()
+const acc = await startAccelerometer(driver, {})
+
+acc.reading.subscribe(reading => {
+    console.log(`x: ${reading[0]}, y: ${reading[0]}, z: ${reading[0]}`)
+})
+```
+
+## Configuration
+
+-   Configure I2C throught the [board configuration](/developer/board-configuration)
+-   Check that you are using the correct I2C address
