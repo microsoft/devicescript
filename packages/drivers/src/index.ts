@@ -17,6 +17,7 @@ export * from "./trafficlight"
 export * from "./ledserver"
 export * from "./accelerometer"
 export * from "./sh110x"
+export * from "./da213"
 
 export * from "./esp32c3fh4rgb"
 export * from "./picobricks"
