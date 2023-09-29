@@ -14,7 +14,7 @@ https://user-images.githubusercontent.com/4175913/228997575-122d6ad0-f37e-4d4e-a
 
 ## Contributing
 
-Contributions are welcome! See [contributing page](./CONTRIBUTING.md).
+Contributions are welcome! See [contributing page](https://microsoft.github.io/devicescript/contributing).
 
 <a href="https://github.com/microsoft/devicescript/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=microsoft/devicescript" />

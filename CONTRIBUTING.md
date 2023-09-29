@@ -1,13 +1,6 @@
 # Contributing
 
-**Contributions are welcome!** Here are some ways you can contribute:
-
--   add missing core js functions (like `Array.findLast`)
--   add missing TypeScript support (like `for .. in ...`)
--   port firmware to other embedded platforms
--   and many more!
-
-**Read more at https://microsoft.github.io/devicescript/contributing**
+**Contributions are welcome! Read more at https://microsoft.github.io/devicescript/contributing**
 or [contributing.mdx](./website/docs/contributing.mdx).
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
