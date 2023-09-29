@@ -149,7 +149,9 @@ description: ${devName}
             : undefined,
         `\n## Features\n`,
         ...info.features.map(f => `-  ${f}`),
+        `{@import optional ./${id}-features.mdp}`,
         ...info.services.map(f => `-  Service: ${f}`),
+        `{@import optional ./${id}-services.mdp}`,
         !boardJson.i2c &&
             `
 :::caution
