@@ -688,7 +688,7 @@
         "P1": 2,
         "P2": 0
       },
-      "productId": "0x3635315b",
+      "productId": "0x38ccab8d",
       "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"
     },
     "kittenbot_nanoscript": {
@@ -739,7 +739,7 @@
         "P6": 6,
         "P7": 7
       },
-      "productId": "0x3aa50e69",
+      "productId": "0x37c2fcc5",
       "sPin": {
         "#": "enable high power limiter mode",
         "@HILIM": 0

@@ -565,8 +565,9 @@
       "P1": 2,
       "P2": 0
     },
-    "productId": "0x3635315b",
-    "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"
+    "productId": "0x38ccab8d",
+    "url": "https://www.kittenbot.cc/products/kittenbot-grapebit",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/grapebitv10.catalog.jpg"
   },
   "kittenbot_nanoscript": {
     "$description": "A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting.",
@@ -616,7 +617,7 @@
       "P6": 6,
       "P7": 7
     },
-    "productId": "0x3aa50e69",
+    "productId": "0x37c2fcc5",
     "sPin": {
       "#": "enable high power limiter mode",
       "@HILIM": 0
@@ -635,7 +636,7 @@
       }
     ],
     "url": "https://www.kittenbot.cc/products/devicescript-enhanced-development-board-with-rp2040",
-    "img": "https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/ultrasonicsensorv10.catalog.jpg"
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/nanoscript2040v10.catalog.jpg"
   },
   "msr124": {
     "$description": "Prototype board",
