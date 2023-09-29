@@ -130,6 +130,7 @@ function deviceConfigToMarkdown(
     const { id } = spec || {}
     const boardJson = normalizeDeviceConfig(board, { ignoreFirmwareUrl: true })
     const info = boardInfo(board, arch)
+    const fdevId = boardIdToFilename(devId)
 
     if (info.errors?.length) {
         console.error(`errors in ${board.id}:\n${info.errors.join("\n")}`)
@@ -149,9 +150,9 @@ description: ${devName}
             : undefined,
         `\n## Features\n`,
         ...info.features.map(f => `-  ${f}`),
-        `{@import optional ./${id}-features.mdp}`,
+        `{@import optional ./${fdevId}-features.mdp}`,
         ...info.services.map(f => `-  Service: ${f}`),
-        `{@import optional ./${id}-services.mdp}`,
+        `{@import optional ./${fdevId}-services.mdp}`,
         !boardJson.i2c &&
             `
 :::caution
@@ -212,6 +213,10 @@ ${JSON.stringify(boardJson, null, 4)}
     }
 }
 
+function boardIdToFilename(boardid: string) {
+    return boardid.replace(/_/g, "-")
+}
+
 export function boardMarkdownFiles() {
     const buildConfig = resolveBuildConfig()
     const { boards, archs } = buildConfig
@@ -225,7 +230,7 @@ export function boardMarkdownFiles() {
         const spec: jdspec.DeviceSpec =
             catalog.specificationFromProductIdentifier(parseAnyInt(productId))
         const aid = architectureFamily(archId)
-        const pa = `${aid}/${boardid.replace(/_/g, "-")}`
+        const pa = `${aid}/${boardIdToFilename(boardid)}`
         r[`${pa}.mdx`] = deviceConfigToMarkdown(
             board,
             archs[board.archId],
