@@ -59,7 +59,7 @@ export class DA213BDriver extends I2CDriver implements AccelerometerDriver {
     subscribe(cb: (sample: Vector3D) => Promise<void>): void {
         const _this = this
         setInterval(async () => {
-            const s = await this.readSample()
+            const s = await _this.readSample()
             await cb(s as Vector3D)
         }, 50)
     }
