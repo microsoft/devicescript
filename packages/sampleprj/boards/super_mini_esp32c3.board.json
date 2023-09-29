@@ -1,0 +1,35 @@
+{
+    "archId": "esp32c3",
+    "devName": "ESP32-C3 SuperMini",
+    "productId": "0x31606c1c",
+    "$description": "A super tiny ESP32-C3 board.",
+    "url": "https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
+    "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+    },
+    "led": {
+        "pin": 8,
+        "isMono": true
+    },
+    "log": {
+        "pinTX": 21
+    },
+    "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P2": 2,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P10": 10,
+        "P20": 20
+    }
+}
