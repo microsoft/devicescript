@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.11](https://github.com/microsoft/devicescript/compare/v2.15.10...v2.15.11)
+
+> 27 September 2023
+
+- SH110X Driver + Documentation [`#631`](https://github.com/microsoft/devicescript/pull/631)
+- add new driver guilde [`c9ba0be`](https://github.com/microsoft/devicescript/commit/c9ba0be9293b5c3b5384877d9786bbb31a1fbe4c)
+- added links [`185c34e`](https://github.com/microsoft/devicescript/commit/185c34ec1dcaf34965a6037f4d051e576315e654)
+- add optional [`6ebe36b`](https://github.com/microsoft/devicescript/commit/6ebe36b2d69ccd769e10c95ceb678690c284a016)
+
 #### [v2.15.10](https://github.com/microsoft/devicescript/compare/v2.15.9...v2.15.10)
 
 > 25 September 2023
