@@ -1,0 +1,131 @@
+---
+description: KittenBot Grape:Bit ESP32-C3
+---
+# KittenBot Grape:Bit ESP32-C3
+
+
+A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.
+
+
+## Features
+
+-  Jacdac on pin 5 using Jacdac connector
+-  I2C on 6/7
+-  WS2812B RGB LED on pin 10  (use [setStatusLight](/developer/status-light) to control)
+-  Service: buttonA (button)
+-  Service: buttonB (button)
+-  Service: music (buzzer)
+-  Service: M1 (motor)
+-  Service: M2 (motor)
+
+## Stores
+
+-  [https://www.kittenbot.cc/products/kittenbot-grapebit](https://www.kittenbot.cc/products/kittenbot-grapebit)
+
+## Pins
+
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P1** |  GPIO2 |  analogIn,  boot,  io |
+| **P2** |  GPIO0 |  analogIn,  io |
+| **$services.buttonA[0].pin** |  GPIO21 |  $services.buttonA[0].pin,  bootUart,  io |
+| **$services.buttonB[1].pin** |  GPIO9 |  $services.buttonB[1].pin,  boot,  io |
+| **$services.music[2].pin** |  GPIO3 |  $services.music[2].pin,  analogIn,  io |
+| **i2c.pinSCL** |  GPIO7 |  i2c.pinSCL,  debug,  io |
+| **i2c.pinSDA** |  GPIO6 |  i2c.pinSDA,  debug,  io |
+| **jacdac.pin** |  GPIO5 |  jacdac.pin,  debug,  io |
+| **led.pin** |  GPIO10 |  led.pin,  io |
+
+
+
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "KittenBot Grape:Bit ESP32-C3".
+
+```ts
+import { pins, board } from "@dsboard/kittenbot_grapebit_esp32c3"
+```
+
+{@import optional ./kittenbot-grapebit-esp32c3-examples.mdp}
+
+## Firmware update
+
+In Visual Studio Code,
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash --board kittenbot_grapebit_esp32c3
+```
+
+
+- [Firmware](https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-kittenbot_grapebit_esp32c3-0x0.bin)
+
+## Configuration
+
+```json title="kittenbot_grapebit_esp32c3.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "kittenbot_grapebit_esp32c3",
+    "devName": "KittenBot Grape:Bit ESP32-C3",
+    "productId": "0x3635315b",
+    "$description": "A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.",
+    "archId": "esp32c3",
+    "url": "https://www.kittenbot.cc/products/kittenbot-grapebit",
+    "$services": [
+        {
+            "name": "buttonA",
+            "pin": 21,
+            "service": "button"
+        },
+        {
+            "name": "buttonB",
+            "pin": 9,
+            "service": "button"
+        },
+        {
+            "name": "music",
+            "pin": 3,
+            "service": "buzzer"
+        },
+        {
+            "dir": -1,
+            "en": -1,
+            "name": "M1",
+            "pwm": 1,
+            "service": "motor"
+        },
+        {
+            "dir": -1,
+            "en": -1,
+            "name": "M2",
+            "pwm": 4,
+            "service": "motor"
+        }
+    ],
+    "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+    },
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 5
+    },
+    "led": {
+        "num": 4,
+        "pin": 10,
+        "type": 1
+    },
+    "pins": {
+        "P1": 2,
+        "P2": 0
+    }
+}
+```

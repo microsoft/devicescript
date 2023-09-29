@@ -510,6 +510,133 @@
     "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/unexpected-maker/feathers2esp32s2v20.catalog.jpg"
   },
+  "kittenbot_grapebit_esp32c3": {
+    "$description": "A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.",
+    "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-kittenbot_grapebit_esp32c3-0x0.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonA",
+        "pin": 21,
+        "service": "button"
+      },
+      {
+        "name": "buttonB",
+        "pin": 9,
+        "service": "button"
+      },
+      {
+        "name": "music",
+        "pin": 3,
+        "service": "buzzer"
+      },
+      {
+        "dir": -1,
+        "en": -1,
+        "name": "M1",
+        "pwm": 1,
+        "service": "motor"
+      },
+      {
+        "dir": -1,
+        "en": -1,
+        "name": "M2",
+        "pwm": 4,
+        "service": "motor"
+      }
+    ],
+    "archId": "esp32c3",
+    "devName": "KittenBot Grape:Bit ESP32-C3",
+    "i2c": {
+      "pinSCL": 7,
+      "pinSDA": 6
+    },
+    "id": "kittenbot_grapebit_esp32c3",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 5
+    },
+    "led": {
+      "num": 4,
+      "pin": 10,
+      "type": 1
+    },
+    "pins": {
+      "P1": 2,
+      "P2": 0
+    },
+    "productId": "0x3635315b",
+    "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"
+  },
+  "kittenbot_nanoscript": {
+    "$description": "A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting.",
+    "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-kittenbot_nanoscript.uf2",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+    "archId": "rp2040",
+    "devName": "KittenBot NanoScript 1.0",
+    "id": "kittenbot_nanoscript",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 9
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 16
+        },
+        {
+          "mult": 60,
+          "pin": 14
+        },
+        {
+          "mult": 150,
+          "pin": 15
+        }
+      ]
+    },
+    "log": {
+      "baud": 115200,
+      "pinTX": 0
+    },
+    "pins": {
+      "@HILIM": 18,
+      "P1": 1,
+      "P10": 10,
+      "P2": 2,
+      "P24": 24,
+      "P25": 25,
+      "P26": 26,
+      "P27": 27,
+      "P28": 28,
+      "P29": 29,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7
+    },
+    "productId": "0x3aa50e69",
+    "sPin": {
+      "#": "enable high power limiter mode",
+      "@HILIM": 0
+    },
+    "services": [
+      {
+        "faultIgnoreMs": 1000,
+        "mode": 3,
+        "name": "power",
+        "pinEn": 22,
+        "pinFault": 12,
+        "pinLedPulse": 13,
+        "pinPulse": 8,
+        "pinUsbDetect": 11,
+        "service": "power"
+      }
+    ],
+    "url": "https://www.kittenbot.cc/products/devicescript-enhanced-development-board-with-rp2040",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/ultrasonicsensorv10.catalog.jpg"
+  },
   "msr124": {
     "$description": "Prototype board",
     "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",

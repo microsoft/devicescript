@@ -193,7 +193,9 @@ async function fetchBoards(options: CToolOptions) {
         const fwBoards = boards.filter(b => !!b.$fwUrl)
         if (!arch.bareUrl) {
             const bareBoard =
-                fwBoards.find(b => /bare/.test(b.id)) ?? fwBoards[0]
+                fwBoards.find(
+                    b => /bare/.test(b.id) || ["pico", "pico_w"].includes(b.id)
+                ) ?? fwBoards[0]
             arch.bareUrl = bareBoard?.$fwUrl
         }
     }
