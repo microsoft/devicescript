@@ -1,4 +1,4 @@
 
-<DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/ultrasonicsensorv10.preview.jpg" href="/devices/rp2040/kittenbot-nanoscript" title="KittenBot NanoScript 1.0" description="A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting." />
+<DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/nanoscript2040v10.preview.jpg" href="/devices/rp2040/kittenbot-nanoscript" title="KittenBot NanoScript 1.0" description="A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting." />
 <DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picov00.preview.jpg" href="/devices/rp2040/pico" title="Raspberry Pi Pico" description="RP2040 board from Raspberry Pi." />
 <DeviceCard image="https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picowv00.preview.jpg" href="/devices/rp2040/pico-w" title="Raspberry Pi Pico W" description="RP2040 board from Raspberry Pi with a WiFi chip." />
