@@ -403,6 +403,44 @@
       "productId": "0x33f29c59",
       "url": "https://github.com/esp-rs/esp-rust-board"
     },
+    "esp32c3_supermini": {
+      "$description": "A super tiny ESP32-C3 board.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_supermini-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 9,
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "ESP32-C3 SuperMini",
+      "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+      },
+      "id": "esp32c3_supermini",
+      "led": {
+        "isMono": true,
+        "pin": 8
+      },
+      "log": {
+        "pinTX": 21
+      },
+      "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P20": 20,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5
+      },
+      "productId": "0x31606c1c",
+      "url": "https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html"
+    },
     "esp32s2_bare": {
       "$description": "A bare ESP32-S2 board without any pin functions.",
       "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
