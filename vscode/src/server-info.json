@@ -354,6 +354,15 @@
                 "PimoroniBadger2040W": "@devicescript/drivers"
             },
             "snippet": "const shield = new PimoroniBadger2040W()\n"
+        },
+        {
+            "label": "KittenBot Grape:bit ESP32-C3",
+            "detail": "Support for KittenBot Grape:bit ESP32-C3",
+            "startName": "KittenBotGrapeBit",
+            "imports": {
+                "KittenBotGrapeBit": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new KittenBotGrapeBit()\n"
         }
     ]
 }

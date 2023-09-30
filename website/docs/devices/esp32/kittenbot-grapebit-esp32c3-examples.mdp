@@ -1,0 +1,12 @@
+## Driver
+
+The accelerometer can be accessed through the `KittenBotGrapeBit` helper.
+
+```ts
+import { KittenBotGrapeBit } from "@devicescript/drivers"
+
+const board = new KittenBotGrapeBit()
+const acc = await board.startAccelerometer()
+
+acc.reading.subscribe(vector => console.log(vector))
+```

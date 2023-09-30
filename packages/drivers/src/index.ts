@@ -24,5 +24,6 @@ export * from "./picobricks"
 export * from "./xiaoexpansionboard"
 export * from "./wavesharepicolcd114"
 export * from "./pimoronipicobadger"
+export * from "./kittenbotgrapebit"
 
 configureHardware({ scanI2C: false })
