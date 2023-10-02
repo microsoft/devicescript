@@ -150,9 +150,9 @@ description: ${devName}
             : undefined,
         `\n## Features\n`,
         ...info.features.map(f => `-  ${f}`),
-        `\n{@import optional ./${fdevId}-features.mdp}\n`,
+        `{@import optional ./${fdevId}-features.mdp}\n`,
         ...info.services.map(f => `-  Service: ${f}`),
-        `\n{@import optional ./${fdevId}-services.mdp}\n`,
+        `{@import optional ./${fdevId}-services.mdp}\n`,
         !boardJson.i2c &&
             `
 :::caution

@@ -1,0 +1,117 @@
+---
+description: ESP32-C3 SuperMini
+---
+# ESP32-C3 SuperMini
+
+
+A super tiny ESP32-C3 board.
+
+
+## Features
+
+-  I2C on 6/7
+-  LED on pin 8  (use [setStatusLight](/developer/status-light) to control)
+-  Serial logging on pin 21 at 115200 8N1
+
+{@import optional ./esp32c3-supermini-features.mdp}
+
+-  Service: buttonBOOT (button)
+
+{@import optional ./esp32c3-supermini-services.mdp}
+
+
+## Stores
+
+-  [https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html](https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html)
+
+## Pins
+
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P0** |  GPIO0 |  analogIn,  io |
+| **P1** |  GPIO1 |  analogIn,  io |
+| **P10** |  GPIO10 |  io |
+| **P2** |  GPIO2 |  analogIn,  boot,  io |
+| **P20** |  GPIO20 |  bootUart,  io |
+| **P3** |  GPIO3 |  analogIn,  io |
+| **P4** |  GPIO4 |  analogIn,  debug,  io |
+| **P5** |  GPIO5 |  debug,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  $services.buttonBOOT[0].pin,  boot,  io |
+| **i2c.pinSCL** |  GPIO7 |  i2c.pinSCL,  debug,  io |
+| **i2c.pinSDA** |  GPIO6 |  i2c.pinSDA,  debug,  io |
+| **led.pin** |  GPIO8 |  led.pin,  boot,  io |
+| **log.pinTX** |  GPIO21 |  log.pinTX,  bootUart,  io |
+
+
+
+## DeviceScript import
+
+
+You must add this import statement to load 
+the pinout configuration for this device.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and 
+select "ESP32-C3 SuperMini".
+
+```ts
+import { pins, board } from "@dsboard/esp32c3_supermini"
+```
+
+{@import optional ./esp32c3-supermini-examples.mdp}
+
+## Firmware update
+
+In Visual Studio Code,
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash --board esp32c3_supermini
+```
+
+
+- [Firmware](https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_supermini-0x0.bin)
+
+## Configuration
+
+```json title="esp32c3_supermini.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32c3_supermini",
+    "devName": "ESP32-C3 SuperMini",
+    "productId": "0x31606c1c",
+    "$description": "A super tiny ESP32-C3 board.",
+    "archId": "esp32c3",
+    "url": "https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
+    "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+    },
+    "led": {
+        "isMono": true,
+        "pin": 8
+    },
+    "log": {
+        "pinTX": 21
+    },
+    "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P20": 20,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5
+    }
+}
+```

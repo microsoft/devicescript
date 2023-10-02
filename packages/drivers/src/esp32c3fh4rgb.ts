@@ -47,7 +47,7 @@ export class Esp32C3FH4RGB {
     /**
      * Start built-in ButtonBOOT
      */
-    startButtonBOOT(roleName?: string) {
-        return board.startButtonBOOT(roleName)
+    startButtonBOOT() {
+        return board.startButtonBOOT("BOOT")
     }
 }
