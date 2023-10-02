@@ -1,5 +1,6 @@
 import * as ds from "@devicescript/core"
 import { blendRgb, hsv, rgb } from "./colors"
+import { PixelMatrix } from "./pixelmatrix"
 
 /**
  * A buffer of RGB colors
@@ -44,7 +45,7 @@ export class PixelBuffer {
      */
     setAt(pixeloffset: number, color: number) {
         pixeloffset = pixeloffset | 0
-        while (pixeloffset < 0) pixeloffset += this.length
+        if (pixeloffset < 0) pixeloffset += this.length
         const i = this.start + pixeloffset
         if (i < this.start || i >= this.start + this.length) return
         const bi = i * 3
@@ -74,7 +75,7 @@ export class PixelBuffer {
      */
     at(pixeloffset: number): number {
         pixeloffset = pixeloffset | 0
-        while (pixeloffset < 0) pixeloffset += this.length
+        if (pixeloffset < 0) pixeloffset += this.length
         const i = this.start + pixeloffset
         if (i < this.start || i >= this.start + this.length) return undefined
         const bi = i * 3
@@ -142,6 +143,16 @@ export class PixelBuffer {
                 : Math.min(length, this.length - start)
         )
         return new PixelBuffer(this.buffer, rangeStart, rangeLength)
+    }
+
+    /**
+     * Returns a matrix view of the pixel buffer
+     * @param width number of LEDs in each row
+     * @returns a matrix view of the pixel buffer
+     */
+    viewAsMatrix(width: number) {
+        if (width <= 1) throw new RangeError("invalid width")
+        return new PixelMatrix(this, width)
     }
 
     /**
