@@ -2,6 +2,8 @@
 title: SSD1306
 ---
 
+import WokwiEditor from "@site/src/components/WokwiEditor"
+
 # SSD1306
 
 Driver for SSD1306 OLED screen at I2C address `0x3c` (or `0x3d`).
@@ -38,3 +40,7 @@ await ssd.init()
 ssd.image.print("Hello world!", 3, 10)
 await ssd.show()
 ```
+
+## Examples
+
+<WokwiEditor projectId="370250148258841601">
