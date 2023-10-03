@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.12](https://github.com/microsoft/devicescript/compare/v2.15.11...v2.15.12)
+
+> 29 September 2023
+
+- Add da213b accelerator [`#632`](https://github.com/microsoft/devicescript/pull/632)
+- update boards [`c0304c1`](https://github.com/microsoft/devicescript/commit/c0304c1494bf7c090a56ac85a931307562f30501)
+- move new driver files, dedicated docs [`bb30df3`](https://github.com/microsoft/devicescript/commit/bb30df3d476ba8602e3d7062868da4d373c9b438)
+- fix build [`716bde7`](https://github.com/microsoft/devicescript/commit/716bde766224e18afe134d48b85c3c8cc375a81d)
+
 #### [v2.15.11](https://github.com/microsoft/devicescript/compare/v2.15.10...v2.15.11)
 
 > 27 September 2023
