@@ -21,7 +21,7 @@ select "Seeed Xiao ESP32-C3 Expansion board".
 import { XiaoExpansionBoard, startCharacterScreen } from "@devicescript/drivers"
 const shield = new XiaoExpansionBoard()
 
-const display = await startCharacterScreen(shield.startDisplay())
+const display = await startCharacterScreen(await shield.startDisplay())
 const buzzer = await shield.startBuzzer()
 const button = await shield.startButton()
 ```
