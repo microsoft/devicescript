@@ -25,9 +25,12 @@ Let's start by mounting a `sensor` client and logging each sensor reading to the
 
 ```tsx
 import { startSHT30 } from "@devicescript/drivers"
-import { SSD1306Driver, startCharacterScreen } from "@devicescript/drivers"
+import {
+    SSD1306Driver,
+    startCharacterScreenDisplay,
+} from "@devicescript/drivers"
 
-const screen = await startCharacterScreen(
+const screen = await startCharacterScreenDisplay(
     new SSD1306Driver({ width: 128, height: 64 })
 )
 const { temperature, humidity } = await startSHT30()

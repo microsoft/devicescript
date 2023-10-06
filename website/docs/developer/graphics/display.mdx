@@ -47,9 +47,12 @@ Using the service is compatible with the simulator.
 -   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/characterscreen.ts)
 
 ```ts
-import { SSD1306Driver, startCharacterScreen } from "@devicescript/drivers"
+import {
+    SSD1306Driver,
+    startCharacterScreenDisplay,
+} from "@devicescript/drivers"
 
-const screen = await startCharacterScreen(
+const screen = await startCharacterScreenDisplay(
     new SSD1306Driver({ width: 128, height: 64 })
 )
 await screen.message.write(`hello

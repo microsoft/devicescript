@@ -18,10 +18,13 @@ click the **wand** icon on the file menu and
 select "Seeed Xiao ESP32-C3 Expansion board".
 
 ```ts
-import { XiaoExpansionBoard, startCharacterScreen } from "@devicescript/drivers"
+import {
+    XiaoExpansionBoard,
+    startCharacterScreenDisplay,
+} from "@devicescript/drivers"
 const shield = new XiaoExpansionBoard()
 
-const display = await startCharacterScreen(await shield.startDisplay())
+const display = await startCharacterScreenDisplay(await shield.startDisplay())
 const buzzer = await shield.startBuzzer()
 const button = await shield.startButton()
 ```

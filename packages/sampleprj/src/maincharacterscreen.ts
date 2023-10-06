@@ -1,5 +1,8 @@
 import { pins, board } from "@dsboard/pico_w"
-import { SSD1306Driver, startCharacterScreen } from "@devicescript/drivers"
+import {
+    SSD1306Driver,
+    startCharacterScreenDisplay,
+} from "@devicescript/drivers"
 import { configureHardware } from "@devicescript/servers"
 import { delay } from "@devicescript/core"
 
@@ -11,7 +14,7 @@ configureHardware({
         kHz: 400,
     },
 })
-const screen = await startCharacterScreen(
+const screen = await startCharacterScreenDisplay(
     new SSD1306Driver({
         width: 128,
         height: 64,
