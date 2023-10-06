@@ -141,5 +141,5 @@ export async function startCharacterScreenDisplay(
         await display.show()
     }
 
-    return startCharacterScreen(render, options)
+    return await startCharacterScreen(render, options)
 }
