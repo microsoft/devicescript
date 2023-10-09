@@ -1,0 +1,20 @@
+# Grove RGB LCD 16x2
+
+Driver for Grove RGB LCD 16x2 Character screen at address `0x3e`.
+
+-   Services: [character screen](/api/clients/characterscreen/)
+-   [Seeed Wiki](https://github.com/Seeed-Studio/Grove_LCD_RGB_Backlight/)
+
+## Usage
+
+```ts
+import { startGroveRGBLCD16x2 } from "@devicescript/drivers"
+const screen = await startGroveRGBLCD16x2()
+
+await screen.message.write(":)")
+```
+
+## Configuration
+
+-   Configure I2C throught the [board configuration](/developer/board-configuration)
+-   Check that you are using the correct I2C address

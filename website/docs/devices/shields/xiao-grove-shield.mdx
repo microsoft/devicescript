@@ -1,0 +1,23 @@
+---
+title: Grove Shield for Seeed Studio XIAO ESP32-C3
+---
+
+# Grove Shield for Seeed Xiao ESP32-C3
+
+-   Device: [Seeed Xiao ESP32-C3](/devices/esp32/seeed-xiao-esp32c3) or [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3)
+-   [Home](https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html)
+
+![Photograph of shield](/img/shields/grove-shield-xiao.webp)
+
+## DeviceScript import
+
+You must import `XiaoGroveShield` to access the shield services.
+
+In [Visual Studio Code](/getting-started/vscode),
+click the **wand** icon on the file menu and
+select "Grove Shield for Seeed XIAO".
+
+```ts
+import { XiaoGroveShield } from "@devicescript/drivers"
+const shield = new XiaoGroveShield() // configure i2c
+```

@@ -50,7 +50,6 @@ setInterval(async () => {
 }, 1000)
 ```
 
-
 ## Xiao + Expansion board + BME680
 
 The generic sample above can be specialized to run on a Xiao ESP32-C3 with expansion board.
@@ -58,17 +57,17 @@ The generic sample above can be specialized to run on a Xiao ESP32-C3 with expan
 ```ts
 import {
     XiaoExpansionBoard,
-    startCharacterScreen,
+    startCharacterScreenDisplay,
     startBME680,
 } from "@devicescript/drivers"
 import { ValueDashboard } from "@devicescript/runtime"
 
 const board = new XiaoExpansionBoard()
 const { temperature, humidity } = await startBME680({
-    address: 0x76
+    address: 0x76,
 })
 const display = await board.startDisplay()
-const screen = await startCharacterScreen(display)
+const screen = await startCharacterScreenDisplay(display)
 
 const dashboard = new ValueDashboard(screen, {
     temperature: { digits: 1, unit: "C" },
@@ -81,3 +80,4 @@ setInterval(async () => {
     await dashboard.show()
 }, 1000)
 ```
+ 
