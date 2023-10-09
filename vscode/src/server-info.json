@@ -330,12 +330,21 @@
         },
         {
             "label": "Seeed Studio XIAO Expansion Board",
-            "detail": "Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board } for Raspberry Pi Pico.\r",
+            "detail": "Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board }.\r",
             "startName": "XiaoExpansionBoard",
             "imports": {
                 "XiaoExpansionBoard": "@devicescript/drivers"
             },
             "snippet": "const shield = new XiaoExpansionBoard()\n"
+        },
+        {
+            "label": "Grove Shield for Seeed Studio XIAO",
+            "detail": "Drivers for the {@link https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html | Grove Shield for Seeed Studio XIAO } for Raspberry Pi Pico.\r",
+            "startName": "XiaoGroveShield",
+            "imports": {
+                "XiaoGroveShield": "@devicescript/drivers"
+            },
+            "snippet": "const shield = new XiaoGroveShield()\n"
         },
         {
             "label": "WaveShare Pico LCD114 for Raspberry Pi Pico",

@@ -1,13 +1,16 @@
 import "@dsboard/seeed_xiao_esp32c3"
 import * as ds from "@devicescript/core"
-import { XiaoExpansionBoard, startGroveRGBLCD16x2 } from "@devicescript/drivers"
+import {
+    XiaoGroveShield,
+    startGroveRGBLCD16x2,
+    startBME680,
+} from "@devicescript/drivers"
 
-const board = new XiaoExpansionBoard()
+const board = new XiaoGroveShield()
 
-console.log("start...")
+const { temperature } = await startBME680()
 const lcd = await startGroveRGBLCD16x2()
 setInterval(async () => {
-    const t = ds.millis() + ""
-    console.log(t)
-    await lcd.message.write(t)
+    const temp = Math.round(await temperature.reading.read())
+    await lcd.message.write(`temp: ${temp}C`)
 }, 1000)
