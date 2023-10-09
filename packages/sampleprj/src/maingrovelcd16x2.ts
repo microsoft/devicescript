@@ -1,16 +1,23 @@
-import "@dsboard/seeed_xiao_esp32c3"
-import * as ds from "@devicescript/core"
 import {
-    XiaoGroveShield,
     startGroveRGBLCD16x2,
     startBME680,
+    XiaoGroveShield,
 } from "@devicescript/drivers"
+import { ValueDashboard } from "@devicescript/runtime"
 
-const board = new XiaoGroveShield()
+const shield = new XiaoGroveShield()
+const { temperature, humidity } = await startBME680({
+    address: 0x76,
+})
+const screen = await startGroveRGBLCD16x2()
 
-const { temperature } = await startBME680()
-const lcd = await startGroveRGBLCD16x2()
+const dashboard = new ValueDashboard(screen, {
+    temp: { digits: 1, unit: "C" },
+    humi: { digits: 0, unit: "%" },
+})
+
 setInterval(async () => {
-    const temp = Math.round(await temperature.reading.read())
-    await lcd.message.write(`temp: ${temp}C`)
+    dashboard.values.temp = await temperature.reading.read()
+    dashboard.values.humi = await humidity.reading.read()
+    await dashboard.show()
 }, 1000)

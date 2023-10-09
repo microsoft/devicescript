@@ -148,10 +148,31 @@ export class GroveRGBLCD extends I2CDriver {
 
     async render(message: string) {
         await this.clear()
-        if (message?.length > 0)
+        if (message?.length > 0) {
+            let col = 0
+            let row = 0
             for (let i = 0; i < message.length; ++i) {
-                await this.write(message.charCodeAt(i))
+                const c = message.charCodeAt(i)
+                if (c === 10) { // \n
+                    col = 0
+                    row += 1
+                    await this.newLine(col, row)
+                }
+                else if (c === 13) {
+                    // skip
+                } else {
+                    // in bounds
+                    if (col < this.columns && row < this.lines)
+                        await this.write(c)
+                    col += 1
+                }
             }
+        }
+    }
+
+    private async newLine(col: number, row: number) {
+        col = row === 0 ? col | 0x80 : col | 0xc0
+        await this.writeBuf(Buffer.from([0x80, col]))
     }
 }
 
