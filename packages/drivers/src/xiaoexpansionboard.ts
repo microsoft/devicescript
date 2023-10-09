@@ -8,7 +8,7 @@ import { pins } from "@dsboard/seeed_xiao_esp32c3"
 
 /**
  *
- * Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board } for Raspberry Pi Pico.
+ * Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board }.
  *
  * @devsPart Seeed Studio XIAO Expansion Board
  * @devsWhenUsed
@@ -26,7 +26,7 @@ export class XiaoExpansionBoard {
 
     /**
      * Starts a server for the OLED display.
-     * @returns 
+     * @returns
      */
     async startDisplay() {
         const disp = new SSD1306Driver({
