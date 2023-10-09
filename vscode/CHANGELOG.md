@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.13](https://github.com/microsoft/devicescript/compare/v2.15.12...v2.15.13)
+
+> 3 October 2023
+
+- added rp2040 matrix example [`11d1f3d`](https://github.com/microsoft/devicescript/commit/11d1f3de52776aec0203a49dafa944f3240ffcf8)
+- added grape:bit driver [`7f91d62`](https://github.com/microsoft/devicescript/commit/7f91d6226b16ae3578adb267fec7a8dfdc5c914d)
+- added pixel matrix [`ce2734c`](https://github.com/microsoft/devicescript/commit/ce2734cbf228c4b3e9713ffe916acf4dec0edff4)
+
 #### [v2.15.12](https://github.com/microsoft/devicescript/compare/v2.15.11...v2.15.12)
 
 > 29 September 2023

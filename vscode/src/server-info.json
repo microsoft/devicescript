@@ -254,7 +254,7 @@
         },
         {
             "label": "Sensirion SHTC3",
-            "detail": "Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.\r",
+            "detail": "Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.",
             "startName": "startSHTC3",
             "classIdentifiers": [
                 337754823,
@@ -267,7 +267,7 @@
         },
         {
             "label": "Sensirion SHT30",
-            "detail": "Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)\r",
+            "detail": "Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)",
             "startName": "startSHT30",
             "classIdentifiers": [
                 337754823,
@@ -280,7 +280,7 @@
         },
         {
             "label": "AHT20",
-            "detail": "Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.\r",
+            "detail": "Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.",
             "startName": "startAHT20",
             "classIdentifiers": [
                 337754823,
@@ -293,7 +293,7 @@
         },
         {
             "label": "LITEON LTR-390UV-01",
-            "detail": "Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.\r",
+            "detail": "Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.",
             "startName": "startLTR390",
             "classIdentifiers": [
                 527306128,
@@ -306,7 +306,7 @@
         },
         {
             "label": "Bosch BME68",
-            "detail": "Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x76` (default) or `0x77`.\r",
+            "detail": "Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x76` (default) or `0x77`.",
             "startName": "startBME680",
             "classIdentifiers": [
                 337754823,
@@ -321,7 +321,7 @@
         },
         {
             "label": "Pico Bricks for Raspberry Pi Pico",
-            "detail": "Drivers for the {@link https://shop.robotistan.com/products/pico-bricks | Pico Bricks } shield for Raspberry Pi Pico ({@link https://github.com/Robotistan/PicoBricks/tree/main/Documents | datasheets}).\r",
+            "detail": "Drivers for the {@link https://shop.robotistan.com/products/pico-bricks | Pico Bricks } shield for Raspberry Pi Pico ({@link https://github.com/Robotistan/PicoBricks/tree/main/Documents | datasheets}).",
             "startName": "PicoBricks",
             "imports": {
                 "PicoBricks": "@devicescript/drivers"
@@ -330,7 +330,7 @@
         },
         {
             "label": "Seeed Studio XIAO Expansion Board",
-            "detail": "Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board }.\r",
+            "detail": "Drivers for the {@link https://wiki.seeedstudio.com/Seeeduino-XIAO-Expansion-Board/ | Seeed Studio XIAO Expansion Board }.",
             "startName": "XiaoExpansionBoard",
             "imports": {
                 "XiaoExpansionBoard": "@devicescript/drivers"
@@ -339,7 +339,7 @@
         },
         {
             "label": "Grove Shield for Seeed Studio XIAO",
-            "detail": "Drivers for the {@link https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html | Grove Shield for Seeed Studio XIAO } for Raspberry Pi Pico.\r",
+            "detail": "Drivers for the {@link https://www.seeedstudio.com/Grove-Shield-for-Seeeduino-XIAO-p-4621.html | Grove Shield for Seeed Studio XIAO } for Raspberry Pi Pico.",
             "startName": "XiaoGroveShield",
             "imports": {
                 "XiaoGroveShield": "@devicescript/drivers"
@@ -348,7 +348,7 @@
         },
         {
             "label": "WaveShare Pico LCD114 for Raspberry Pi Pico",
-            "detail": "Driver for WaveShare Pico-LCD-1.14 inch.\r",
+            "detail": "Driver for WaveShare Pico-LCD-1.14 inch.",
             "startName": "WaveSharePicoLCD114",
             "imports": {
                 "WaveSharePicoLCD114": "@devicescript/drivers"
@@ -357,7 +357,7 @@
         },
         {
             "label": "Pimoroni Pico Badger",
-            "detail": "Support for Badger 2040 W (Pico W Aboard)\r",
+            "detail": "Support for Badger 2040 W (Pico W Aboard)",
             "startName": "PimoroniBadger2040W",
             "imports": {
                 "PimoroniBadger2040W": "@devicescript/drivers"
@@ -366,7 +366,7 @@
         },
         {
             "label": "KittenBot Grape:bit ESP32-C3",
-            "detail": "Support for KittenBot Grape:bit ESP32-C3\r",
+            "detail": "Support for KittenBot Grape:bit ESP32-C3",
             "startName": "KittenBotGrapeBit",
             "imports": {
                 "KittenBotGrapeBit": "@devicescript/drivers"
