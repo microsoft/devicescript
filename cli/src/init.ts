@@ -450,6 +450,11 @@ export async function init(dir: string | undefined, options: InitOptions) {
     // ok, soft patch applied, now we apply more stuff that always has to be set
     // in case the project already had a package.json
     const pkg = readJSON5Sync("package.json") as PackageManifest
+
+    // name needed in worspace for install to work
+    if (!pkg.name)
+        pkg.name = dir || basename(process.cwd())
+
     // ensure cli is added
     addCliDependency(pkg)
     // write down
