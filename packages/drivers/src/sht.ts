@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 import { DriverError } from "./core"
-import { I2CSensorDriver, I2CSensorDriverOptions } from "./driver"
+import { I2CSensorDriver, I2CSensorDriverOptions } from "./i2csensordriver"
 
 export abstract class SHTDriver extends I2CSensorDriver<{
     humidity: number

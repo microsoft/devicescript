@@ -1,5 +1,5 @@
 import { Display, Image, Palette } from "@devicescript/graphics"
-import { I2CDriver, I2CDriverOptions } from "./driver"
+import { I2CDriver, I2CDriverOptions } from "./i2cdriver"
 import { delay, isSimulator } from "@devicescript/core"
 
 // inspired by https://github.com/adafruit/Adafruit_SH110x

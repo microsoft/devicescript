@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 import { DriverError } from "./core"
-import { I2CSensorDriver } from "./driver"
+import { I2CSensorDriver } from "./i2csensordriver"
 import { startSimpleServer } from "./servers"
 
 const LTR390UV_ADDR = 0x53

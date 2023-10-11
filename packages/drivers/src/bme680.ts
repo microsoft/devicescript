@@ -6,7 +6,7 @@ import {
 } from "./servers"
 import { delay } from "@devicescript/core"
 import { DriverError } from "./core"
-import { I2CSensorDriver } from "./driver"
+import { I2CSensorDriver } from "./i2csensordriver"
 
 // based on https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/main/adafruit_bme680.py
 

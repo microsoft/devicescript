@@ -1,6 +1,7 @@
 import { configureHardware } from "@devicescript/servers"
 
-export * from "./driver"
+export * from "./i2cdriver"
+export * from "./i2csensordriver"
 export * from "./core"
 export * from "./shtc3"
 export * from "./sht30"

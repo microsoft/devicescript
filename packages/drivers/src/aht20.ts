@@ -1,7 +1,7 @@
 import * as ds from "@devicescript/core"
 import { DriverError } from "./core"
 import { startTemperatureHumidity } from "./servers"
-import { I2CSensorDriver } from "./driver"
+import { I2CSensorDriver } from "./i2csensordriver"
 import { sleep } from "@devicescript/core"
 
 const AHT20_ADDRESS = 0x38
