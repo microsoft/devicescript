@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/crypto",
-    "version": "2.15.14",
+    "version": "2.15.15",
     "private": true,
     "dependencies": {},
     "devDependencies": {

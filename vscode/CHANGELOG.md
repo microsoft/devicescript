@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.14](https://github.com/microsoft/devicescript/compare/v2.15.13...v2.15.14)
+
+> 9 October 2023
+
+- support for grove RGB LCD 16x2 [`#639`](https://github.com/microsoft/devicescript/pull/639)
+- added dummy lcd project [`79536d6`](https://github.com/microsoft/devicescript/commit/79536d62487324fb9c5002e7952749cfa09c02f6)
+- updated sample/multi support in lcd [`9dbda44`](https://github.com/microsoft/devicescript/commit/9dbda446e58a30c5f5cc742d8a26ca400fd05884)
+- updated xiao docs [`2f6cf19`](https://github.com/microsoft/devicescript/commit/2f6cf197b043f2344f16aeea452b0b74c3f9e41d)
+
 #### [v2.15.13](https://github.com/microsoft/devicescript/compare/v2.15.12...v2.15.13)
 
 > 3 October 2023
