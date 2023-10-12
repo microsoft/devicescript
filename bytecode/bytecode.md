@@ -11,7 +11,7 @@ Jacdac service specifications, and runtime configuration (`configureHardware()` 
 
 Functions are sequences of opcodes defined below.
 Opcodes are divided into expressions (with return type) which do not modify state,
-and statements (no return type; `ret_val()` expression is used to retrive the logical
+and statements (no return type; `ret_val()` expression is used to retrieve the logical
 result of a last statement).
 Many opcodes (both expressions and statements) can also throw an exception.
 
