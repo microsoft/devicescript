@@ -108,7 +108,8 @@ void fun5_Image_alloc(devs_ctx_t *ctx) {
     int offset = devs_arg_int(ctx, 4);
     uint8_t *pix = NULL;
 
-    if (width <= 0 || height <= 0 || width * height > DEVS_MAX_ALLOC || (bpp != 1 && bpp != 4)) {
+    if (width <= 0 || height <= 0 || (bpp != 1 && bpp != 4) ||
+        bpp * width * height > 8 * DEVS_MAX_ALLOC) {
         devs_throw_range_error(ctx, "invalid dimensions %dx%dx%d", width, height, bpp);
         return;
     }
