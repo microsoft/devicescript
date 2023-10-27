@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.15](https://github.com/microsoft/devicescript/compare/v2.15.14...v2.15.15)
+
+> 11 October 2023
+
+- slim date object [`#643`](https://github.com/microsoft/devicescript/pull/643)
+- always populate package.json name [`5f2d79c`](https://github.com/microsoft/devicescript/commit/5f2d79ca6d5ffed144395744acfae86390dd1c83)
+
 #### [v2.15.14](https://github.com/microsoft/devicescript/compare/v2.15.13...v2.15.14)
 
 > 9 October 2023
