@@ -207,18 +207,19 @@ function startProxyServers(
     options: DevToolsOptions
 ) {
     let clientId = 0
-
+    const { vscode } = options
     const bus = devtoolsSelf.bus
 
     const listenHost = options.internet ? undefined : "127.0.0.1"
     const domain = listenHost || "localhost"
-    log(`   http     : http://${domain}:${port}`)
-    log(`   websocket: ws://${domain}:${port}`)
+    log(`   dashboard  : http://${domain}:${port}/`)
+    log(`   connection : http://${domain}:${port}/connect`)
+    log(`   websocket  : ws://${domain}:${port}`)
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
-        let route: "vscode" | "connect"
-        if (pathname === "/") route = "vscode"
+        let route: "vscode" | "connect" | "dashboard"
+        if (pathname === "/") route = vscode ? "vscode" : "dashboard"
         else if (pathname === "/connect") route = "connect"
         if (!route) res.statusCode = 404
         else
