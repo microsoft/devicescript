@@ -48,7 +48,7 @@ export function serverInfo(host: Host) {
         return stmt
             .getFullText()
             .replace(/\s*\/\*\*\s+(\*\s*)*/, "")
-            .replace(/\n[^]*/, "")
+            .replace(/\r?\n[^]*/, "")
     }
 
     function customDriver(stmt: ts.ClassDeclaration) {

@@ -259,7 +259,7 @@ function startProxyServers(
     })
     server.listen(port, listenHost)
 
-    log(`   tcpsocket: tcp://${domain}:${tcpPort}`)
+    log(`   tcpsocket  : tcp://${domain}:${tcpPort}`)
     const tcpServer = net.createServer(socket => {
         const sender = "tcp" + ++clientId
         const client: DevToolsClient = socket as any
@@ -363,7 +363,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
 
     const listenHost = options.internet ? undefined : "127.0.0.1"
     const domain = listenHost || "localhost"
-    console.log(`   dbgserver: tcp://${domain}:${port}`)
+    console.log(`   dbgserver  : tcp://${domain}:${port}`)
     net.createServer(async socket => {
         console.log("dbgserver: connection")
         let session: DsDapSession
