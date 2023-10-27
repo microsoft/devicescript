@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 
 function toHex(bytes: Uint8Array) {
     let r = ""
@@ -9,14 +9,14 @@ function toHex(bytes: Uint8Array) {
 }
 
 export default function KeyGenerator() {
-    const compute = () => {
+    const compute = useCallback(() => {
         if (typeof window === "undefined")
             return "00000000000000000000000000000000"
 
         const array = new Uint8Array(32) // Create a Uint8Array with 32 elements.
         window.crypto.getRandomValues(array) // Fill the array with cryptographically strong random values.
         return toHex(array)
-    }
+    }, [])
 
     const [value, setValue] = useState(compute())
 

@@ -12,6 +12,7 @@ export default function HeroImage() {
                     loading="lazy"
                     src={hero}
                     alt="screenshot of the visual studio integration"
+                    decoding="async"
                 />
             </div>
             <div className={styles["mid-grid"]}>💖</div>
@@ -25,7 +26,7 @@ export default function HeroImage() {
                     }))
                     .filter(({ img, url }) => !!img && !!url)
                     .map(({ id, img, devName }) => (
-                        <img key={id} src={img} alt={devName} title={devName} />
+                        <img key={id} src={img} alt={devName} title={devName} decoding="async" />
                     ))}
             </div>
         </div>

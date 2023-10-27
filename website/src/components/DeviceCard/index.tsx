@@ -17,6 +17,7 @@ export default function DeviceCard(props: {
                 className={`avatar__photo-link avatar__photo avatar__photo--xl ${styles.device__photo}`}
                 alt={imageAlt || `photograph of ${title}`}
                 src={image}
+                decoding="async"
             />
             <div className="avatar__intro">
                 <div className="avatar__name">{title}</div>
