@@ -467,8 +467,6 @@ async function rebuild(args: BuildReqArgs) {
 }
 
 function deployService(args: BuildReqArgs) {
-    console.log("-----------> run it ")
-
     const bus = devtoolsSelf.bus
     if (args.deployTo == "*") {
         const services = bus.services({
