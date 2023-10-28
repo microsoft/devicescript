@@ -111,7 +111,7 @@ export async function devtools(
     const traceFd = options.trace ? await open(options.trace, "w") : null
 
     // passive bus to sniff packets
-    const transports = createTransports(options)
+    const transports = await createTransports(options)
     const bus = new JDBus(transports, {
         client: false,
         disableRoleManager: true,
@@ -430,6 +430,8 @@ async function rebuild(args: BuildReqArgs) {
     opts.verify = false
     opts.quiet = true
 
+    await compileFile(args.filename, opts);
+
     const res = await compileFile(args.filename, opts)
 
     let deployStatus = ""
@@ -465,6 +467,8 @@ async function rebuild(args: BuildReqArgs) {
 }
 
 function deployService(args: BuildReqArgs) {
+    console.log("-----------> run it ")
+
     const bus = devtoolsSelf.bus
     if (args.deployTo == "*") {
         const services = bus.services({

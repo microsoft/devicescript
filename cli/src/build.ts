@@ -1,5 +1,5 @@
 import { basename, dirname, join, relative, resolve } from "node:path"
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
+import { readFileSync, writeFileSync, existsSync, readdirSync, constants } from "node:fs"
 import { ensureDirSync, mkdirp, removeSync } from "fs-extra"
 import {
     compileWithHost,
@@ -36,7 +36,7 @@ import {
 import glob from "fast-glob"
 
 import type { DevsModule } from "@devicescript/vm"
-import { readFile, writeFile } from "node:fs/promises"
+import { readFile, writeFile, access } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
 import {
@@ -58,14 +58,14 @@ export function setupWebsocket() {
         require("websocket-polyfill")
         // @ts-ignore
         global.Blob = require("buffer").Blob
-        global.WebSocket.prototype.send = function (this: any, data: any) {
+        global.WebSocket.prototype.send = function(this: any, data: any) {
             if (typeof data.valueOf() === "string")
                 this.connection_.sendUTF(data)
             else {
                 this.connection_.sendBytes(Buffer.from(data))
             }
         }
-        global.WebSocket.prototype.close = function (this: any, code, reason) {
+        global.WebSocket.prototype.close = function(this: any, code, reason) {
             this.state_ = WebSocket.CLOSING
             if (this.connection_) {
                 if (code === undefined) this.connection_.sendCloseFrame()
@@ -81,11 +81,13 @@ export function readDebugInfo() {
     let dbg: DebugInfo
     try {
         dbg = readJSON5Sync(join(BINDIR, DEVS_DBG_FILE))
-    } catch {}
+    } catch {
+    }
     return dbg
 }
 
 let devsInst: DevsModule
+
 export function setDevsDmesg() {
     if (devsInst) {
         const dbg = readDebugInfo()
@@ -160,8 +162,10 @@ export async function devsStartWithNetwork(options: {
 export async function getHost(
     buildConfig: ResolvedBuildConfig,
     options: BuildOptions,
-    folder: string
+    folder: string,
 ) {
+    console.log(" =============+> getHost")
+
     const inst = options.verify === false ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
@@ -199,6 +203,7 @@ export async function getHost(
     }
     return devsHost
 }
+
 function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
     return {
         category: 1,
@@ -237,7 +242,7 @@ function compilePackageJson(
     tsdir: string,
     entryPoint: string,
     lcfg: LocalBuildConfig,
-    errors: DevsDiagnostic[]
+    errors: DevsDiagnostic[],
 ) {
     const pkgJsonPath = join(tsdir, "package.json")
     if (existsSync(pkgJsonPath)) {
@@ -247,10 +252,10 @@ function compilePackageJson(
         let version = pkgJSON.version ?? "(no version)"
         if (isGit()) {
             const head = execCmd(
-                "git describe --tags --match 'v[0-9]*' --always"
+                "git describe --tags --match 'v[0-9]*' --always",
             )
             let dirty = execCmd(
-                "git status --porcelain --untracked-file=no --ignore-submodules=untracked"
+                "git status --porcelain --untracked-file=no --ignore-submodules=untracked",
             )
             if (!head) dirty = "yes"
             const exact = !dirty && head[0] == "v" && !head.includes("-")
@@ -289,14 +294,14 @@ function compilePackageJson(
     }
 
     verboseLog(
-        `compile: ${lcfg.hwInfo["@name"]} ${lcfg.hwInfo["@version"] ?? ""}`
+        `compile: ${lcfg.hwInfo["@name"]} ${lcfg.hwInfo["@version"] ?? ""}`,
     )
 }
 
 function compileServiceSpecs(
     tsdir: string,
     lcfg: LocalBuildConfig,
-    errors: DevsDiagnostic[]
+    errors: DevsDiagnostic[],
 ) {
     const dir = join(tsdir, "services")
     lcfg.addServices = []
@@ -304,10 +309,10 @@ function compileServiceSpecs(
     if (existsSync(dir)) {
         const includes: Record<string, jdspec.ServiceSpec> = {}
         jacdacDefaultSpecifications.forEach(
-            spec => (includes[spec.shortId] = spec)
+            spec => (includes[spec.shortId] = spec),
         )
         const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(
-            fn => /\.md$/i.test(fn) && !/README\.md$/i.test(fn)
+            fn => /\.md$/i.test(fn) && !/README\.md$/i.test(fn),
         )
         for (const mdf of markdowns) {
             const fn = join(dir, mdf)
@@ -315,7 +320,7 @@ function compileServiceSpecs(
             const json = parseServiceSpecificationMarkdownToJSON(
                 content,
                 includes,
-                fn
+                fn,
             )
             json.catalog = false
             if (json?.errors?.length)
@@ -346,7 +351,7 @@ export function validateBoard(board: DeviceConfig, baseCfg: RepoInfo) {
 function compileBoards(
     tsdir: string,
     lcfg: LocalBuildConfig,
-    errors: DevsDiagnostic[]
+    errors: DevsDiagnostic[],
 ) {
     const dir = join(tsdir, "boards")
     lcfg.addBoards = []
@@ -354,13 +359,13 @@ function compileBoards(
 
     if (existsSync(dir)) {
         const boards = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
-            fn.endsWith(".board.json")
+            fn.endsWith(".board.json"),
         )
         for (const boardFn of boards) {
             const fullName = join(dir, boardFn)
             try {
                 const board: DeviceConfig = JSON.parse(
-                    readFileSync(fullName, "utf-8")
+                    readFileSync(fullName, "utf-8"),
                 )
                 const bid = basename(boardFn, ".board.json")
                 if (board.id && board.id != bid)
@@ -375,7 +380,7 @@ function compileBoards(
                         file: fullName,
                         line: 1,
                         message: e.message,
-                    })
+                    }),
                 )
             }
         }
@@ -384,6 +389,7 @@ function compileBoards(
 
 export class CompilationError extends Error {
     static NAME = "CompilationError"
+
     constructor(message: string) {
         super(message)
         this.name = CompilationError.NAME
@@ -393,7 +399,7 @@ export class CompilationError extends Error {
 export function buildConfigFromDir(
     dir: string,
     entryPoint: string = "",
-    options: BuildOptions = {}
+    options: BuildOptions = {},
 ) {
     const lcfg: LocalBuildConfig = {
         hwInfo: {},
@@ -418,7 +424,7 @@ export function buildConfigFromDir(
 
 export async function compileFile(
     fn: string,
-    options: BuildOptions = {}
+    options: BuildOptions = {},
 ): Promise<CompilationResult> {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
@@ -438,7 +444,7 @@ export async function compileFile(
     const { errors, buildConfig } = buildConfigFromDir(
         folder,
         entryPoint,
-        options
+        options,
     )
 
     await saveLibFiles(buildConfig, options)
@@ -455,7 +461,7 @@ export async function compileFile(
         verboseLog(`sha: ${res.dbg.binarySHA256}`)
         writeFileSync(
             join(folder, outDir, DEVS_DBG_FILE),
-            JSON.stringify(res.dbg)
+            JSON.stringify(res.dbg),
         )
     }
 
@@ -471,7 +477,7 @@ export async function compileFile(
 
 export async function saveLibFiles(
     buildConfig: ResolvedBuildConfig,
-    options: BuildOptions
+    options: BuildOptions,
 ) {
     // pass the user-provided services so they are included in devicescript-specs.d.ts
     const prelude = preludeFiles(buildConfig)
@@ -484,16 +490,18 @@ export async function saveLibFiles(
     ) {
         verboseLog(`not saving files in ${libpath} (source build)`)
     } else {
-        await mkdirp(libpath)
+        if (!existsSync(libpath))
+            await mkdirp(libpath)
+
         verboseLog(`saving lib files in ${libpath}`)
         for (const fn of Object.keys(prelude)) {
             const fnpath = join(pref, fn)
-            await mkdirp(dirname(fnpath))
-            const ex = await readFile(fnpath, "utf-8").then(
-                r => r,
-                _ => null
-            )
-            if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+            if (!existsSync(libpath))
+                await mkdirp(dirname(fnpath))
+
+            const ex = readFileSync(fnpath, { encoding: "utf-8" })
+
+            if (prelude[fn] != ex) writeFileSync(fnpath, prelude[fn])
         }
     }
 
@@ -501,28 +509,38 @@ export async function saveLibFiles(
     const customServices =
         buildConfig.services.filter(srv => srv.catalog !== undefined) || []
     // generate source files
-    await Promise.all(["ts", "c"].map(async(lang) => {
+    await Promise.all(["ts", "c"].map(async (lang) => {
         const converter = converters()[lang]
         let constants = ""
         for (const srv of customServices) {
             constants += converter(srv) + "\n"
         }
         const dir = join(pref, GENDIR, lang)
-        await mkdirp(dir)
-        return writeFile(join(dir, `constants.${lang}`), constants, {
+        if (!existsSync(dir))
+            await mkdirp(dir)
+
+        if (existsSync(join(dir, `constants.${lang}`)))
+            return
+
+        await writeFile(join(dir, `constants.${lang}`), constants, {
             encoding: "utf-8",
         })
     }))
     // json specs
     {
         const dir = join(pref, GENDIR)
-        await mkdirp(dir)
+        if (!existsSync(dir))
+            await mkdirp(dir)
+
+        if (existsSync(join(dir, `services.json`)))
+            return
+
         await writeFile(
             join(dir, `services.json`),
             JSON.stringify(customServices, null, 2),
             {
                 encoding: "utf-8",
-            }
+            },
         )
     }
 }
@@ -562,9 +580,9 @@ async function buildOnce(file: string, options: BuildOptions) {
         const { sizes, functions } = dbg
         log(
             "  " +
-                Object.keys(sizes)
-                    .map(name => `${name}: ${prettySize(sizes[name])}`)
-                    .join(", ")
+            Object.keys(sizes)
+                .map(name => `${name}: ${prettySize(sizes[name])}`)
+                .join(", "),
         )
         log(`  functions:`)
         const resolver = SrcMapResolver.from(dbg)
@@ -573,7 +591,7 @@ async function buildOnce(file: string, options: BuildOptions) {
             .forEach(fn => {
                 log(`  ${fn.name} (${prettySize(fn.size)})`)
                 fn.users.forEach(user =>
-                    debug(`    <-- ${resolver.posToString(user[0])}`)
+                    debug(`    <-- ${resolver.posToString(user[0])}`),
                 )
             })
     }
