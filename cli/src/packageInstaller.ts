@@ -18,10 +18,16 @@ export const isYarnRepo = (): boolean => {
     }
 }
 
-export const getPackageInstallerCommand = (packageName: string): string[] => {
+export const getPackageInstallerCommand = (packageName?: string): string[] => {
     if (isYarnRepo()) {
+        if (!packageName)
+            return ['yarn', 'install'];
+
         return ['yarn', 'add', packageName]
     }
+
+    if (!packageName)
+        return ['npm', 'install'];
 
     return ['npm', 'install', '--save', '--no-workspaces', packageName]
 };

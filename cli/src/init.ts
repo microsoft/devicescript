@@ -32,6 +32,7 @@ import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
 import { MARKETPLACE_EXTENSION_ID } from "@devicescript/interop"
 import { TSDOC_TAGS } from "@devicescript/compiler"
+import { getPackageInstallerCommand, isYarnRepo } from "./packageInstaller"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -408,16 +409,12 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
     return cwd
 }
 
-function isYarn(cwd: string, options: InitOptions) {
-    const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
-    return yarnlock || options.yarn
-}
-
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
-        const cmd = isYarn(cwd, options) ? "yarn" : "npm"
-        log(`install dependencies using ${cmd}...`)
-        spawnSync(cmd, ["install"], {
+        const [packageManagerCmd, ...packageManagerArgs] = getPackageInstallerCommand();
+
+        log(`install dependencies using ${packageManagerCmd}...`)
+        spawnSync(packageManagerCmd, packageManagerArgs, {
             shell: true,
             stdio: "inherit",
             cwd,
@@ -442,7 +439,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     log(`Configuring DeviceScript project...`)
 
     const files = { ...optionalFiles }
-    if (isYarn(".", options)) patchYarnFiles(files)
+    if (isYarnRepo() || options.yarn) patchYarnFiles(files)
 
     // write template files
     const cwd = writeFiles(dir, options, files)
@@ -682,7 +679,7 @@ export async function addNpm(options: AddNpmOptions) {
         files["src/index.ts"] += `export * from "./${fn.slice(0, -3)}"\n`
     }
 
-    if (isYarn(".", options)) patchYarnFiles(files)
+    if (isYarnRepo() || options.yarn) patchYarnFiles(files)
 
     const cwd = writeFiles(".", options, files)
 
