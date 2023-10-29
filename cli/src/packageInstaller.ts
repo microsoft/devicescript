@@ -2,7 +2,7 @@ import { readFile, access, constants } from "node:fs/promises"
 import { accessSync } from "node:fs"
 import { join } from "node:path"
 import { spawn } from "node:child_process"
-import { verboseLog } from "./command"
+import { isInteractiveMode, verboseLog } from "./command"
 
 interface PkgJson {
     dependencies: Record<string, string>
@@ -99,6 +99,9 @@ export const spawnAsyncInstaller = (packageName: string) => {
 };
 
 export const askForPackageInstallation = async (pkgName: string, installByDefault = true) => {
+    if (!isInteractiveMode)
+        console.log(`Interactive mode disabled, package "${pkgName}" must be installed manually`)
+
     if (await isPackageInstalledLocally(pkgName))
         return
 

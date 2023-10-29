@@ -16,7 +16,7 @@ import { dcfg } from "./dcfg"
 import {
     incVerbose,
     setConsoleColors,
-    setDeveloperMode,
+    setDeveloperMode, setInteractiveMode,
     setQuiet,
     verboseLog,
 } from "./command"
@@ -429,6 +429,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:quiet", () => setQuiet(true))
+    program.on("option:disable-interactive-mode", () => setInteractiveMode(false))
     program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
     program.on("option:dev", () => {

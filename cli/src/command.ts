@@ -70,6 +70,7 @@ export function logToConsole(priority: LoggerPriority, message: string) {
 
 export let isVerbose = 0
 export let isQuiet = false
+export let isInteractiveMode = true
 
 export function incVerbose() {
     isVerbose++
@@ -78,6 +79,10 @@ export function incVerbose() {
 
 export function setQuiet(v: boolean) {
     isQuiet = v
+}
+
+export function setInteractiveMode(v: boolean) {
+    isInteractiveMode = v
 }
 
 export function verboseLog(msg: string) {
