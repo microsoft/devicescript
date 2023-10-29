@@ -164,8 +164,6 @@ export async function getHost(
     options: BuildOptions,
     folder: string,
 ) {
-    console.log(" =============+> getHost")
-
     const inst = options.verify === false ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
