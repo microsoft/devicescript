@@ -1,4 +1,5 @@
-import { readFile } from "node:fs/promises"
+import { readFile, access, constants } from "node:fs/promises"
+import { accessSync } from "node:fs"
 import { join } from "node:path"
 import { spawn } from "node:child_process"
 import { verboseLog } from "./command"
@@ -6,6 +7,24 @@ import { verboseLog } from "./command"
 interface PkgJson {
     dependencies: Record<string, string>
 }
+
+export const isYarnRepo = (): boolean => {
+    try {
+        accessSync(join(process.cwd(), "yarn.lock"), constants.R_OK)
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+
+export const getPackageInstallerCommand = (packageName: string): string[] => {
+    if (isYarnRepo()) {
+        return ['yarn', 'add', packageName]
+    }
+
+    return ['npm', 'install', '--save', '--no-workspaces', packageName]
+};
 
 export const isPackageInstalledLocally = async (pkgName: string): Promise<boolean> => {
     const pkgJsonString = await readFile(join(process.cwd(), "package.json"), { encoding: "utf-8" })
@@ -52,7 +71,9 @@ export const spawnAsyncInstaller = (packageName: string) => {
     let resolve: () => void
     let reject: () => void
 
-    const installProcess = spawn('npm', ['install', '--save', '--no-workspaces', packageName], {
+    const [rootCmd, ...cmdArgs] = getPackageInstallerCommand(packageName);
+
+    const installProcess = spawn(rootCmd, cmdArgs, {
         cwd: process.cwd(),
         env: process.env,
     });
@@ -93,7 +114,9 @@ export const askForPackageInstallation = async (pkgName: string, installByDefaul
             console.log(`Package "${pkgName}" installed!`)
         }
         catch {
-            console.log(`Automatic package installation failed :( You can try to install it manually by running "npm install --save ${pkgName}"`)
+            const installCmd = getPackageInstallerCommand(pkgName).join(' ');
+
+            console.log(`Automatic package installation failed :( You can try to install it manually by running "${installCmd}"`)
         }
     }
 }
