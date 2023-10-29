@@ -118,15 +118,15 @@ export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
             break
         }
         case "spi": {
-            newTransport = createSPI()
+            newTransport = await createSPI()
             break
         }
         case "serial": {
-            newTransport = createSerial()
+            newTransport = await createSerial()
             break
         }
         case "usb": {
-            newTransport = createUSB()
+            newTransport = await createUSB()
             break
         }
         case "none": {
