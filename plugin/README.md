@@ -4,7 +4,6 @@ This plugin checks for errors that will trip the [DeviceScript](https://microsof
 
 This plugin ships with the Visual Studio Code extension and is automatically enabled for DeviceScript projects.
 
-
 ## Contributing
 
 Contributions are welcome! See [contributing page](../CONTRIBUTING.md).

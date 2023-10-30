@@ -51,7 +51,7 @@ function computedPropNames() {
     msg("computedPropNames")
     const f = 10
     let p1 = 1
-    const o = { f, [ ds._id("c") + "x"]: 12, 1: "x", [p1 + 2]: "b123" }
+    const o = { f, [ds._id("c") + "x"]: 12, 1: "x", [p1 + 2]: "b123" }
     check(o, "f:10,cx:12,1:x,3:b123")
 }
 
@@ -160,5 +160,3 @@ function testLam() {
 
 runObjLit()
 testLam()
-
-

@@ -449,8 +449,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const pkg = readJSON5Sync("package.json") as PackageManifest
 
     // name needed in worspace for install to work
-    if (!pkg.name)
-        pkg.name = dir || basename(process.cwd())
+    if (!pkg.name) pkg.name = dir || basename(process.cwd())
 
     // ensure cli is added
     addCliDependency(pkg)
@@ -502,12 +501,12 @@ export async function init(dir: string | undefined, options: InitOptions) {
 
     return finishAdd(
         `Your DeviceScript project is initialized.\n` +
-        `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
+            `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
         ["package.json", MAIN]
     )
 }
 
-export interface AddSimOptions extends InitOptions { }
+export interface AddSimOptions extends InitOptions {}
 
 export async function addSim(options: AddSimOptions) {
     log(`Adding simulator support`)
@@ -566,7 +565,7 @@ export interface AddNpmOptions extends InitOptions {
     name?: string
 }
 
-export interface AddSettingsOptions extends InitOptions { }
+export interface AddSettingsOptions extends InitOptions {}
 
 export function execCmd(cmd: string) {
     try {
@@ -726,7 +725,7 @@ export async function addTest(options: AddTestOptions) {
     )
 }
 
-export interface AddTestOptions extends InitOptions { }
+export interface AddTestOptions extends InitOptions {}
 
 export function initAddCmds() {
     addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>

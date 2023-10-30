@@ -34,5 +34,3 @@ function testUnionIndexer(): void {
 
 testStringCollection()
 testUnionIndexer()
-
-

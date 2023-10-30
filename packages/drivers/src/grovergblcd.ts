@@ -153,12 +153,12 @@ export class GroveRGBLCD extends I2CDriver {
             let row = 0
             for (let i = 0; i < message.length; ++i) {
                 const c = message.charCodeAt(i)
-                if (c === 10) { // \n
+                if (c === 10) {
+                    // \n
                     col = 0
                     row += 1
                     await this.newLine(col, row)
-                }
-                else if (c === 13) {
+                } else if (c === 13) {
                     // skip
                 } else {
                     // in bounds

@@ -208,7 +208,10 @@ export class DevsDbgClient extends JDServiceClient {
     values: DevsValue[] = []
     private valueMap: Record<string, DevsValue>
 
-    constructor(service: JDService, public img: Image) {
+    constructor(
+        service: JDService,
+        public img: Image
+    ) {
         super(service)
         assert(service.serviceClass == SRV_DEVS_DBG)
 

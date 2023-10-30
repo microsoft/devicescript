@@ -1,14 +1,10 @@
 {
-  "extends": "../../tsconfig-base.json",
-  "compilerOptions": {
-    "declarationDir": "built",
-    "outDir": "built",
-    "emitDeclarationOnly": false,
-    "types": [
-      "emscripten"
-    ]
-  },
-  "include": [
-    "*.ts"
-  ]
+    "extends": "../../tsconfig-base.json",
+    "compilerOptions": {
+        "declarationDir": "built",
+        "outDir": "built",
+        "emitDeclarationOnly": false,
+        "types": ["emscripten"]
+    },
+    "include": ["*.ts"]
 }

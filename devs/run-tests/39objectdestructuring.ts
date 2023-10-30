@@ -39,7 +39,7 @@ function arrayAssignment() {
     assert(a === 1, "[]")
     assert(c === 3, "[]")
     assert(b === "foo", "[1]")
-    
+
     /* TODO destructor assignments
     ;[a, c] = [c, a]
     assert(a === 3, "[2]")
@@ -62,7 +62,10 @@ function arrayAssignment() {
 }
 
 class ObjF {
-    constructor(public x: number, public y: string) {}
+    constructor(
+        public x: number,
+        public y: string
+    ) {}
 }
 
 function objectAssignment() {
@@ -129,5 +132,3 @@ function runObjDestruct() {
 }
 
 runObjDestruct()
-
-

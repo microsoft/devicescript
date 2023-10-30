@@ -33,7 +33,11 @@ export const enum ColorHues {
 /**
  * Blends two colors, left and right, using the alpha parameter.
  */
-export type ColorInterpolator = (left: number, alpha: number, right: number) => number;
+export type ColorInterpolator = (
+    left: number,
+    alpha: number,
+    right: number
+) => number
 
 /**
  * Encodes an RGB color into a 24bit color number.

@@ -507,23 +507,20 @@ export async function saveLibFiles(
     const customServices =
         buildConfig.services.filter(srv => srv.catalog !== undefined) || []
     // generate source files
-    await Promise.all(["ts", "c"].map(async (lang) => {
-        const converter = converters()[lang]
-        let constants = ""
-        for (const srv of customServices) {
-            constants += converter(srv) + "\n"
-        }
-        const dir = join(pref, GENDIR, lang)
-        if (!existsSync(dir))
+    await Promise.all(
+        ["ts", "c"].map(async lang => {
+            const converter = converters()[lang]
+            let constants = ""
+            for (const srv of customServices) {
+                constants += converter(srv) + "\n"
+            }
+            const dir = join(pref, GENDIR, lang)
             await mkdirp(dir)
-
-        if (existsSync(join(dir, `constants.${lang}`)))
-            return
-
-        await writeFile(join(dir, `constants.${lang}`), constants, {
-            encoding: "utf-8",
+            return writeFile(join(dir, `constants.${lang}`), constants, {
+                encoding: "utf-8",
+            })
         })
-    }))
+    )
     // json specs
     {
         const dir = join(pref, GENDIR)
@@ -544,13 +541,15 @@ export async function saveLibFiles(
 }
 
 export async function buildAll(options: BuildOptions) {
-    await Promise.all((await glob("src/main*.ts")).map((file) => {
-        log(`build ${file}`)
-        return build(file, {
-            ...options,
-            outDir: BINDIR + "/" + file.slice(8, -3),
+    await Promise.all(
+        (await glob("src/main*.ts")).map(file => {
+            log(`build ${file}`)
+            return build(file, {
+                ...options,
+                outDir: BINDIR + "/" + file.slice(8, -3),
+            })
         })
-    }))
+    )
 }
 
 export async function build(file: string, options: BuildOptions) {

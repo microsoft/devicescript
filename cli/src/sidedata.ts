@@ -55,7 +55,7 @@ const msgHandlers: Record<
 
 export function addReqHandler<
     Req extends SideReq,
-    Resp extends SideResp<Req["req"]> = SideResp<Req["req"]>
+    Resp extends SideResp<Req["req"]> = SideResp<Req["req"]>,
 >(
     req: Req["req"],
     cb: (msg: Req, sender: DevToolsClient) => Promise<Resp["data"]>
