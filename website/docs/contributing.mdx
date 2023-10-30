@@ -11,10 +11,10 @@ title: Contributing
 
 We have a few guides to help with specific contributions.
 
-- [add a new driver](/developer/drivers/add-driver)
-- [add a new board](/devices/add-board)
-- [add a new shield](/devices/add-shield)
-- [add a new SOC](/devices/add-soc)
+-   [add a new driver](/developer/drivers/add-driver)
+-   [add a new board](/devices/add-board)
+-   [add a new shield](/devices/add-shield)
+-   [add a new SOC](/devices/add-soc)
 
 ### Samples
 
@@ -92,6 +92,10 @@ Once you have it all:
 -   run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 -   run `make em` to compile using emscripten
 
+To lint sources,
+
+-   run `yarn lint`
+
 ### Visual Studio Extension
 
 Open the Debug view in VSCode and run the `VSCode Extension` configuration. This will launch a new VSCode instance with the extension loaded. A build is automatically triggered before launch VSCode.
@@ -104,7 +108,6 @@ It should also open the `packages` folder which will allow you to work on the bu
 ### Documentation
 
 Run `yarn docs` and edit any markdown file in the `website/docs` folder. The changes should be automatically picked up and rendered by docusaurus.
-
 
 ### Add Core JavaScript APIs
 
