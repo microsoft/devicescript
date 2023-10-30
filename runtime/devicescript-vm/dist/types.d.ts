@@ -1,68 +1,67 @@
 /// <reference types="emscripten" />
-declare type ptr = number
-declare type int32 = number
-export declare type DevsModule = EmscriptenModule &
-    typeof Exts & {
-        _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void
-        _jd_em_set_device_id_string(str: ptr): void
-        _jd_em_init(): void
-        _jd_em_process(): number
-        _jd_em_frame_received(frame: ptr): int32
-        _jd_em_devs_deploy(img: ptr, size: int32): int32
-        _jd_em_devs_verify(img: ptr, size: int32): int32
-        _jd_em_devs_client_deploy(img: ptr, size: int32): int32
-        _jd_em_devs_enable_gc_stress(en: int32): void
-        _jd_em_tcpsock_on_event(ev: int32, arg: ptr, len: int32): void
-        sendPacket(pkt: Uint8Array): void
-        /**
-         * Overrideable metod called when deployment is done.
-         * @param code error code, 0 is success.
-         */
-        deployHandler(code: int32): void
-        /**
-         * Overrideable method called when a panic code is raiserd.
-         * @param exitCode the panic code
-         */
-        panicHandler(exitCode: int32): void
-        /**
-         * Overridable. Read contents of flash.
-         */
-        flashLoad(): Uint8Array
-        /**
-         * Overridable. Write contents of flash.
-         * Currently, we save up to 128k.
-         */
-        flashSave(data: Uint8Array): void
-        /**
-         * Overridable. The requested size of flash in bytes.
-         * Defaults to 128k.
-         */
-        flashSize?: number
-    }
+declare type ptr = number;
+declare type int32 = number;
+export declare type DevsModule = EmscriptenModule & typeof Exts & {
+    _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void;
+    _jd_em_set_device_id_string(str: ptr): void;
+    _jd_em_init(): void;
+    _jd_em_process(): number;
+    _jd_em_frame_received(frame: ptr): int32;
+    _jd_em_devs_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_verify(img: ptr, size: int32): int32;
+    _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_enable_gc_stress(en: int32): void;
+    _jd_em_tcpsock_on_event(ev: int32, arg: ptr, len: int32): void;
+    sendPacket(pkt: Uint8Array): void;
+    /**
+     * Overrideable metod called when deployment is done.
+     * @param code error code, 0 is success.
+     */
+    deployHandler(code: int32): void;
+    /**
+     * Overrideable method called when a panic code is raiserd.
+     * @param exitCode the panic code
+     */
+    panicHandler(exitCode: int32): void;
+    /**
+     * Overridable. Read contents of flash.
+     */
+    flashLoad(): Uint8Array;
+    /**
+     * Overridable. Write contents of flash.
+     * Currently, we save up to 128k.
+     */
+    flashSave(data: Uint8Array): void;
+    /**
+     * Overridable. The requested size of flash in bytes.
+     * Defaults to 128k.
+     */
+    flashSize?: number;
+};
 export declare module Exts {
     /**
      * Debug output and stack traces are sent here.
      */
-    let dmesg: (s: string) => void
+    let dmesg: (s: string) => void;
     /**
      * Logging function
      */
-    let log: (...data: any[]) => void
+    let log: (...data: any[]) => void;
     /**
      * Error logging function
      */
-    let error: (...data: any[]) => void
+    let error: (...data: any[]) => void;
     /**
      * Callback to invoke when a packet needs to be handled by the virtual machine
      * TODO: frame or packet?
      * @param pkt a Jacdac frame
      */
-    function handlePacket(pkt: Uint8Array): void
+    function handlePacket(pkt: Uint8Array): void;
     interface TransportResult {
         /**
          * Callback to close the transport
          */
-        close: () => void
+        close: () => void;
     }
     /**
      * Starts a packet transport over a TCP socket in a node.js application
@@ -70,39 +69,32 @@ export declare module Exts {
      * @param host socket url host
      * @param port socket port
      */
-    function setupNodeTcpSocketTransport(
-        require: (moduleName: string) => any,
-        host: string,
-        port: number
-    ): Promise<TransportResult>
+    function setupNodeTcpSocketTransport(require: (moduleName: string) => any, host: string, port: number): Promise<TransportResult>;
     /**
      * Starts a packet transport over a WebSocket using arraybuffer binary type.
      * @param url socket url
      * @param port socket port
      */
-    function setupWebsocketTransport(
-        url: string | URL,
-        protocols?: string | string[]
-    ): Promise<TransportResult>
+    function setupWebsocketTransport(url: string | URL, protocols?: string | string[]): Promise<TransportResult>;
     /**
      * Utility that converts a base64-encoded buffer into a Uint8Array
      * TODO: nobody is using this?
      * @param s
      * @returns
      */
-    function b64ToBin(s: string): Uint8Array
+    function b64ToBin(s: string): Uint8Array;
     /**
      * Deploys a DeviceScript bytecode to the virtual machine
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
-    function devsDeploy(binary: Uint8Array): number
+    function devsDeploy(binary: Uint8Array): number;
     /**
      * Verifies the format and version of the bytecode
      * @param binary DeviceScript bytecode
      * @returns error code, 0 if verification is successful
      */
-    function devsVerify(binary: Uint8Array): number
+    function devsVerify(binary: Uint8Array): number;
     /**
      * Deploys to the first virtual machine on Jacdac stack (experimental)
      * @internal
@@ -110,32 +102,32 @@ export declare module Exts {
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
-    function devsClientDeploy(binary: Uint8Array): number
+    function devsClientDeploy(binary: Uint8Array): number;
     /**
      * Initalises the virtual machine data structure.
      */
-    function devsInit(): void
+    function devsInit(): void;
     /**
      * Enables/disables GC stress testing.
      */
-    function devsGcStress(en: boolean): void
+    function devsGcStress(en: boolean): void;
     /**
      * Clear settings.
      */
-    function devsClearFlash(): void
+    function devsClearFlash(): void;
     /**
      * Initializes and start the virtual machine (calls init).
      */
-    function devsStart(): void
+    function devsStart(): void;
     /**
      * Stops the virtual machine
      */
-    function devsStop(): void
+    function devsStop(): void;
     /**
      * Indicates if the virtual machine is running
      * @returns true if the virtual machine is started.
      */
-    function devsIsRunning(): boolean
+    function devsIsRunning(): boolean;
     /**
      * Specifices the virtual macine device id.
      * @remarks
@@ -145,12 +137,12 @@ export declare module Exts {
      * @param id0 a hex-encoded device id string or the first 32bit of the device id
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
-    function devsSetDeviceId(id0: string | number, id1?: number): void
-    function sockClose(): 0 | -10
-    function sockWrite(data: ptr, len: number): 0 | -10
-    function sockIsAvailable(): boolean
-    function sockOpen(hostptr: ptr, port: int32): void
+    function devsSetDeviceId(id0: string | number, id1?: number): void;
+    function sockClose(): 0 | -10;
+    function sockWrite(data: ptr, len: number): 0 | -10;
+    function sockIsAvailable(): boolean;
+    function sockOpen(hostptr: ptr, port: int32): void;
 }
-declare function factory(): Promise<DevsModule>
-export default factory
+declare function factory(): Promise<DevsModule>;
+export default factory;
 //# sourceMappingURL=wasmpre.d.ts.map
