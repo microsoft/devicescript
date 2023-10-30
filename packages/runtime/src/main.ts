@@ -14,7 +14,6 @@ import {
 } from "."
 import { delay } from "@devicescript/core"
 
-
 describe("rgb", () => {
     test("0,0,0", () => {
         expect(rgb(0, 0, 0)).toBe(0)
@@ -193,9 +192,9 @@ describe("Test Es Set Class", () => {
 
     test("clear", () => {
         let elements = new Set<number>()
-            ;[1, 3, 1, 4, 5, 3].forEach(element => {
-                elements.add(element)
-            })
+        ;[1, 3, 1, 4, 5, 3].forEach(element => {
+            elements.add(element)
+        })
         expect(elements.size === 4).toBe(true)
 
         elements.clear()
@@ -204,9 +203,9 @@ describe("Test Es Set Class", () => {
 
     test("delete", () => {
         let elements = new Set<string>()
-            ;["a", "b", "e", "b", "d", "c", "a"].forEach(element => {
-                elements.add(element)
-            })
+        ;["a", "b", "e", "b", "d", "c", "a"].forEach(element => {
+            elements.add(element)
+        })
 
         expect(elements.size === 5).toBe(true)
 
@@ -222,9 +221,9 @@ describe("Test Es Set Class", () => {
 
     test("has", () => {
         let elements = new Set<string>()
-            ;["a", "d", "f", "d", "d", "a", "g"].forEach(element => {
-                elements.add(element)
-            })
+        ;["a", "d", "f", "d", "d", "a", "g"].forEach(element => {
+            elements.add(element)
+        })
 
         expect(elements.has("g")).toBe(true)
         expect(elements.has("d")).toBe(true)
@@ -234,31 +233,29 @@ describe("Test Es Set Class", () => {
 })
 
 describe("number", () => {
-    
     test("isInteger", () => {
         const check = (v: unknown) => expect(Number.isInteger(v)).toBe(true)
         const checkNot = (v: unknown) => expect(Number.isInteger(v)).toBe(false)
 
-        check(0); // true
-        check(1); // true
-        check(-100000); // true
-        check(99999999999999999999999); // true
+        check(0) // true
+        check(1) // true
+        check(-100000) // true
+        check(99999999999999999999999) // true
 
-        checkNot(0.1); // false
-        checkNot(Math.PI); // false
+        checkNot(0.1) // false
+        checkNot(Math.PI) // false
 
-        checkNot(NaN); // false
-        checkNot(Infinity); // false
-        checkNot(-Infinity); // false
-        checkNot("10"); // false
-        checkNot(true); // false
-        checkNot(false); // false
-        checkNot([1]); // false
+        checkNot(NaN) // false
+        checkNot(Infinity) // false
+        checkNot(-Infinity) // false
+        checkNot("10") // false
+        checkNot(true) // false
+        checkNot(false) // false
+        checkNot([1]) // false
 
-        check(5.0); // true
-        checkNot(5.000000000000001); // false
-        check(5.0000000000000001); // true, because of loss of precision
-        check(4500000000000000.1); // true, because of loss of precision
-
+        check(5.0) // true
+        checkNot(5.000000000000001) // false
+        check(5.0000000000000001) // true, because of loss of precision
+        check(4500000000000000.1) // true, because of loss of precision
     })
 })

@@ -6,5 +6,5 @@ const lightBulb = startLightBulb({
 })
 
 setInterval(async () => {
-  await lightBulb.toggle();
-}, 500);
+    await lightBulb.toggle()
+}, 500)

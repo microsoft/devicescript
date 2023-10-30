@@ -11,16 +11,11 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "service": {
-                    "enum": [
-                        "accelerometer"
-                    ],
+                    "enum": ["accelerometer"],
                     "type": "string"
                 },
                 "trX": {
@@ -43,10 +38,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "service"
-            ],
+            "required": ["name", "service"],
             "type": "object"
         },
         "ButtonConfig": {
@@ -62,10 +54,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -76,9 +65,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "button"
-                    ],
+                    "enum": ["button"],
                     "type": "string"
                 },
                 "variant": {
@@ -86,11 +73,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "BuzzerConfig": {
@@ -106,10 +89,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -117,9 +97,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "buzzer"
-                    ],
+                    "enum": ["buzzer"],
                     "type": "string"
                 },
                 "variant": {
@@ -127,11 +105,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "FlexConfig": {
@@ -143,10 +117,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pinH": {
@@ -159,9 +130,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "flex"
-                    ],
+                    "enum": ["flex"],
                     "type": "string"
                 },
                 "variant": {
@@ -169,20 +138,11 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pinH",
-                "pinL",
-                "pinM",
-                "service"
-            ],
+            "required": ["name", "pinH", "pinL", "pinM", "service"],
             "type": "object"
         },
         "HexInt": {
-            "type": [
-                "string",
-                "integer"
-            ]
+            "type": ["string", "integer"]
         },
         "HidJoystickConfig": {
             "additionalProperties": false,
@@ -193,16 +153,11 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "service": {
-                    "enum": [
-                        "hidJoystick"
-                    ],
+                    "enum": ["hidJoystick"],
                     "type": "string"
                 },
                 "variant": {
@@ -210,10 +165,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "service"
-            ],
+            "required": ["name", "service"],
             "type": "object"
         },
         "HidKeyboardConfig": {
@@ -225,16 +177,11 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "service": {
-                    "enum": [
-                        "hidKeyboard"
-                    ],
+                    "enum": ["hidKeyboard"],
                     "type": "string"
                 },
                 "variant": {
@@ -242,10 +189,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "service"
-            ],
+            "required": ["name", "service"],
             "type": "object"
         },
         "HidMouseConfig": {
@@ -257,16 +201,11 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "service": {
-                    "enum": [
-                        "hidMouse"
-                    ],
+                    "enum": ["hidMouse"],
                     "type": "string"
                 },
                 "variant": {
@@ -274,10 +213,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "service"
-            ],
+            "required": ["name", "service"],
             "type": "object"
         },
         "I2CConfig": {
@@ -289,11 +225,7 @@
                 },
                 "$connector": {
                     "description": "How I2C devices are attached.",
-                    "enum": [
-                        "Grove",
-                        "Header",
-                        "Qwiic"
-                    ],
+                    "enum": ["Grove", "Header", "Qwiic"],
                     "type": "string"
                 },
                 "inst": {
@@ -312,10 +244,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "pinSCL",
-                "pinSDA"
-            ],
+            "required": ["pinSCL", "pinSDA"],
             "type": "object"
         },
         "JacdacConfig": {
@@ -326,19 +255,14 @@
                     "type": "string"
                 },
                 "$connector": {
-                    "enum": [
-                        "Header",
-                        "Jacdac"
-                    ],
+                    "enum": ["Header", "Jacdac"],
                     "type": "string"
                 },
                 "pin": {
                     "type": "integer"
                 }
             },
-            "required": [
-                "pin"
-            ],
+            "required": ["pin"],
             "type": "object"
         },
         "LedChannel": {
@@ -358,9 +282,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "pin"
-            ],
+            "required": ["pin"],
             "type": "object"
         },
         "LedConfig": {
@@ -420,10 +342,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -431,9 +350,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "lightBulb"
-                    ],
+                    "enum": ["lightBulb"],
                     "type": "string"
                 },
                 "variant": {
@@ -441,11 +358,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "LightLevelConfig": {
@@ -457,10 +370,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -496,9 +406,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:lightLevel"
-                    ],
+                    "enum": ["analog:lightLevel"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -511,11 +419,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "LogConfig": {
@@ -535,9 +439,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "pinTX"
-            ],
+            "required": ["pinTX"],
             "type": "object"
         },
         "MotionConfig": {
@@ -563,10 +465,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -574,9 +473,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "motion"
-                    ],
+                    "enum": ["motion"],
                     "type": "string"
                 },
                 "variant": {
@@ -584,11 +481,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "PinLabels": {
@@ -1059,10 +952,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -1098,9 +988,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:potentiometer"
-                    ],
+                    "enum": ["analog:potentiometer"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -1113,11 +1001,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "PowerConfig": {
@@ -1138,10 +1022,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pinEn": {
@@ -1164,9 +1045,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "power"
-                    ],
+                    "enum": ["power"],
                     "type": "string"
                 },
                 "variant": {
@@ -1197,10 +1076,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -1236,9 +1112,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:reflectedLight"
-                    ],
+                    "enum": ["analog:reflectedLight"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -1251,11 +1125,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "RelayConfig": {
@@ -1283,10 +1153,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -1302,9 +1169,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "relay"
-                    ],
+                    "enum": ["relay"],
                     "type": "string"
                 },
                 "variant": {
@@ -1312,11 +1177,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "RotaryEncoderConfig": {
@@ -1341,10 +1202,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin0": {
@@ -1354,9 +1212,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "rotaryEncoder"
-                    ],
+                    "enum": ["rotaryEncoder"],
                     "type": "string"
                 },
                 "variant": {
@@ -1364,12 +1220,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin0",
-                "pin1",
-                "service"
-            ],
+            "required": ["name", "pin0", "pin1", "service"],
             "type": "object"
         },
         "ServiceConfig": {
@@ -1469,10 +1320,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
@@ -1484,9 +1332,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "servo"
-                    ],
+                    "enum": ["servo"],
                     "type": "string"
                 },
                 "variant": {
@@ -1494,11 +1340,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "SoilMoistureConfig": {
@@ -1510,10 +1352,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -1549,9 +1388,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:soilMoisture"
-                    ],
+                    "enum": ["analog:soilMoisture"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -1564,11 +1401,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "SoundLevelConfig": {
@@ -1580,10 +1413,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -1619,9 +1449,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:soundLevel"
-                    ],
+                    "enum": ["analog:soundLevel"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -1634,11 +1462,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "SwitchConfig": {
@@ -1650,19 +1474,14 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "pin": {
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "switch"
-                    ],
+                    "enum": ["switch"],
                     "type": "string"
                 },
                 "variant": {
@@ -1670,11 +1489,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         },
         "WaterLevelConfig": {
@@ -1686,10 +1501,7 @@
                 },
                 "name": {
                     "description": "Instance/role name to be assigned to service.",
-                    "examples": [
-                        "buttonA",
-                        "activityLed"
-                    ],
+                    "examples": ["buttonA", "activityLed"],
                     "type": "string"
                 },
                 "offset": {
@@ -1725,9 +1537,7 @@
                     "type": "integer"
                 },
                 "service": {
-                    "enum": [
-                        "analog:waterLevel"
-                    ],
+                    "enum": ["analog:waterLevel"],
                     "type": "string"
                 },
                 "streamingItv": {
@@ -1740,11 +1550,7 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "name",
-                "pin",
-                "service"
-            ],
+            "required": ["name", "pin", "service"],
             "type": "object"
         }
     },
@@ -1777,17 +1583,12 @@
         },
         "archId": {
             "description": "Architecture for the board.\nThis is auto-populated from arch.json file.",
-            "examples": [
-                "esp32c3",
-                "rp2040w"
-            ],
+            "examples": ["esp32c3", "rp2040w"],
             "type": "string"
         },
         "devName": {
             "description": "Name of the device.",
-            "examples": [
-                "Acme Corp. SuperIoT v1.3"
-            ],
+            "examples": ["Acme Corp. SuperIoT v1.3"],
             "type": "string"
         },
         "devNetwork": {
@@ -1812,9 +1613,7 @@
         "productId": {
             "$ref": "#/definitions/HexInt",
             "description": "Identifier for a particular firmware running on a particular device, typically given as a hex number starting with 0x3.",
-            "examples": [
-                "0x379ea214"
-            ]
+            "examples": ["0x379ea214"]
         },
         "sPin": {
             "$ref": "#/definitions/Record<string,0|1>",
@@ -1836,10 +1635,6 @@
             "type": "string"
         }
     },
-    "required": [
-        "devName",
-        "productId"
-    ],
+    "required": ["devName", "productId"],
     "type": "object"
 }
-

@@ -3,10 +3,7 @@
     "additionalProperties": false,
     "definitions": {
         "HexInt": {
-            "type": [
-                "string",
-                "integer"
-            ]
+            "type": ["string", "integer"]
         }
     },
     "properties": {
@@ -39,19 +36,12 @@
         },
         "id": {
             "description": "Short identification of architecture.",
-            "examples": [
-                "rp2040",
-                "rp2040w",
-                "esp32c3"
-            ],
+            "examples": ["rp2040", "rp2040w", "esp32c3"],
             "type": "string"
         },
         "name": {
             "description": "Full name of architecture.",
-            "examples": [
-                "RP2040 + CYW43 WiFi",
-                "ESP32-C3"
-            ],
+            "examples": ["RP2040 + CYW43 WiFi", "ESP32-C3"],
             "type": "string"
         },
         "pins": {
@@ -111,9 +101,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "io"
-            ],
+            "required": ["io"],
             "type": "object"
         },
         "repoUrl": {
@@ -125,11 +113,6 @@
             "description": "Force alignment of the last page in the patched UF2 file.\nSet to 4096 on RP2040 because wof RP2040-E14."
         }
     },
-    "required": [
-        "dcfgOffset",
-        "id",
-        "name"
-    ],
+    "required": ["dcfgOffset", "id", "name"],
     "type": "object"
 }
-

@@ -1,10 +1,8 @@
 {
-  "extends": "../../tsconfig-base.json",
-  "compilerOptions": {
-    "declarationDir": "../built/types",
-    "outDir": "../built"
-  },
-  "include": [
-    "."
-  ]
+    "extends": "../../tsconfig-base.json",
+    "compilerOptions": {
+        "declarationDir": "../built/types",
+        "outDir": "../built"
+    },
+    "include": ["."]
 }

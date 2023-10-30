@@ -81,13 +81,16 @@ export async function runTest(
             error(...data)
             process.exit(1)
         }
-        setTimeout(() => {
-            if (resolve) {
-                inst.devsStop()
-                console.log("timeout")
-                reject(new Error("timeout"))
-            }
-        }, parseInt(options.testTimeout) || 5000)
+        setTimeout(
+            () => {
+                if (resolve) {
+                    inst.devsStop()
+                    console.log("timeout")
+                    reject(new Error("timeout"))
+                }
+            },
+            parseInt(options.testTimeout) || 5000
+        )
     })
 }
 

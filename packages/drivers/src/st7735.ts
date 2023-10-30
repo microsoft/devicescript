@@ -11,7 +11,7 @@ import {
     Image,
     SpiImageFlags,
     spiSendImage,
-    Palette
+    Palette,
 } from "@devicescript/graphics"
 import "@devicescript/gpio"
 
@@ -100,7 +100,7 @@ export interface STLikeDisplayOptions extends FourWireOptions {
 }
 
 export class FourWireDriver<OPT extends FourWireOptions> {
-    constructor(public options: OPT) { }
+    constructor(public options: OPT) {}
 
     protected async sendSeq(seq: Buffer) {
         let i = 0
@@ -158,7 +158,8 @@ export class FourWireDriver<OPT extends FourWireOptions> {
 
 export class STLikeDisplayDriver
     extends FourWireDriver<STLikeDisplayOptions>
-    implements Display {
+    implements Display
+{
     public readonly palette: Palette
     private rot = 0
 
@@ -243,7 +244,7 @@ export class STLikeDisplayDriver
     }
 }
 
-export interface ST7735Options extends STLikeDisplayOptions { }
+export interface ST7735Options extends STLikeDisplayOptions {}
 
 export class ST7735Driver extends STLikeDisplayDriver {
     constructor(image: Image, options: ST7735Options) {
@@ -262,7 +263,7 @@ export class ST7735Driver extends STLikeDisplayDriver {
     }
 }
 
-export interface ST7789Options extends STLikeDisplayOptions { }
+export interface ST7789Options extends STLikeDisplayOptions {}
 
 export class ST7789Driver extends STLikeDisplayDriver {
     constructor(image: Image, options: ST7789Options) {

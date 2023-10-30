@@ -1,11 +1,9 @@
 {
-  "extends": "../../tsconfig-base.json",
-  "compilerOptions": {
-    "module": "CommonJS",
-    "declarationDir": "../built/types",
-    "outDir": "../built"
-  },
-  "include": [
-    "."
-  ]
+    "extends": "../../tsconfig-base.json",
+    "compilerOptions": {
+        "module": "CommonJS",
+        "declarationDir": "../built/types",
+        "outDir": "../built"
+    },
+    "include": ["."]
 }

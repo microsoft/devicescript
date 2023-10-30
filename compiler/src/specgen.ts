@@ -115,7 +115,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
             SRV_CODAL_MESSAGE_BUS,
             SRV_DEVS_DBG,
             SRV_TCP,
-            SRV_GPIO
+            SRV_GPIO,
         ].indexOf(info.classIdentifier) > -1
     )
 }
@@ -190,8 +190,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         info.shortId == "_base"
             ? "ServerInterface"
             : isSensor
-                ? "SensorServerSpec"
-                : "BaseServerSpec"
+            ? "SensorServerSpec"
+            : "BaseServerSpec"
     srv += `interface ${clname}ServerSpec extends ${ibase} {\n`
     lkp += `interface ${clname}LookupSpec extends ServiceSpec {\n`
 
@@ -258,10 +258,10 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             r += wrapComment(
                 "devs",
                 cmt.comment +
-                pkt.fields
-                    .filter(f => !!f)
-                    .map(f => `@param ${f.name} - ${f.unit ?? ""}`)
-                    .join("\n")
+                    pkt.fields
+                        .filter(f => !!f)
+                        .map(f => `@param ${f.name} - ${f.unit ?? ""}`)
+                        .join("\n")
             )
             r += `    ${commandSig(info, pkt).sig}\n`
             srv += `    ${commandSig(info, pkt, true).sig}\n`
@@ -315,7 +315,13 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
 /**
  * Pin mapping and built-in services for ${binfo.devName}
  *
- * ${binfo.$custom || !binfo.archId || !binfo.id ? 'This is a custom board definition.' : `@see {@link https://microsoft.github.io/devicescript/devices/${architectureFamily(binfo.archId)}/${binfo.id.replace(/_/g, "-")}/ Catalog}`}
+ * ${
+     binfo.$custom || !binfo.archId || !binfo.id
+         ? "This is a custom board definition."
+         : `@see {@link https://microsoft.github.io/devicescript/devices/${architectureFamily(
+               binfo.archId
+           )}/${binfo.id.replace(/_/g, "-")}/ Catalog}`
+ }
  * ${binfo.url ? `@see {@link ${binfo.url} Store}` : ``}
 */
 declare module "@dsboard/${binfo.id}" {\n`
@@ -569,7 +575,7 @@ ${varname}.${sig}
             !isNumber && !isBoolean && !isString
                 ? undefined
                 : pkt.kind === "rw"
-                    ? `-  read and write
+                ? `-  read and write
 \`\`\`ts ${nobuild}
 import { ${clname} } from "@devicescript/core"
 
@@ -579,7 +585,7 @@ const value = await ${varname}.${pname}.read()
 await ${varname}.${pname}.write(value)
 \`\`\`
 `
-                    : `-  read only
+                : `-  read only
 \`\`\`ts ${nobuild}
 import { ${clname} } from "@devicescript/core"
 

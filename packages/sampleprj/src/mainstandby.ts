@@ -1,4 +1,4 @@
-import { standby } from '@devicescript/runtime'
+import { standby } from "@devicescript/runtime"
 
 setTimeout(async () => {
     await standby(1000)

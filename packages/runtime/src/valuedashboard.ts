@@ -51,7 +51,10 @@ export class ValueDashboard<T extends Record<string, ValueDomain>> {
      */
     public offset = 0
 
-    constructor(readonly screen: CharacterScreen, domains: T) {
+    constructor(
+        readonly screen: CharacterScreen,
+        domains: T
+    ) {
         this.domains = domains
     }
 

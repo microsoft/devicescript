@@ -62,10 +62,13 @@ const seven = 7
 class FooInit {
     baz: number
     qux = seven
-    constructor(public foo: number, public bar: string) {
+    constructor(
+        public foo: number,
+        public bar: string
+    ) {
         this.baz = this.foo + 1
     }
-    semicolonTest() {};
+    semicolonTest() {}
 }
 
 function classInit() {
@@ -233,5 +236,3 @@ function testAnon() {
 }
 
 testAnon()
-
-

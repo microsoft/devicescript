@@ -247,5 +247,3 @@ testNums()
 testNaN()
 testUnaryPlus()
 testEnumToString()
-
-

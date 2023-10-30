@@ -113,7 +113,10 @@ export class GenerationInfo {
         return this.lastBlock - this.firstBlock + 1
     }
 
-    constructor(public parent: LogInfo, public index: number) {}
+    constructor(
+        public parent: LogInfo,
+        public index: number
+    ) {}
 
     toString() {
         return `gen ${this.index}, ${bytes(

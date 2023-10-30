@@ -112,7 +112,10 @@ export class Value {
 export class CachedValue {
     numRefs = 1
     _longTerm = false
-    constructor(public parent: OpWriter, public index: number) {}
+    constructor(
+        public parent: OpWriter,
+        public index: number
+    ) {}
     get packedIndex() {
         return packVarIndex(VariableKind.Cached, this.index)
     }
@@ -204,7 +207,10 @@ export function nonEmittable() {
 }
 
 class Comment {
-    constructor(public offset: number, public comment: string) {}
+    constructor(
+        public offset: number,
+        public comment: string
+    ) {}
 }
 
 export enum VariableKind {
@@ -260,7 +266,10 @@ export class OpWriter {
     private lastReturnLocation = -1
     private closureRefs: Record<string, number[]> = {}
 
-    constructor(public prog: TopOpWriter, public name: string) {
+    constructor(
+        public prog: TopOpWriter,
+        public name: string
+    ) {
         this.top = this.mkLabel("top")
         this.emitLabel(this.top)
         this.binary = new Uint8Array(128)
@@ -849,7 +858,10 @@ export class DelayedCodeSection {
     returnLabel: Label
     body: ((wr: OpWriter) => void)[] = []
 
-    constructor(public name: string, public parent: OpWriter) {}
+    constructor(
+        public name: string,
+        public parent: OpWriter
+    ) {}
 
     empty() {
         return this.body.length == 0

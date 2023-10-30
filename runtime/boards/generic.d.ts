@@ -1,8 +1,5 @@
 import { Pin } from "@devicescript/srvcfg"
-import {
-    ArchConfig,
-    DeviceConfig,
-} from "../../interop/src/archconfig"
+import { ArchConfig, DeviceConfig } from "../../interop/src/archconfig"
 
 interface GenericDeviceConfig extends DeviceConfig {}
 

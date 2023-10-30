@@ -6,7 +6,7 @@ import { createWebSocketBus } from "jacdac-ts"
 
 /**
  * A Jacdac bus that will connect to the devicescript local server.
- * 
+ *
  * ```example
  * import { bus } from "./runtime"
  * ```

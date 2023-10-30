@@ -9,13 +9,13 @@ export class Set<T> {
     /**
      * The number of (unique) elements in Set.
      */
-    public size: number;
+    public size: number
 
     constructor(elements?: readonly T[] | null) {
         if (elements) {
             this.elements = elements
         }
-        this.size = this.elements.length;
+        this.size = this.elements.length
     }
 
     /**
@@ -24,14 +24,14 @@ export class Set<T> {
     add(value: T): this {
         if (!this.elements.includes(value)) {
             this.elements.push(value)
-            this.size++;
+            this.size++
         }
         return this
     }
 
     clear(): void {
         this.elements = []
-        this.size = 0;
+        this.size = 0
     }
 
     /**
@@ -41,16 +41,19 @@ export class Set<T> {
     delete(value: T): boolean {
         if (this.elements.includes(value)) {
             this.elements = this.elements.filter(e => e !== value)
-            this.size = this.elements.length;
-            return true;
+            this.size = this.elements.length
+            return true
         }
-        return false;
+        return false
     }
 
     /**
      * Executes a provided function once per each value in the Set object, in insertion order.
      */
-    forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void {
+    forEach(
+        callbackfn: (value: T, value2: T, set: Set<T>) => void,
+        thisArg?: any
+    ): void {
         for (let i = 0; i < this.elements.length; i++) {
             callbackfn(this.elements[i], this.elements[i], this)
         }
@@ -77,13 +80,10 @@ export class Set<T> {
         return this.elements
     }
 
-
     /**
      * @returns Despite its name, returns an iterable of the values in the set.
      */
     keys(): IterableIterator<T> {
         return this.values()
     }
-
-
 }
