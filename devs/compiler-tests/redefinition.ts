@@ -14,9 +14,9 @@ function foo() {
 }
 
 const qq = 1 //! Duplicate identifier
-function qq() { } //! Duplicate identifier
+function qq() {} //! Duplicate identifier
 
-function baz() { } //! Duplicate function implementation
-function baz() { } //! Duplicate function implementation
+function baz() {} //! Duplicate function implementation
+function baz() {} //! Duplicate function implementation
 
 foo()

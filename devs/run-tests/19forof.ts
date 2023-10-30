@@ -11,14 +11,14 @@ function testForOf() {
     let sum = 0
     for (let e of arr) {
         msg("FO:" + e)
-        sum += (e - 1)
+        sum += e - 1
     }
     assert(sum === 13, "fo1")
     msg("loop1 done")
 
     // make sure we incr reference count of the array during the loop execution
     for (let q of [3, 4, 12]) {
-        sum += (q - 2)
+        sum += q - 2
     }
     assert(sum === 26, "fo2")
 
@@ -48,7 +48,12 @@ function testForOf() {
     }
 
     // array concatenation
-    let yss = [[1, 2, 3], [4, 5], [6, 7, 8], [9, 10]]
+    let yss = [
+        [1, 2, 3],
+        [4, 5],
+        [6, 7, 8],
+        [9, 10],
+    ]
     let concat: number[] = []
     for (let ys of yss) {
         for (let y of ys) {
@@ -62,7 +67,6 @@ function testForOf() {
         sum += y
     }
     assert(sum === 55, "fo7")
-
 
     /* TODO nested closures
     let f = []

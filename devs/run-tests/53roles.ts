@@ -4,7 +4,7 @@ function expectError(t: any, f: () => void) {
     let ok = false
     try {
         f()
-    } catch (e:any) {
+    } catch (e: any) {
         ds.assert(e instanceof t)
         ok = true
     }

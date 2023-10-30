@@ -48,4 +48,3 @@ function testNumCollection(): void {
 
 testNumCollection()
 testArrIncr()
-

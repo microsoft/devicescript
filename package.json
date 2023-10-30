@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "setup": "git submodule update --init --recursive && git pull && yarn install --frozen-lockfile && npm install -g -u jacdac-cli",
-        "lint": "node node_modules/prettier/bin/prettier.cjs -w --config .prettierrc packages/**/*.ts",
+        "lint": "node node_modules/prettier/bin/prettier.cjs -w --config .prettierrc cli compiler dap devs interop dcfg plugin packages/**/*.ts",
         "build:jacdac-ts": "cd jacdac-ts && yarn build",
         "build:vscodeicons": "cd vscode && yarn buildicons",
         "build:serverinfo": "node ./cli/devicescript ctool --server-info",

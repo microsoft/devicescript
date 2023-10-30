@@ -122,5 +122,3 @@ function testBoolCasts() {
 
 testLazyOps()
 testBoolCasts()
-
-

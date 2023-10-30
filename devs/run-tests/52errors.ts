@@ -22,7 +22,7 @@ function expectExn(f: () => void, ex: Function) {
     }
 }
 
-async function expectExnAsync(f:  ds.Callback, ex: Function) {
+async function expectExnAsync(f: ds.Callback, ex: Function) {
     try {
         await f()
         ds.assert(false, "missing exn")
@@ -126,5 +126,3 @@ async function testExn() {
 }
 
 await testExn()
-
-
