@@ -11,12 +11,12 @@ const led2 = startLightBulb({
 
 // start interval timer every 1000ms
 setInterval(async () => {
-    // toggle on/off    
+    // toggle on/off
     await led1.toggle()
 }, 1000)
 
 // start interval timer every 250ms
 setInterval(async () => {
-    // toggle on/off    
+    // toggle on/off
     await led2.toggle()
 }, 250)

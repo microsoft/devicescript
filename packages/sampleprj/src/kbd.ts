@@ -12,5 +12,5 @@ btn.down.subscribe(async () => {
 })
 
 setInterval(() => {
-// console.log("alive", btn.isBound)
+    // console.log("alive", btn.isBound)
 }, 1000)

@@ -4,7 +4,10 @@ export function expect<T>(value: T) {
     return new Expect(value, false)
 }
 export class Expect<T> {
-    constructor(readonly value: T, private readonly _not: boolean) {}
+    constructor(
+        readonly value: T,
+        private readonly _not: boolean
+    ) {}
 
     private check(condition: boolean) {
         return this._not ? !condition : condition

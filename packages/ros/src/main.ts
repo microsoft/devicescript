@@ -3,7 +3,7 @@ import { rosSubscribe, rosPublish, rosConfigure } from "./index"
 import { delay } from "@devicescript/core"
 
 describe("ros", () => {})
-    /*
+/*
 describe("ros", () => {
     test("configure", async () => {
         await rosConfigure("mynode")

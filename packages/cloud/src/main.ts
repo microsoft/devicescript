@@ -94,7 +94,7 @@ describe("upload message", () => {
         })
     })
 })
-describe("environment", () => { 
+describe("environment", () => {
     test("env", async () => {
         const env = await environment()
         await ds.delay(1500)

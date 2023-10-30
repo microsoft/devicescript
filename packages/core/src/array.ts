@@ -1,10 +1,9 @@
 Array.prototype.at = function (index) {
     if (index < 0) {
         const length = this.length
-        return this[length + index];        
+        return this[length + index]
     }
-    return this[index];
-    
+    return this[index]
 }
 
 Array.prototype.map = function (f) {
@@ -40,11 +39,11 @@ Array.prototype.findIndex = function (f) {
 }
 
 Array.prototype.findLast = function (f) {
-    const length = this.length;
+    const length = this.length
     for (let i = length - 1; i >= 0; i--) {
         if (f(this[i], i, this)) return this[i]
     }
-    return undefined;
+    return undefined
 }
 
 Array.prototype.findLastIndex = function (f) {
@@ -103,7 +102,7 @@ Array.prototype.fill = function (value, start, end) {
     }
 
     let endIndex = end ?? length
-    if (endIndex >= length ) {
+    if (endIndex >= length) {
         endIndex = length
     }
 
@@ -116,11 +115,10 @@ Array.prototype.fill = function (value, start, end) {
     }
 
     for (let i = startIndex; i < endIndex; ++i) {
-
-        this[i] = value;
+        this[i] = value
     }
 
-    return this;
+    return this
 }
 
 Array.prototype.some = function (f) {

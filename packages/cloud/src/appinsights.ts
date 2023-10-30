@@ -54,7 +54,10 @@ export class Metric {
      * Creates a new named metric
      * @param name
      */
-    constructor(readonly name: string, value?: number | number[]) {
+    constructor(
+        readonly name: string,
+        value?: number | number[]
+    ) {
         this.add(value)
     }
 

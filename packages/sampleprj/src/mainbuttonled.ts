@@ -3,7 +3,7 @@ import { startLightBulb, startButton } from "@devicescript/servers"
 
 // List of pins: https://microsoft.github.io/devicescript/devices/esp32/esp32c3-bare
 const led = startLightBulb({
-  pin: pins.P2,
+    pin: pins.P2,
 })
 const button = startButton({
     pin: pins.P5,

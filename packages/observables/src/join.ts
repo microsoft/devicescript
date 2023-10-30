@@ -13,7 +13,7 @@ import {
  * @returns
  */
 export function collect<
-    TObservables extends Record<string, Observable<unknown>>
+    TObservables extends Record<string, Observable<unknown>>,
 >(
     observables: TObservables,
     closingObservable: Observable<unknown>,
@@ -64,7 +64,7 @@ export function collect<
  * @returns
  */
 export function collectTime<
-    TObservables extends Record<string, Observable<unknown>>
+    TObservables extends Record<string, Observable<unknown>>,
 >(
     observables: TObservables,
     duration: number,

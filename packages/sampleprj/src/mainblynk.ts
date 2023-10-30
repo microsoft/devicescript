@@ -10,7 +10,10 @@ export type VirtualPinValueType = number | string
  * VirtualPin on top of HTTP; should really use the TCP protocol.
  */
 export class VirtualPin<T extends VirtualPinValueType> {
-    constructor(public readonly id: number, public value: T) {}
+    constructor(
+        public readonly id: number,
+        public value: T
+    ) {}
 
     /**
      * Writes the current value of the pin

@@ -49,7 +49,7 @@ Math.constrain = function constrain(x, low, high) {
 // TODO timeout
 // TODO retry policy
 ;(ds as typeof ds).actionReport = async function actionResponse<
-    T extends ds.Role
+    T extends ds.Role,
 >(
     role: T,
     meth: string & keyof T,

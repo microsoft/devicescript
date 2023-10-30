@@ -13,7 +13,7 @@ import { font5 } from "@devicescript/graphics"
 export class WaveShareRP2040Matrix {
     constructor() {
         configureHardware({
-            scanI2C: false
+            scanI2C: false,
         })
     }
 

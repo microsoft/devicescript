@@ -2,7 +2,7 @@ import * as ds from "@devicescript/core"
 import { cowsay } from "devicescript-cowsay"
 
 setInterval(() => {
-    console.log('interval')
+    console.log("interval")
 }, 1000)
 
 function foo() {

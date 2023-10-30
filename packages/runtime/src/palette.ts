@@ -4,11 +4,15 @@ import { PixelBuffer, correctGammaChannel, fillMap } from "./pixelbuffer"
 
 /**
  * Interpolates a normalize value `[0, 1]` in the palette. By default uses RGB linear interpolation.
- * @param index 
- * @param interpolator 
- * @returns 
+ * @param index
+ * @param interpolator
+ * @returns
  */
-export function interpolateColor(palette: Palette, alpha: number, interpolator?: ColorInterpolator) {
+export function interpolateColor(
+    palette: Palette,
+    alpha: number,
+    interpolator?: ColorInterpolator
+) {
     const index = Math.constrain(alpha, 0, 1) * (palette.length - 1)
 
     const li = Math.floor(index)
@@ -23,7 +27,6 @@ export function interpolateColor(palette: Palette, alpha: number, interpolator?:
 
     return mixer(lc, a, uc)
 }
-
 
 /**
  * Applies gamma correction to the colors of the palette in place.
