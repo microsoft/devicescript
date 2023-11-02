@@ -35,6 +35,7 @@ import {
     SideAddTestReq,
     SideAddTestResp,
     SideConnectReq,
+    SideMissingPackageEvent,
     SideStartVmReq,
     SideStopVmReq,
     SideTransportEvent,
@@ -52,7 +53,6 @@ import { SimulatorsWebView } from "./simulatorWebView"
 import { showErrorMessage } from "./telemetry"
 import _serverInfo from "./server-info.json"
 import { resolvePythonEnvironment } from "./python"
-import { resolveDarkMode } from "./assets"
 
 const serverInfo = _serverInfo as ServerInfoFile
 
@@ -105,6 +105,13 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 this._transport = _transport
                 this.emit(CHANGE)
             }
+        })
+        subSideEvent<SideMissingPackageEvent>("missingPackage", async msg => {
+            const packageName = msg.packageName
+            await showErrorMessage(
+                "package.missing",
+                `Failed to require ${packageName} package. Please install manually.`
+            )
         })
     }
 

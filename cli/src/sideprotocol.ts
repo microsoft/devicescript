@@ -140,6 +140,9 @@ export interface SideAddBoardResp extends SideResp<"addBoard"> {
 export interface SideTransportEvent extends SideEvent<"transport"> {
     data: TransportStatus
 }
+export interface SideMissingPackageEvent extends SideEvent<"missingPackage"> {
+    packageName: string
+}
 
 export interface TransportStatus {
     autoConnect?: boolean

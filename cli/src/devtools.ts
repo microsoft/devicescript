@@ -111,7 +111,7 @@ export async function devtools(
     const traceFd = options.trace ? await open(options.trace, "w") : null
 
     // passive bus to sniff packets
-    const transports = createTransports(options)
+    const transports = await createTransports(options)
     const bus = new JDBus(transports, {
         client: false,
         disableRoleManager: true,
@@ -387,7 +387,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
 }
 
 async function connectCmd(req: ConnectReqArgs) {
-    await connectTransport(devtoolsSelf.bus, req)
+    await connectTransport(devtoolsSelf, req)
 }
 
 async function buildCmd(args: BuildReqArgs) {
