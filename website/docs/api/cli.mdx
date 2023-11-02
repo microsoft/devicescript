@@ -148,7 +148,7 @@ To automatically rebuild your program based on file changes,
 add the file name.
 
 ```bash
-devs devtools main.ts
+devs devtools src/main.ts
 ```
 
 When the build is run in watch mode, it also opens a developer tool web server that allows
@@ -169,12 +169,43 @@ stateDiagram-v2
     browser --> dev: WebSerial, WebUsb, ...
 ```
 
-#### --internet
+### --internet
 
 To access the developer tools outside localhost, add `--internet`
 
 ```bash
 devs devtools --internet
+```
+
+### --usb, --serial, --spi
+
+These flags tell the CLI to open native transports to USB, Serial or SPI devices. Each of these flags requires to install separate packages. These packages are not installed by default, as they typically have native dependencies and may not successfully install on all environments.
+
+#### --usb
+
+Uses [usb package](https://www.npmjs.com/package/usb) to communicate with USB devices.
+
+```bash npm2yarn
+npm install usb
+devs devtools --usb
+```
+
+#### --serial
+
+Uses [serialport package](https://www.npmjs.com/package/serialport) to communicate with USB devices.
+
+```bash npm2yarn
+npm install serialport
+devs devtools --serial
+```
+
+#### --spi
+
+On Raspberry Pi, uses [node-rpio](https://www.npmjs.com/package/rpio) and [spi-dev](https://www.npmjs.com/package/spi-dev).
+
+```bash npm2yarn
+npm install rpio spi-dev
+devs devtools --spi
 ```
 
 ## devs flash
