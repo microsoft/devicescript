@@ -472,10 +472,9 @@ function deployService(args: BuildReqArgs) {
             lost: false,
         })
         if (services.length > 1)
-            throw new Error(`Multiple DeviceScript Managers found.`)
+            throw new Error(`Multiple DeviceScript device found.`)
         else if (services.length == 0)
-            throw new Error(`No DeviceScript Managers found.`)
-
+            throw new Error(`No DeviceScript device found.`)
         return services[0]
     }
 

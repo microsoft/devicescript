@@ -57,3 +57,13 @@ Importing a npm package designed for node.js or the browser is not yet supported
 as the DeviceScript runtime environment is radically different from the browser or even node.js.
 
 Instead you should try to import packages [specifically built for devicescript](/developer/packages/custom).
+
+## No DeviceScript device found. {#no-devicescript-device-found}
+
+DeviceScript is trying to deploy bytecode but it cannot find any connected DeviceScript device.
+Make sure that your device is actively connected either through the connection helper page or through native transports (USB, Serial).
+
+## Multiple DeviceScript device found. {#multiple-devicescript-device-found}
+
+DeviceScript is trying to deploy bytecode but it found multiple connected DeviceScript devices. There should only be 1 connect device to deploy
+or the tool will give up.
