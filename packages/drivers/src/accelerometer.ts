@@ -6,6 +6,7 @@ import {
 } from "@devicescript/server"
 import { AccelerometerServerSpec } from "@devicescript/core"
 import { AccelerometerConfig } from "@devicescript/servers"
+import { startSimulatorServer } from "./servers"
 
 // shake/gesture detection based on
 // https://github.com/lancaster-university/codal-core/blob/master/source/driver-models/Accelerometer.cpp
@@ -318,8 +319,40 @@ export async function startAccelerometer(
     driver: AccelerometerDriver,
     options: AccelerometerOptions & SensorServerOptions
 ): Promise<ds.Accelerometer> {
-    const server = new AccelerometerServer(driver, options)
-    const client = new ds.Accelerometer(startServer(server, options))
+    let roleName: string
+    if (ds.isSimulator() && !options.simOk)
+        roleName = startSimulatorServer({
+            name: options.roleName,
+            variant: () => options.variant,
+            spec: ds.Accelerometer.spec,
+        })
+    else {
+        const server = new AccelerometerServer(driver, options)
+        roleName = startServer(server, options)
+    }
+    const client = new ds.Accelerometer(roleName)
+    return client
+}
+
+/**
+ * Start an accelerometer. See also startIMU().
+ */
+export async function startGyroscope(
+    driver: GyroscopeDriver,
+    options: GyroscopeOptions & SensorServerOptions
+): Promise<ds.Gyroscope> {
+    let roleName: string
+    if (ds.isSimulator() && !options.simOk)
+        roleName = startSimulatorServer({
+            name: options.roleName,
+            variant: () => options.variant,
+            spec: ds.Gyroscope.spec,
+        })
+    else {
+        const server = new GyroscopeServer(driver, options)
+        roleName = startServer(server, options)
+    }
+    const client = new ds.Gyroscope(roleName)
     return client
 }
 
@@ -330,11 +363,8 @@ export async function startIMU(
     driver: AccelerometerDriver & GyroscopeDriver,
     options: AccelerometerOptions & GyroscopeOptions & SensorServerOptions
 ) {
-    const accelerometer = new ds.Accelerometer(
-        startServer(new AccelerometerServer(driver, options), options)
-    )
-    const gyroscope = new ds.Accelerometer(
-        startServer(new GyroscopeServer(driver, options), options)
-    )
+    const accelerometer = startAccelerometer(driver, options)
+    const gyroscope = startGyroscope(driver, options)
+
     return { accelerometer, gyroscope }
 }

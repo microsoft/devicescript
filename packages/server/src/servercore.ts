@@ -8,6 +8,7 @@ type DsServer = typeof ds & {
 
 export interface ServerOptions {
     roleName?: string
+    simOk?: boolean
 }
 
 let eventWorker: SequentialWorker

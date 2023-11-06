@@ -42,7 +42,7 @@ export interface SimpleSensorBaseOptions {
     minReading?(): ds.AsyncValue<number>
     maxReading?(): ds.AsyncValue<number>
     readingError?(): ds.AsyncValue<number>
-    variant?(): () => number
+    variant?: () => number
     errorFraction?: number
     errorValue?: number
     min?: number
@@ -56,43 +56,54 @@ export interface SimpleSensorOptions extends SimpleSensorBaseOptions {
     spec: ds.ServiceSpec
 }
 
-let simRoles: any
-
+let _simRoles: any
 function simRole(pref: string) {
     for (let i = 0; ; i++) {
         const k = pref + "_" + i
-        if (!simRoles[k]) {
-            simRoles[k] = true
+        if (!_simRoles[k]) {
+            _simRoles[k] = true
             return k
         }
+    }
+}
+
+export interface SimulatorServerOptions {
+    errorValue?: number
+    min?: number
+    max?: number
+
+    baseName?: string
+    name?: string
+    variant?: () => number
+    spec: ds.ServiceSpec
+}
+
+export function startSimulatorServer(options: SimulatorServerOptions) {
+    if (!_simRoles) _simRoles = {}
+    let name = options.name
+    if (!name) {
+        if (options.baseName) name = options.baseName + "_" + options.spec.name
+        else name = simRole(options.spec.name)
+    } else _simRoles[name] = true
+    const keys: (keyof SimulatorServerOptions)[] = ["min", "max", "errorValue"]
+    let num = 0
+    for (const key of keys) {
+        if (options[key] !== undefined) addkv(key, options[key])
+    }
+    if (options.variant) addkv("variant", options.variant())
+    console.debug(`request sim: ${name}`)
+    return name
+
+    function addkv(key: string, value: any) {
+        name += (num === 0 ? "?" : "&") + key + "=" + value
+        num++
     }
 }
 
 export function startSimpleServer(
     options: SimpleSensorOptions & ServerOptions
 ) {
-    if (ds.isSimulator() && !options.simOk) {
-        if (!simRoles) simRoles = {}
-        let name = options.name
-        if (!name) {
-            if (options.baseName)
-                name = options.baseName + "_" + options.spec.name
-            else name = simRole(options.spec.name)
-        } else simRoles[name] = true
-        const keys: (keyof SimpleSensorOptions)[] = ["min", "max", "errorValue"]
-        let num = 0
-        for (const key of keys) {
-            if (options[key] !== undefined) addkv(key, options[key])
-        }
-        if (options.variant) addkv("variant", options.variant())
-        console.debug(`request sim: ${name}`)
-        return name
-
-        function addkv(key: string, value: any) {
-            name += (num === 0 ? "?" : "&") + key + "=" + value
-            num++
-        }
-    }
+    if (ds.isSimulator() && !options.simOk) return startSimulatorServer(options)
     return startServer(new SimpleSensorServer(options), options)
 }
 
