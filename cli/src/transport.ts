@@ -1,4 +1,4 @@
-import { log } from "./command"
+import { isInteractive, log } from "./command"
 import {
     CONNECTION_STATE,
     createNodeSPITransport,
@@ -27,6 +27,7 @@ import type {
     SideUploadJsonFromDevice,
 } from "@devicescript/interop"
 import { printDmesg } from "./vmworker"
+import { askForPackageInstallation } from "./packageinstaller"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -40,41 +41,38 @@ export class RequireError extends Error {
     }
 }
 
-interface RequireOptions {
-    interactive?: boolean
-}
-
-async function tryRequire(name: string, options: RequireOptions) {
+async function tryRequire(name: string) {
     try {
         return require(name)
     } catch (e) {
         log(`failed to require package "${name}"`)
         console.debug(e.stderr?.toString())
-        if (options.interactive) {
-            // TODO
+        if (isInteractive) {
+            await askForPackageInstallation(name)
+            return require(name)
         }
         throw new RequireError(name)
     }
 }
 
-async function createSPI(options?: RequireOptions) {
+async function createSPI() {
     log(`adding SPI transport (requires "rpio" package)`)
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const RPIO = await tryRequire("rpio", options)
+    const RPIO = await tryRequire("rpio")
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const SpiDev = await tryRequire("spi-device", options)
+    const SpiDev = await tryRequire("spi-device")
     return createNodeSPITransport(RPIO, SpiDev)
 }
-async function createUSB(options?: RequireOptions) {
+async function createUSB() {
     log(`adding USB transport (requires "usb" package)`)
-    const usb = await tryRequire("usb", options)
+    const usb = await tryRequire("usb")
     const usbOptions = createNodeUSBOptions(usb.WebUSB)
     return createUSBTransport(usbOptions)
 }
-async function createSerial(options?: RequireOptions) {
+async function createSerial() {
     log(`adding serial transport (requires "serialport" package)`)
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const sp = await tryRequire("serialport", options)
+    const sp = await tryRequire("serialport")
     return createNodeWebSerialTransport(sp.SerialPort)
 }
 
@@ -178,10 +176,9 @@ export async function connectTransport(
 
 export async function createTransports(options: TransportsOptions) {
     const transports: Transport[] = []
-    if (options.usb) transports.push(await createUSB({ interactive: true }))
-    if (options.serial)
-        transports.push(await createSerial({ interactive: true }))
-    if (options.spi) transports.push(await createSPI({ interactive: true }))
+    if (options.usb) transports.push(await createUSB())
+    if (options.serial) transports.push(await createSerial())
+    if (options.spi) transports.push(await createSPI())
     return transports
 }
 
