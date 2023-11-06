@@ -1,4 +1,4 @@
-import { isInteractive, log } from "./command"
+import { log } from "./command"
 import {
     CONNECTION_STATE,
     createNodeSPITransport,
@@ -27,32 +27,12 @@ import type {
     SideUploadJsonFromDevice,
 } from "@devicescript/interop"
 import { printDmesg } from "./vmworker"
-import { askForPackageInstallation } from "./packageinstaller"
+import { RequireError, tryRequire } from "./require"
 
 export interface TransportsOptions {
     usb?: boolean
     serial?: boolean
     spi?: boolean
-}
-
-export class RequireError extends Error {
-    constructor(readonly packageName: string) {
-        super(`failed to require package "${packageName}"`)
-    }
-}
-
-async function tryRequire(name: string) {
-    try {
-        return require(name)
-    } catch (e) {
-        log(`failed to require package "${name}"`)
-        console.debug(e.stderr?.toString())
-        if (isInteractive) {
-            await askForPackageInstallation(name)
-            return require(name)
-        }
-        throw new RequireError(name)
-    }
 }
 
 async function createSPI() {

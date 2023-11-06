@@ -1,4 +1,3 @@
-import { SerialPort } from "serialport"
 import { delimiter, join, resolve } from "path"
 import { existsSync, readFileSync, Stats, writeFileSync } from "fs"
 import { spawn } from "child_process"
@@ -14,6 +13,7 @@ import { mkdirp } from "fs-extra"
 import { delay, groupBy } from "jacdac-ts"
 import { buildConfigFromDir } from "./build"
 import { patchCustomBoard } from "./binpatch"
+import { tryRequire } from "./require"
 
 let buildConfig: ResolvedBuildConfig
 
@@ -126,6 +126,7 @@ export async function resolveBoard(arch: string, options: FlashOptions) {
 }
 
 export async function flashESP32(options: FlashESP32Options) {
+    const { SerialPort } = await tryRequire("serialport")
     const { board } = await resolveBoard("esp32", options)
 
     if (options.remote) {
@@ -177,7 +178,7 @@ export async function flashESP32(options: FlashESP32Options) {
 
     const filterPorts = () => {
         if (!options.allSerial) {
-            ports = ports.filter(p =>
+            ports = ports.filter((p: any) =>
                 vendors.includes(parseInt(p.vendorId, 16))
             )
             if (!msg && ports.length == 0) {
@@ -188,7 +189,7 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 
     if (options.port) {
-        ports = ports.filter(p => p.path == options.port)
+        ports = ports.filter((p: any) => p.path == options.port)
         if (ports.length == 0) {
             printPorts()
             fatal(`port ${options.port} not found`)
