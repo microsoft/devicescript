@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.17](https://github.com/microsoft/devicescript/compare/v2.15.16...v2.15.17)
+
+> 6 November 2023
+
+- handle missing usb package [`#657`](https://github.com/microsoft/devicescript/pull/657)
+- Update PR for https://github.com/microsoft/devicescript/pull/653 [`#656`](https://github.com/microsoft/devicescript/pull/656)
+- Lint [`#654`](https://github.com/microsoft/devicescript/pull/654)
+- refactoring to handle require errors [`4372a14`](https://github.com/microsoft/devicescript/commit/4372a1464ed26dc3e8c9f0e7a7bafc6b2987948c)
+- more cli docs [`207858a`](https://github.com/microsoft/devicescript/commit/207858a274313a163347af0b8abf4402ff5f6836)
+- updated error messages [`53b3d2d`](https://github.com/microsoft/devicescript/commit/53b3d2d8044c539eeb1a007700241281c03ae85c)
+
 #### [v2.15.16](https://github.com/microsoft/devicescript/compare/v2.15.15...v2.15.16)
 
 > 27 October 2023
