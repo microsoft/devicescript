@@ -2,7 +2,7 @@ import { isInteractive } from "./command"
 import { askForPackageInstallation } from "./packageinstaller"
 
 export class RequireError extends Error {
-    constructor(readonly packageName: string) {
+    constructor(public readonly packageName: string) {
         super(`failed to require package "${packageName}"`)
     }
 }

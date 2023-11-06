@@ -812,7 +812,6 @@ export class DeveloperToolsManager extends JDEventSource {
         let cmd = yarn ? "yarn" : "npm"
         if (command) {
             args = args || []
-            if (command === "install") args.push("-D")
             if (yarn) {
                 command =
                     {
@@ -839,17 +838,18 @@ export class DeveloperToolsManager extends JDEventSource {
         command: string,
         ...args: string[]
     ) {
+        const cmd = await this.resolvePackageTool(cwd, command, args)
         const t = vscode.window.createTerminal({
             name: title,
             cwd: cwd.fsPath,
             isTransient: true,
         })
-        const cmd = await this.resolvePackageTool(cwd, command, args)
         t.sendText(cmd)
         t.show(true)
         return t
     }
 
+    private lastCreateCliFailed = false
     public async createCliTerminal(options: {
         title?: string
         progress: string
@@ -926,7 +926,8 @@ export class DeveloperToolsManager extends JDEventSource {
                 )
                 const isWindows = globalThis.process?.platform === "win32"
                 const useShell =
-                    options.useShell ?? !!devToolsConfig.get("shell")
+                    this.lastCreateCliFailed ||
+                    (options.useShell ?? !!devToolsConfig.get("shell"))
                 const nodePath = this.nodePath
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
@@ -946,6 +947,8 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd.fsPath
                     }> ${cli} ${args.join(" ")}`
                 )
+
+                this.lastCreateCliFailed = false
                 const terminalOptions: vscode.TerminalOptions = {
                     name: "DeviceScript" || title,
                     hideFromUser: false,
@@ -960,6 +963,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (useShell) {
                     t.sendText("", true)
                     t.sendText(`${cli} ${args.join(" ")}`, true)
+                    if (this.lastCreateCliFailed) t.show(true)
                 }
                 let retry = 0
                 let inited = false
@@ -971,6 +975,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 }
                 if (!inited) {
                     this.clear()
+                    this.lastCreateCliFailed = true
                     return undefined
                 }
 
