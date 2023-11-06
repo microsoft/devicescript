@@ -363,8 +363,8 @@ export async function startIMU(
     driver: AccelerometerDriver & GyroscopeDriver,
     options: AccelerometerOptions & GyroscopeOptions & SensorServerOptions
 ) {
-    const accelerometer = startAccelerometer(driver, options)
-    const gyroscope = startGyroscope(driver, options)
+    const accelerometer = await startAccelerometer(driver, options)
+    const gyroscope = await startGyroscope(driver, options)
 
     return { accelerometer, gyroscope }
 }
