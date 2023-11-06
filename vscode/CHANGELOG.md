@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.16](https://github.com/microsoft/devicescript/compare/v2.15.15...v2.15.16)
+
+> 27 October 2023
+
+- Typo fix in bytecode/bytecode.md [`#645`](https://github.com/microsoft/devicescript/pull/645)
+- Performance and Loading Speed Enhancements for the Website 🏎 [`#652`](https://github.com/microsoft/devicescript/pull/652)
+- allow larger images (depending on bpp): fixes #649 [`#649`](https://github.com/microsoft/devicescript/issues/649)
+- start dashboard in non-vscode mode [`a4b905d`](https://github.com/microsoft/devicescript/commit/a4b905d6097a7a1f7bc368171acff3775854e880)
+- formatting and update jacdac [`87974cc`](https://github.com/microsoft/devicescript/commit/87974cc914ab2a65dd821f42755f9ced2d806d50)
+- updated jacdac-ts [`4a71ef6`](https://github.com/microsoft/devicescript/commit/4a71ef61e885eda21d943ed2fdf375ac725cbb3b)
+
 #### [v2.15.15](https://github.com/microsoft/devicescript/compare/v2.15.14...v2.15.15)
 
 > 11 October 2023
