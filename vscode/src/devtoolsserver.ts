@@ -194,14 +194,11 @@ export class DeveloperToolsManager extends JDEventSource {
         if (!projectFolder) return
 
         await this.kill()
-        const t = vscode.window.createTerminal({
-            isTransient: true,
-            name: "@devicescript/cli upgrade",
-            cwd: projectFolder,
-        })
-        const cmd = await this.resolvePackageTool(projectFolder, "upgrade")
-        t.sendText(`${cmd} @devicescript/cli`)
-        t.show()
+        await this.startPackageTool(
+            projectFolder,
+            "Upgrade DeviceScript",
+            "upgrade"
+        )
     }
 
     updateBuildConfig(data: ResolvedBuildConfig) {
@@ -805,7 +802,11 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
-    private async resolvePackageTool(cwd: vscode.Uri, command?: string) {
+    private async resolvePackageTool(
+        cwd: vscode.Uri,
+        command: string,
+        args?: string[]
+    ) {
         if (!cwd) return "npm"
         const yarn = await checkFileExists(cwd, "yarn.lock")
         let cmd = yarn ? "yarn" : "npm"
@@ -818,6 +819,7 @@ export class DeveloperToolsManager extends JDEventSource {
             }
             cmd += " " + command
         }
+        if (args?.length) cmd += " " + args.join(" ")
         return cmd
     }
 
@@ -827,6 +829,23 @@ export class DeveloperToolsManager extends JDEventSource {
         )
         const nodePath = devToolsConfig.get("node") as string
         return nodePath || "node"
+    }
+
+    public async startPackageTool(
+        cwd: vscode.Uri,
+        title: string,
+        command: string,
+        ...args: string[]
+    ) {
+        const t = vscode.window.createTerminal({
+            name: title,
+            cwd: cwd.fsPath,
+            isTransient: true,
+        })
+        const cmd = await this.resolvePackageTool(cwd, command, args)
+        t.sendText(cmd)
+        t.show(true)
+        return t
     }
 
     public async createCliTerminal(options: {
@@ -877,16 +896,14 @@ export class DeveloperToolsManager extends JDEventSource {
                 "Install @devicescript/cli package.",
                 "Install"
             ).then(async (res: string) => {
-                if (res === "Install") {
-                    const t = vscode.window.createTerminal({
-                        name: "Install Node.JS dependencies",
-                        cwd: cwd.fsPath,
-                        isTransient: true,
-                    })
-                    const cmd = await this.resolvePackageTool(cwd, "install")
-                    t.sendText(`${cmd} -D @devicescript/cli@latest`)
-                    t.show()
-                }
+                if (res === "Install")
+                    await this.startPackageTool(
+                        cwd,
+                        "Install Node.JS dependencies",
+                        "install",
+                        "-D",
+                        "@devicescript/cli@latest"
+                    )
             })
             return undefined
         }
