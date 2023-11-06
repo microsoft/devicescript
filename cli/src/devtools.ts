@@ -3,7 +3,7 @@ const WebSocket = require("faye-websocket")
 import http from "http"
 import url from "url"
 import net from "net"
-import { error, log } from "./command"
+import { error, isInteractive, log, setInteractive } from "./command"
 import { watch } from "fs-extra"
 import { resolveBuildConfig, SrcFile } from "@devicescript/compiler"
 import {
@@ -100,6 +100,7 @@ export async function devtools(
     const tcpPort = 8082
     const dbgPort = 8083
 
+    if (options.vscode) setInteractive(false) // don't prompt for anything
     if (options.diagnostics) Flags.diagnostics = true
 
     overrideConsoleDebug()
