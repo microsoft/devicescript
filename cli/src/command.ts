@@ -70,7 +70,7 @@ export function logToConsole(priority: LoggerPriority, message: string) {
 
 export let isVerbose = 0
 export let isQuiet = false
-export let isInteractive = !!Boolean(process.env.CI)
+export let isInteractive = !Boolean(process.env.CI)
 
 export function incVerbose() {
     isVerbose++
