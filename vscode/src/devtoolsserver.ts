@@ -811,6 +811,8 @@ export class DeveloperToolsManager extends JDEventSource {
         const yarn = await checkFileExists(cwd, "yarn.lock")
         let cmd = yarn ? "yarn" : "npm"
         if (command) {
+            args = args || []
+            if (command === "install") args.push("-D")
             if (yarn) {
                 command =
                     {
@@ -818,8 +820,8 @@ export class DeveloperToolsManager extends JDEventSource {
                     }[command] || command
             }
             cmd += " " + command
+            if (args?.length) cmd += " " + unique(args).join(" ")
         }
-        if (args?.length) cmd += " " + args.join(" ")
         return cmd
     }
 
