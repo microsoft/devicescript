@@ -196,8 +196,9 @@ export class DeveloperToolsManager extends JDEventSource {
         await this.kill()
         await this.startPackageTool(
             projectFolder,
-            "Upgrade DeviceScript",
-            "upgrade"
+            "Upgrade DeviceScript tools",
+            "upgrade",
+            "@devicescript/cli"
         )
     }
 
