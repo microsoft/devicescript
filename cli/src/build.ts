@@ -46,9 +46,9 @@ import {
     toHex,
     versionTryParse,
 } from "jacdac-ts"
-import { execSync } from "node:child_process"
 import { BuildOptions } from "./sideprotocol"
 import { readJSON5Sync } from "./jsonc"
+import { execCmd } from "./exec"
 
 // TODO should we move this to jacdac-ts and call automatically for transports?
 export function setupWebsocket() {
@@ -213,14 +213,6 @@ function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
         endLine: d.line,
         endColumn: 100,
         formatted: "",
-    }
-}
-
-function execCmd(cmd: string) {
-    try {
-        return execSync(cmd, { encoding: "utf-8" }).trim()
-    } catch {
-        return ""
     }
 }
 

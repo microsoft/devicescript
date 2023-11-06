@@ -11,7 +11,7 @@ import {
     existsSync,
 } from "fs-extra"
 import { build } from "./build"
-import { spawnSync, execSync } from "node:child_process"
+import { spawnSync } from "node:child_process"
 import { assert, clone, randomUInt } from "jacdac-ts"
 import { addReqHandler } from "./sidedata"
 import type {
@@ -32,6 +32,7 @@ import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
 import { MARKETPLACE_EXTENSION_ID } from "@devicescript/interop"
 import { TSDOC_TAGS } from "@devicescript/compiler"
+import { execCmd } from "./exec"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -569,14 +570,6 @@ export interface AddNpmOptions extends InitOptions {
 }
 
 export interface AddSettingsOptions extends InitOptions {}
-
-export function execCmd(cmd: string) {
-    try {
-        return execSync(cmd, { encoding: "utf-8" }).trim()
-    } catch {
-        return ""
-    }
-}
 
 export async function addSettings(options: AddSettingsOptions) {
     const files = clone(settingsFiles)

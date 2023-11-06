@@ -2,8 +2,6 @@ import {
     JDBus,
     Packet,
     PACKET_REPORT,
-    SRV_DEVICE_SCRIPT_MANAGER,
-    DeviceScriptManagerCmd,
     LoggerPriority,
     SRV_LOGGER,
     LoggerCmd,

@@ -188,6 +188,7 @@ export interface PkgJson {
         library?: boolean
         bundle?: boolean
     }
+    dependencies?: Record<string, string>
 }
 
 export interface LocalBuildConfig {

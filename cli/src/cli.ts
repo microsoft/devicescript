@@ -17,6 +17,7 @@ import {
     incVerbose,
     setConsoleColors,
     setDeveloperMode,
+    setInteractive,
     setQuiet,
     verboseLog,
 } from "./command"
@@ -75,6 +76,10 @@ export async function mainCli() {
         .version(cliVersion())
         .option("-v, --verbose", "more logging (can be repeated)")
         .option("--quiet", "less logging")
+        .option(
+            "--ci",
+            "disable interactions with user, default is false unless CI env var is set"
+        )
         .option("--no-colors", "disable color output")
         .option("--dev", "developer mode")
 
@@ -429,6 +434,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:quiet", () => setQuiet(true))
+    program.on("option:ci", () => setInteractive(false))
     program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
     program.on("option:dev", () => {
