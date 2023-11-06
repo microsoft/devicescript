@@ -107,11 +107,21 @@ export class DeviceScriptExtensionState extends JDEventSource {
             }
         })
         subSideEvent<SideMissingPackageEvent>("missingPackage", async msg => {
-            const packageName = msg.packageName
-            await showErrorMessage(
+            const { packageName } = msg.data
+            const projectFolder = this.projectFolder
+            const install = "Install"
+            const res = await showErrorMessage(
                 "package.missing",
-                `Failed to require ${packageName} package. Please install manually.`
+                `Failed to require '${packageName}' package. Please install and try again.`,
+                install
             )
+            if (res === install)
+                await this.devtools.startPackageTool(
+                    projectFolder,
+                    `Installing ${packageName}...`,
+                    "install",
+                    packageName
+                )
         })
     }
 

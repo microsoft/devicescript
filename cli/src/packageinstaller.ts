@@ -26,7 +26,7 @@ function getPackageInstallerCommand(
 
     if (!packageName) return ["npm", "install"]
 
-    return ["npm", "install", "--save", "--no-workspaces", packageName]
+    return ["npm", "install", "--save", "-D", "--no-workspaces", packageName]
 }
 
 async function isPackageInstalledLocally(pkgName: string): Promise<boolean> {

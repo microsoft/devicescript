@@ -194,14 +194,12 @@ export class DeveloperToolsManager extends JDEventSource {
         if (!projectFolder) return
 
         await this.kill()
-        const t = vscode.window.createTerminal({
-            isTransient: true,
-            name: "@devicescript/cli upgrade",
-            cwd: projectFolder,
-        })
-        const cmd = await this.resolvePackageTool(projectFolder, "upgrade")
-        t.sendText(`${cmd} @devicescript/cli`)
-        t.show()
+        await this.startPackageTool(
+            projectFolder,
+            "Upgrade DeviceScript tools",
+            "upgrade",
+            "@devicescript/cli"
+        )
     }
 
     updateBuildConfig(data: ResolvedBuildConfig) {
@@ -805,11 +803,16 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
-    private async resolvePackageTool(cwd: vscode.Uri, command?: string) {
+    private async resolvePackageTool(
+        cwd: vscode.Uri,
+        command: string,
+        args?: string[]
+    ) {
         if (!cwd) return "npm"
         const yarn = await checkFileExists(cwd, "yarn.lock")
         let cmd = yarn ? "yarn" : "npm"
         if (command) {
+            args = args || []
             if (yarn) {
                 command =
                     {
@@ -817,6 +820,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     }[command] || command
             }
             cmd += " " + command
+            if (args?.length) cmd += " " + unique(args).join(" ")
         }
         return cmd
     }
@@ -829,6 +833,24 @@ export class DeveloperToolsManager extends JDEventSource {
         return nodePath || "node"
     }
 
+    public async startPackageTool(
+        cwd: vscode.Uri,
+        title: string,
+        command: string,
+        ...args: string[]
+    ) {
+        const cmd = await this.resolvePackageTool(cwd, command, args)
+        const t = vscode.window.createTerminal({
+            name: title,
+            cwd: cwd.fsPath,
+            isTransient: true,
+        })
+        t.sendText(cmd)
+        t.show(true)
+        return t
+    }
+
+    private lastCreateCliFailed = false
     public async createCliTerminal(options: {
         title?: string
         progress: string
@@ -877,16 +899,14 @@ export class DeveloperToolsManager extends JDEventSource {
                 "Install @devicescript/cli package.",
                 "Install"
             ).then(async (res: string) => {
-                if (res === "Install") {
-                    const t = vscode.window.createTerminal({
-                        name: "Install Node.JS dependencies",
-                        cwd: cwd.fsPath,
-                        isTransient: true,
-                    })
-                    const cmd = await this.resolvePackageTool(cwd, "install")
-                    t.sendText(`${cmd} -D @devicescript/cli@latest`)
-                    t.show()
-                }
+                if (res === "Install")
+                    await this.startPackageTool(
+                        cwd,
+                        "Install Node.JS dependencies",
+                        "install",
+                        "-D",
+                        "@devicescript/cli@latest"
+                    )
             })
             return undefined
         }
@@ -907,7 +927,8 @@ export class DeveloperToolsManager extends JDEventSource {
                 )
                 const isWindows = globalThis.process?.platform === "win32"
                 const useShell =
-                    options.useShell ?? !!devToolsConfig.get("shell")
+                    this.lastCreateCliFailed ||
+                    (options.useShell ?? !!devToolsConfig.get("shell"))
                 const nodePath = this.nodePath
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
@@ -927,6 +948,8 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd.fsPath
                     }> ${cli} ${args.join(" ")}`
                 )
+
+                this.lastCreateCliFailed = false
                 const terminalOptions: vscode.TerminalOptions = {
                     name: "DeviceScript" || title,
                     hideFromUser: false,
@@ -941,6 +964,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (useShell) {
                     t.sendText("", true)
                     t.sendText(`${cli} ${args.join(" ")}`, true)
+                    if (this.lastCreateCliFailed) t.show(true)
                 }
                 let retry = 0
                 let inited = false
@@ -952,6 +976,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 }
                 if (!inited) {
                     this.clear()
+                    this.lastCreateCliFailed = true
                     return undefined
                 }
 
