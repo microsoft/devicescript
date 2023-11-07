@@ -90,7 +90,8 @@ export function startSimulatorServer(options: SimulatorServerOptions) {
     for (const key of keys) {
         if (options[key] !== undefined) addkv(key, options[key])
     }
-    if (options.variant) addkv("variant", options.variant())
+    const variant = options.variant?.()
+    if (variant !== undefined) addkv("variant", variant)
     console.debug(`request sim: ${name}`)
     return name
 
