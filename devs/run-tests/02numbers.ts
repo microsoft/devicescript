@@ -245,7 +245,7 @@ function testEnumToString() {
 function testToFixed() {
     const numObj = 12345.6789;
 
-    assert(numObj.toFixed(5) === '12346') // '12346'; rounding, no fractional part
+    assert(numObj.toFixed(5) === '12346', 'testToFixed') // '12346'; rounding, no fractional part
 }
 
 testComma()
@@ -254,4 +254,3 @@ testNaN()
 testUnaryPlus()
 testEnumToString()
 testToFixed()
-

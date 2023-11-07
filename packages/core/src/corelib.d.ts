@@ -199,7 +199,6 @@ declare var String: StringConstructor
 interface Boolean {}
 
 interface NumberConstructor {
-    (number: Number): number
     readonly prototype: Number
 }
 
@@ -210,7 +209,6 @@ interface Number {
     // todo
     toFixed(digits?: number): string
 }
-interface Number {}
 
 interface RegExp {}
 interface IterableIterator<T> {}
