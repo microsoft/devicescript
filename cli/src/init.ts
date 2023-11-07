@@ -453,7 +453,9 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const pkg = readJSON5Sync("package.json") as PackageManifest
 
     // name needed in worspace for install to work
-    if (!pkg.name) pkg.name = dir || basename(process.cwd())
+    if (!pkg.name)
+        pkg.name = dir && dir !== "./" ? dir : basename(process.cwd())
+    if (pkg.name === "./") pkg.name = "devicescript-demo"
 
     // ensure cli is added
     addCliDependency(pkg)
