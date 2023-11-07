@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.18](https://github.com/microsoft/devicescript/compare/v2.15.17...v2.15.18)
+
+> 6 November 2023
+
+- fix simulation for gyro/acc [`7129d81`](https://github.com/microsoft/devicescript/commit/7129d817c939db1d860c3a5676d6e1467ed5bb44)
+- missing newlines in docs [`a284989`](https://github.com/microsoft/devicescript/commit/a284989fa0e44e2ce1e2bd3b78a6a06b2f4cd848)
+- missing await [`3b8132b`](https://github.com/microsoft/devicescript/commit/3b8132babe4edbc30207a852b6a25e01651d1255)
+
 #### [v2.15.17](https://github.com/microsoft/devicescript/compare/v2.15.16...v2.15.17)
 
 > 6 November 2023
