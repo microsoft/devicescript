@@ -1,10 +1,10 @@
 import { Image } from "@devicescript/graphics"
 import { STLikeDisplayOptions, STLikeDisplayDriver } from "./stlikedisplay"
 
-export interface ILI9341xOptions extends STLikeDisplayOptions {}
+export interface ILI9341Options extends STLikeDisplayOptions {}
 
-export class ILI9341xDriver extends STLikeDisplayDriver {
-    constructor(image: Image, options: ILI9341xOptions) {
+export class ILI9341Driver extends STLikeDisplayDriver {
+    constructor(image: Image, options: ILI9341Options) {
         super(
             image,
             options,
