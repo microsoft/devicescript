@@ -2,7 +2,7 @@
 // by Pimoroni Ltd, MIT license
 
 import { GPIOMode, InputPin, LOW, delay, isSimulator } from "@devicescript/core"
-import { FourWireDriver, FourWireOptions } from "./st7735"
+import { FourWireDriver, FourWireOptions } from "./stlikedisplay"
 import {
     Display,
     Image,
