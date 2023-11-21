@@ -1,5 +1,4 @@
 import { Image } from "@devicescript/graphics"
-import "@devicescript/gpio"
 import { STLikeDisplayDriver, STLikeDisplayOptions } from "./stlikedisplay"
 
 export interface ST7735Options extends STLikeDisplayOptions {}
