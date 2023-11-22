@@ -1968,6 +1968,8 @@ class Program implements TopOpWriter {
 
         this.withProcedure(this.protoProc, () => {
             for (;;) {
+                if (this.usedSpecs.length > 0)
+                    this.markMethodUsed("#ds.Role._onPacket")
                 let numemit = 0
                 for (const p of this.protoDefinitions) {
                     if (needsEmit(p)) {
@@ -2042,8 +2044,6 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.RESTART))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.usedSpecs.length > 0)
-                this.markMethodUsed("#ds.Role._onPacket")
             this.emitProtoAssigns()
         })
 
