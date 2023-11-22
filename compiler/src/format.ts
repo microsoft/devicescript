@@ -56,6 +56,7 @@ export function stmtIsFinal(op: Op) {
 export interface InstrArgResolver {
     describeCell?(fmt: string, idx: number): string
     verboseDisasm?: boolean
+    forDiff?: boolean
 }
 
 export function bitSize(fmt: NumFmt) {

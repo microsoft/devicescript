@@ -35,8 +35,14 @@ import {
     stringToUint8Array,
     assert,
     fromHex,
+    sortedBy,
 } from "./jdutil"
 import { IMAGE_MIN_LENGTH, checkMagic } from "./magic"
+
+export interface DisassembleOptions {
+    detailed?: boolean
+    diff?: boolean
+}
 
 export class OpTree {
     args: OpTree[] = undefined
@@ -74,7 +80,7 @@ export class ImgFunction {
         public name: string
     ) {}
 
-    disassemble(verbose = false) {
+    disassemble(options: DisassembleOptions) {
         const tpMap: Record<string, StrIdx> = {
             B: StrIdx.BUFFER,
             U: StrIdx.UTF8,
@@ -82,7 +88,8 @@ export class ImgFunction {
             I: StrIdx.BUILTIN,
         }
         const resolver: InstrArgResolver = {
-            verboseDisasm: verbose,
+            verboseDisasm: options.detailed,
+            forDiff: options.diff,
             describeCell: (ff, idx) => {
                 switch (ff) {
                     case "B":
@@ -96,7 +103,7 @@ export class ImgFunction {
                         return (
                             (this.parent.functions?.[idx]?.name ?? "") +
                             "_F" +
-                            idx
+                            (options.diff ? "x" : idx)
                         )
                     case "L":
                         if (this.flags & FunctionFlag.NEEDS_THIS) {
@@ -126,8 +133,11 @@ export class ImgFunction {
         if (this.flags & FunctionFlag.IS_CTOR) {
             pref = "ctor"
         }
-        const fullname = `${pref} ${this.name}_F${this.index}`
-        let r = `${fullname}(${txtArgs.join(", ")}): @${this.imgOffset}\n`
+        const idx = options.diff ? "x" : this.index
+        const fullname = `${pref} ${this.name}_F${idx}`
+        let r = `${fullname}(${txtArgs.join(", ")}): `
+        if (options.diff) r += `\n`
+        else r += `@${this.imgOffset}\n`
         if (this.numLocals)
             r += `  locals: ${range(this.numLocals).map(i => "loc" + i)}\n`
 
@@ -142,10 +152,11 @@ export class ImgFunction {
                     ? srcmap.posToString(stmt.srcPos).replace(/.*\//, "")
                     : ""
             if (pos && pos != prevPos) {
-                res = "//                           " + pos + "\n" + res
+                if (!options.diff)
+                    res = "//                           " + pos + "\n" + res
                 prevPos = pos
             }
-            if (verbose) {
+            if (options.detailed) {
                 res += " // " + toHex(this.bytecode.slice(stmt.pc, stmt.pcEnd))
             }
             r += res + "\n"
@@ -352,7 +363,7 @@ export function stringifyInstr(stmt: OpStmt, resolver?: InstrArgResolver) {
     let res = "    " + stringifyExpr(resolver, stmt)
 
     const pc = stmt.pc
-    if (pc !== undefined)
+    if (pc !== undefined && !resolver?.forDiff)
         res = (pc > 9999 ? pc : ("    " + pc).slice(-4)) + ": " + res
 
     return res
@@ -726,14 +737,15 @@ export class Image {
         }
     }
 
-    disassemble(verbose = false) {
+    disassemble(options: DisassembleOptions) {
         const img = this
         let r =
             `// img size ${this.devsBinary.length}\n` +
             `// ${this.numGlobals} globals, ${this.functions.length} functions\n` +
             this.sizeInfo
 
-        for (const fn of this.functions) r += "\n" + fn.disassemble(verbose)
+        const funs = sortedBy(this.functions, f => f.name)
+        for (const fn of funs) r += "\n" + fn.disassemble(options)
 
         // printStrings("builtin", StrIdx.BUILTIN)
         printStrings("ASCII", StrIdx.ASCII)
@@ -833,9 +845,9 @@ export class Image {
 
 export function disassemble(
     data: string | Uint8Array | DebugInfo,
-    verbose = false
+    options: DisassembleOptions = {}
 ): string {
     const img = new Image(data)
     for (const err of img.errors) console.error("DevS disasm error: " + err)
-    return img.disassemble(verbose)
+    return img.disassemble(options)
 }

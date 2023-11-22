@@ -729,3 +729,9 @@ export function parseIdentifier(value: number | string) {
         return parseInt(value)
     return Number(value)
 }
+
+export function sortedBy<T>(arr: T[], key: (t: T) => string) {
+    arr = arr.slice();
+    arr.sort((a, b) => strcmp(key(a), key(b)));
+    return arr;
+}

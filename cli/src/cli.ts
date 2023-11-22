@@ -238,6 +238,7 @@ export async function mainCli() {
         .command("disasm")
         .description("disassemble .devs binary")
         .option("-d, --detailed", "include all details")
+        .option("-D, --diff", "canonical-ize output for diffing")
         .arguments("[file.ts|file-dbg.json|file.devs]")
         .action(disasm)
 
