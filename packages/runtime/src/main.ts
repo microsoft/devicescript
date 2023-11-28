@@ -258,4 +258,19 @@ describe("number", () => {
         check(5.0000000000000001) // true, because of loss of precision
         check(4500000000000000.1) // true, because of loss of precision
     })
+    test("isNaN", () => {
+        const check = (v: unknown) => expect(Number.isNaN(v)).toBe(true)
+        const checkNot = (v: unknown) => expect(Number.isNaN(v)).toBe(false)
+
+        check(NaN)
+
+        checkNot("NaN")
+        checkNot(Infinity)
+        checkNot(-Infinity)
+        checkNot("5")
+        checkNot(5)
+        checkNot(true)
+        checkNot(false)
+        checkNot([NaN])
+    })
 })
