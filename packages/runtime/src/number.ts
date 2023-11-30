@@ -13,4 +13,11 @@ export class Number {
             return false
         return number === Math.round(number)
     }
+    /**
+     * Returns true if the value passed is an NaN, false otherwise.
+     * @param number A numeric value.
+     */
+    static isNaN(number: unknown): boolean {
+        return isNaN(number as number)
+    }
 }
