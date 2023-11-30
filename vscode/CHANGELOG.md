@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.20](https://github.com/microsoft/devicescript/compare/v2.15.19...v2.15.20)
+
+> 22 November 2023
+
+- Add ILI9341 driver support [`#663`](https://github.com/microsoft/devicescript/pull/663)
+- emit ds.Role._onPacket properly [`#659`](https://github.com/microsoft/devicescript/issues/659)
+- add --diff option to devs disasm [`e42e955`](https://github.com/microsoft/devicescript/commit/e42e955dc12a027088476e078212d3268135bd08)
+- add repro [`11be29c`](https://github.com/microsoft/devicescript/commit/11be29cd39b2beda01d16ecb5b1a40dcfc941f09)
+- add samples with accelerometer [`44fa373`](https://github.com/microsoft/devicescript/commit/44fa3734e873d2d4552b98ba55b7f5e26bbc63a4)
+
 #### [v2.15.19](https://github.com/microsoft/devicescript/compare/v2.15.18...v2.15.19)
 
 > 7 November 2023

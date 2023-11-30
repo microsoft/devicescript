@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/gpio",
-    "version": "2.15.20",
+    "version": "2.15.21",
     "private": true,
     "dependencies": {},
     "devDependencies": {

@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/settings",
-    "version": "2.15.20",
+    "version": "2.15.21",
     "private": true,
     "dependencies": {},
     "devDependencies": {
