@@ -273,4 +273,27 @@ describe("number", () => {
         checkNot(false)
         checkNot([NaN])
     })
+    test("parseFloat", () => {
+        const check = (v: unknown) => expect(Number.parseFloat(v)).toBe(3.14)
+        const checkNaN = (v: unknown) =>
+            expect(isNaN(Number.parseFloat(v))).toBe(isNaN(NaN))
+
+        const checkInfinity = (v: unknown) =>
+            expect(Number.parseFloat(v)).toBe(Infinity)
+
+        const checkMinusInfinity = (v: unknown) =>
+            expect(Number.parseFloat(v)).toBe(-Infinity)
+        check(3.14)
+        check("3.14")
+        check("  3.14  ")
+        check("314e-2")
+        check("0.0314E+2")
+        check("3.14some non-digit characters")
+        checkNaN("FF2")
+        checkNaN("NaN")
+        checkInfinity("1.7976931348623159e+308")
+        checkMinusInfinity("-1.7976931348623159e+308")
+        checkInfinity("Infinity")
+        checkMinusInfinity("-Infinity")
+    })
 })
