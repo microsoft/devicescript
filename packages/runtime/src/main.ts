@@ -296,4 +296,36 @@ describe("number", () => {
         checkInfinity("Infinity")
         checkMinusInfinity("-Infinity")
     })
+    test("isFinite", () => {
+        const check = (v: unknown) => expect(Number.isFinite(v)).toBe(true)
+        const checkNot = (v: unknown) => expect(Number.isFinite(v)).toBe(false)
+
+        check(5)
+        check(5 / 3)
+
+        checkNot(Infinity)
+        checkNot(-Infinity)
+        checkNot(6 / 0)
+        checkNot([5])
+        checkNot("5")
+        checkNot(NaN)
+    })
+    test("isSafeInteger", () => {
+        const check = (v: unknown) => expect(Number.isSafeInteger(v)).toBe(true)
+        const checkNot = (v: unknown) =>
+            expect(Number.isSafeInteger(v)).toBe(false)
+
+        check(3)
+        check(3.0)
+        check(2 ** 53 - 1)
+        check(-(2 ** 53 - 1))
+
+        checkNot(2 ** 53)
+        checkNot(-(2 ** 53))
+        checkNot(NaN)
+        checkNot(Infinity)
+        checkNot(-Infinity)
+        checkNot("3")
+        checkNot(3.1)
+    })
 })
