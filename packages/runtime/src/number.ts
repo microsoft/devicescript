@@ -20,4 +20,20 @@ export class Number {
     static isNaN(number: unknown): boolean {
         return isNaN(number as number)
     }
+    static parseInt(string: unknown, radix?: unknown): number {
+        if (!radix) radix = 10
+        if (radix < 2 || radix < 2) return NaN
+        const validChars: string = (
+            "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" as string
+        ).slice(radix as number)
+
+        const inputUpperCase: string = (string as string).toUpperCase()
+        let result: number = 0
+        for (const char of inputUpperCase) {
+            const charValue = validChars.indexOf(char)
+            if (charValue === -1) return NaN
+            result = result * (radix as number) + charValue
+        }
+        return result
+    }
 }

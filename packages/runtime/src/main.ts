@@ -273,4 +273,37 @@ describe("number", () => {
         checkNot(false)
         checkNot([NaN])
     })
+
+    test("isNaN", () => {
+        const check = (v: unknown, r?: unknown) =>
+            expect(Number.parseInt(v, r)).toBe(15)
+        const checkNegative = (v: unknown, r?: unknown) =>
+            expect(Number.parseInt(v, r)).toBe(-15)
+        const checkNaN = (v: unknown, r?: unknown) =>
+            expect(isNaN(Number.parseInt(v, r))).toBe(true)
+
+        check("015", 10) // but `parseInt('015', 8)` will return 13
+        check("15,123", 10)
+        //check("0xF", 16)
+        check("F", 16)
+        check("17", 8)
+        check("FXX123", 16)
+        check("1111", 2)
+        check("15 * 3", 10)
+        check("15e2", 10)
+        check("15px", 10)
+        check("12", 13)
+
+        //checkNaN("Hello", 8) // Not a number at all
+        //checkNaN("546", 2) // Digits other than 0 or 1 are invalid for binary radix
+
+        //checkNegative("-F", 16)
+        //checkNegative("-0F", 16)
+        //checkNegative("-0XF", 16)
+        //checkNegative("-17", 8)
+        //checkNegative("-15", 10)
+        //checkNegative("-1111", 2)
+        //checkNegative("-15e1", 10)
+        //checkNegative("-12", 13)
+    })
 })
