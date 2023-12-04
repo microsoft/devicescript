@@ -27,7 +27,7 @@ export class Number {
     static parseFloat(string: unknown): number {
         return parseFloat(string as string)
     }
-     * Returns tru if the passed value is finite number, false otherwise.
+    /** Returns tru if the passed value is finite number, false otherwise.
      * @param number A numeric value
      */
     static isFinite(number: unknown): boolean {
