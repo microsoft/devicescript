@@ -273,6 +273,20 @@ describe("number", () => {
         checkNot(false)
         checkNot([NaN])
     })
+    test("isFinite", () => {
+        const check = (v: unknown) => expect(Number.isFinite(v)).toBe(true)
+        const checkNot = (v: unknown) => expect(Number.isFinite(v)).toBe(false)
+
+        check(5)
+        check(5 / 3)
+
+        checkNot(Infinity)
+        checkNot(-Infinity)
+        checkNot(6 / 0)
+        checkNot([5])
+        checkNot("5")
+        checkNot(NaN)
+    })
     test("isSafeInteger", () => {
         const check = (v: unknown) => expect(Number.isSafeInteger(v)).toBe(true)
         const checkNot = (v: unknown) =>

@@ -21,6 +21,18 @@ export class Number {
         return isNaN(number as number)
     }
     /**
+     * Returns tru if the passed value is finite number, false otherwise.
+     * @param number A numeric value
+     */
+    static isFinite(number: unknown): boolean {
+        return (
+            number !== Infinity &&
+            number !== -Infinity &&
+            typeof number === "number" &&
+            !isNaN(number)
+        )
+    }
+    /*
      * The boolean value true if the given value is a number that is a safe integer. Otherwise false.
      * @param The value to be tested for being a safe integer.
      */
