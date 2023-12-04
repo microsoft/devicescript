@@ -30,7 +30,8 @@ export class Number {
             number !== -Infinity &&
             typeof number === "number" &&
             !isNaN(number)
-     }
+        )
+    }
     /*
      * The boolean value true if the given value is a number that is a safe integer. Otherwise false.
      * @param The value to be tested for being a safe integer.
