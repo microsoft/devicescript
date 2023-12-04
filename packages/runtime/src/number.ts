@@ -21,7 +21,13 @@ export class Number {
         return isNaN(number as number)
     }
     /**
-     * Returns tru if the passed value is finite number, false otherwise.
+     * Returns floating point number parsed from the given string, or NaN when the first non-whitespace character cannot be converted to a number.
+     * @param string The value to parse, coerced to a string. Leading whitespace in this argument is ignored.
+     */
+    static parseFloat(string: unknown): number {
+        return parseFloat(string as string)
+    }
+    /** Returns tru if the passed value is finite number, false otherwise.
      * @param number A numeric value
      */
     static isFinite(number: unknown): boolean {
