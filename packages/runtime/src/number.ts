@@ -20,6 +20,12 @@ export class Number {
     static isNaN(number: unknown): boolean {
         return isNaN(number as number)
     }
+    /**
+     * Return integer parsed from the given string.
+     * If the radix is smaller than 2 or bigger than 36, or the first non-whitespace character cannot be converted to a number, NaN is returned.
+     * @param string The value to parse, coerced to a string. Leading whitespace in this argument is ignored.
+     * @param radix An integer between 2 and 36 that represents the radix (the base in mathematical numeral systems) of the string. If radix is undefined or 0, it is assumed to be 10 except when the number begins with the code unit pairs 0x or 0X, in which case a radix of 16 is assumed.
+     */
     static parseInt(string: unknown, radix?: unknown): number {
         const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         let result: number = 0
