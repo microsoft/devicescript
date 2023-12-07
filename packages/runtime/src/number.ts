@@ -21,22 +21,35 @@ export class Number {
         return isNaN(number as number)
     }
     static parseInt(string: unknown, radix?: unknown): number {
-        if (!radix || radix === 10) return parseInt(string as string)
-        if (radix < 2 || radix < 2) return NaN
         const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        const validChars = chars.slice(0, radix as number)
-        const inputUpperCase: string = (string as string).toUpperCase()
         let result: number = 0
-        for (let index = 0; index < inputUpperCase.length; index++) {
-            const charValue = validChars.indexOf(inputUpperCase[index])
-            if (charValue === -1) return NaN
-            result = result * (radix as number) + charValue
+        let parse: string = (string as string).trim().toUpperCase()
+        let base: number = radix as number
+        let isNegative: boolean = false
+        if (parse.charAt(0) === "-" || parse.charAt(0) === "+") {
+            isNegative = parse.charAt(0) === "-"
+            parse = parse.slice(1, parse.length)
         }
-        //for (const char of inputUpperCase) {
-        //    const charValue = validChars.indexOf(char)
-        //    if (charValue === -1) return NaN
-        //    result = result * (radix as number) + charValue
-        //}
-        return result
+        if (
+            !radix ||
+            radix === 0 ||
+            isNaN(base) ||
+            radix === Infinity ||
+            radix === -Infinity
+        ) {
+            base = parse.charAt(0) === "0" && parse.charAt(1) === "X" ? 16 : 10
+        }
+        if (base === 16 && parse.charAt(0) === "0" && parse.charAt(1) === "X")
+            parse = parse.slice(2, parse.length)
+        if (radix < 2 || radix > 32) return NaN
+        const validChars = chars.slice(0, radix as number)
+        const inputUpperCase: string = parse
+        if (validChars.indexOf(parse.charAt(0)) === -1) return NaN
+        for (const char of parse) {
+            const charValue = validChars.indexOf(char)
+            if (charValue === -1) break
+            result = result * base + charValue
+        }
+        return isNegative ? 0 - result : result
     }
 }
