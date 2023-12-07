@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.21](https://github.com/microsoft/devicescript/compare/v2.15.20...v2.15.21)
+
+> 30 November 2023
+
+- Added Number.isNaN [`#665`](https://github.com/microsoft/devicescript/pull/665)
+- updated jacdac-ts [`bf5b846`](https://github.com/microsoft/devicescript/commit/bf5b8460f1fbad3c59d12fc3d251f1d188d6249c)
+
 #### [v2.15.20](https://github.com/microsoft/devicescript/compare/v2.15.19...v2.15.20)
 
 > 22 November 2023
