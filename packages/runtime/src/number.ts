@@ -21,7 +21,44 @@ export class Number {
         return isNaN(number as number)
     }
     /**
-     * Returns floating point number parsed from the given string, or NaN when the first non-whitespace character cannot be converted to a number.
+     * Return integer parsed from the given string.
+     * If the radix is smaller than 2 or bigger than 36, or the first non-whitespace character cannot be converted to a number, NaN is returned.
+     * @param string The value to parse, coerced to a string. Leading whitespace in this argument is ignored.
+     * @param radix An integer between 2 and 36 that represents the radix (the base in mathematical numeral systems) of the string. If radix is undefined or 0, it is assumed to be 10 except when the number begins with the code unit pairs 0x or 0X, in which case a radix of 16 is assumed.
+     */
+    static parseInt(string: unknown, radix?: unknown): number {
+        const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let result: number = 0
+        let parse: string = (string as string).trim().toUpperCase()
+        let base: number = radix as number
+        let isNegative: boolean = false
+        if (parse.charAt(0) === "-" || parse.charAt(0) === "+") {
+            isNegative = parse.charAt(0) === "-"
+            parse = parse.slice(1, parse.length)
+        }
+        if (
+            !radix ||
+            radix === 0 ||
+            isNaN(base) ||
+            radix === Infinity ||
+            radix === -Infinity
+        ) {
+            base = parse.charAt(0) === "0" && parse.charAt(1) === "X" ? 16 : 10
+        }
+        if (base === 16 && parse.charAt(0) === "0" && parse.charAt(1) === "X")
+            parse = parse.slice(2, parse.length)
+        if (radix < 2 || radix > 32) return NaN
+        const validChars = chars.slice(0, radix as number)
+        const inputUpperCase: string = parse
+        if (validChars.indexOf(parse.charAt(0)) === -1) return NaN
+        for (const char of parse) {
+            const charValue = validChars.indexOf(char)
+            if (charValue === -1) break
+            result = result * base + charValue
+        }
+        return isNegative ? 0 - result : result
+    }
+    /** Returns floating point number parsed from the given string, or NaN when the first non-whitespace character cannot be converted to a number.
      * @param string The value to parse, coerced to a string. Leading whitespace in this argument is ignored.
      */
     static parseFloat(string: unknown): number {
