@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.15.22",
+    "version": "2.15.23",
     "publisher": "devicescript",
     "description": "TypeScript for microcontrollers.",
     "author": {
@@ -28,7 +28,7 @@
         "Jacdac"
     ],
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.85.0"
     },
     "icon": "images/devs-logo.png",
     "categories": [
