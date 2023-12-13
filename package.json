@@ -58,11 +58,9 @@
     ],
     "devDependencies": {
         "auto-changelog": "^2.4.0",
-        "esbuild": "^0.17.11",
-        "semver": "^7.3.8",
-        "zx": "^7.2.1"
-    },
-    "dependencies": {
-        "prettier": "^3.0.3"
+        "esbuild": "^0.19.9",
+        "semver": "^7.5.4",
+        "zx": "^7.2.3",
+        "prettier": "^3.1.1"
     }
 }

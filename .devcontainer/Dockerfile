@@ -1,5 +1,5 @@
 # see https://github.com/microsoft/vscode-dev-containers/tree/main/containers
-ARG VARIANT="16"
+ARG VARIANT="20"
 FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 ENV PATH="/opt/emsdk/upstream/emscripten:${PATH}"

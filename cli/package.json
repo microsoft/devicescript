@@ -27,7 +27,7 @@
         "directory": "cli"
     },
     "engines": {
-        "node": ">=16"
+        "node": ">=20"
     },
     "license": "MIT",
     "devDependencies": {
@@ -35,22 +35,22 @@
         "@devicescript/compiler": "*",
         "@devicescript/interop": "*",
         "@devicescript/vm": "*",
-        "@types/debounce-promise": "^3.1.6",
-        "@types/fs-extra": "^11.0.1",
-        "@types/node": "^16",
-        "@types/update-notifier": "^6.0.2",
-        "commander": "^10.0.0",
+        "@types/debounce-promise": "^3.1.9",
+        "@types/fs-extra": "^11.0.4",
+        "@types/node": "^20",
+        "@types/update-notifier": "^6.0.8",
+        "commander": "^11.1.0",
         "debounce-promise": "^3.1.2",
         "jacdac-ts": "*",
-        "fast-glob": "^3.2.12",
+        "fast-glob": "^3.3.2",
         "faye-websocket": "^0.11.4",
-        "fs-extra": "^11.1.0"
+        "fs-extra": "^11.2.0"
     },
     "dependencies": {
-        "update-notifier": "^6.0.2"
+        "update-notifier": "^7.0.0"
     },
     "optionalDependencies": {
-        "serialport": "^10.5.0"
+        "serialport": "^12.0.0"
     },
     "publishConfig": {
         "access": "public"

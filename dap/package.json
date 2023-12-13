@@ -21,11 +21,11 @@
     },
     "license": "MIT",
     "devDependencies": {
-        "@types/node": "^16",
+        "@types/node": "^20",
         "async-mutex": "^0.4.0",
         "@devicescript/compiler": "*",
         "@devicescript/vm": "*",
-        "@vscode/debugadapter": "^1.58.0",
+        "@vscode/debugadapter": "^1.64.0",
         "jacdac-ts": "*"
     },
     "dependencies": {},
