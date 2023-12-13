@@ -102,9 +102,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     cwd,
                 })
 
-                let cmd = "npx --yes @devicescript/cli@latest init --quiet"
+                let cmd = "npx --yes @devicescript/cli@latest init"
                 if (yarn) cmd += " --yarn"
                 if (verbose) cmd += "  --verbose"
+                else cmd += "  --quiet"
                 terminal.sendText(cmd)
                 terminal.show()
 
