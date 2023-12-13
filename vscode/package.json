@@ -28,7 +28,7 @@
         "Jacdac"
     ],
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.85.0"
     },
     "icon": "images/devs-logo.png",
     "categories": [
