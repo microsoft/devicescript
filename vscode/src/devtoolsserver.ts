@@ -855,6 +855,7 @@ export class DeveloperToolsManager extends JDEventSource {
         title?: string
         progress: string
         useShell?: boolean
+        verbose?: boolean
         diagnostics?: boolean
         developerMode?: boolean
         internet?: boolean
@@ -930,6 +931,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     this.lastCreateCliFailed ||
                     (options.useShell ?? !!devToolsConfig.get("shell"))
                 const nodePath = this.nodePath
+                const verbose = options.verbose ?? devToolsConfig.get("verbose")
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
                 const developerMode =
@@ -943,6 +945,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (diagnostics) args.push("--diagnostics", "--verbose")
                 if (developerMode) args.push("--dev")
                 if (internet) args.push("--internet")
+                if (verbose) args.push("--verbose")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath

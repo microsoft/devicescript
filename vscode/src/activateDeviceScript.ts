@@ -92,14 +92,19 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                           title: "What package manager do you use?",
                           placeHolder: "npm",
                       }))
-
+                const devToolsConfig = vscode.workspace.getConfiguration(
+                    "devicescript.devtools"
+                )
+                const verbose = devToolsConfig.get("verbose")
                 await vscode.workspace.fs.createDirectory(cwd)
                 const terminal = vscode.window.createTerminal({
                     isTransient: true,
                     cwd,
                 })
+
                 let cmd = "npx --yes @devicescript/cli@latest init --quiet"
                 if (yarn) cmd += " --yarn"
+                if (verbose) cmd += "  --verbose"
                 terminal.sendText(cmd)
                 terminal.show()
 
