@@ -22,3 +22,4 @@ devs/snippets
 local.env
 .env.local
 emsdk-cache*
+.DS_Store
