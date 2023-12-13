@@ -8,5 +8,6 @@ export const errors: Record<string, string> = {
   "Install @devicescript/cli package": "terminal-notinstalled",
   "missing \"devicescript\" section": "missing-devicescript-section",
   "No DeviceScript device found.": "no-devicescript-device-found",
-  "Multiple DeviceScript device found.": "multiple-devicescript-device-found"
+  "Multiple DeviceScript device found.": "multiple-devicescript-device-found",
+  "error can't alloc pcb": "error-cant-alloc-pcb"
 };
