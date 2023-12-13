@@ -27,7 +27,7 @@ export function activateTelemetry(context: vscode.ExtensionContext): void {
 
     telemetry = {
         reportException: (error, properties) => {
-            reporter.sendTelemetryException(error, properties)
+            reporter.sendTelemetryErrorEvent("exception", properties)
         },
         reportEvent: (
             eventName: string,
