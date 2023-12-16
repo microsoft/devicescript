@@ -883,11 +883,11 @@ export class DeveloperToolsManager extends JDEventSource {
             if (!v) {
                 showErrorWithHelp(
                     "terminal.nodemissing",
-                    "Unable to locate Node.JS v16+."
+                    "Unable to locate Node.JS."
                 )
                 return undefined
             }
-            if (!(v.major >= 16)) {
+            if (!(v.major >= MIN_NODE_VERSION)) {
                 showErrorMessage(
                     "terminal.nodeversion",
                     `Node.JS version outdated, found ${v.major}.${v.minor} but needed v16+.`

@@ -31,7 +31,7 @@ jobs:
                   key: ${{env.EM_VERSION}}-${{ runner.os }}
             - uses: actions/setup-node@v3
               with:
-                  node-version: "16"
+                  node-version: "20"
                   cache: yarn
                   registry-url: 'https://registry.npmjs.org'
             - uses: mymindstorm/setup-emsdk@v12
@@ -41,7 +41,7 @@ jobs:
             # setup node again, in case emsdk messed it up
             - uses: actions/setup-node@v3
               with:
-                  node-version: "16"
+                  node-version: "20"
                   cache: yarn
                   registry-url: 'https://registry.npmjs.org'
             - run: yarn install --frozen-lockfile
