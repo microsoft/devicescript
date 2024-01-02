@@ -20,8 +20,8 @@ For a more highlevel description of runtime and bytecode, see [Runtime implement
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 15
-    img_version_patch = 23
+    img_version_minor = 16
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
