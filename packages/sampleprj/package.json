@@ -1,6 +1,6 @@
 {
     "name": "sampleprj",
-    "version": "2.15.23",
+    "version": "2.16.0",
     "private": true,
     "dependencies": {
         "@types/papaparse": "^5.3.7",

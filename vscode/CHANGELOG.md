@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.15.23](https://github.com/microsoft/devicescript/compare/v2.15.22...v2.15.23)
+
+> 13 December 2023
+
+- Added Number.parseInt [`#669`](https://github.com/microsoft/devicescript/pull/669)
+- updated yarn.lock [`693e2ec`](https://github.com/microsoft/devicescript/commit/693e2eca36fb677ced4714c3d99580f0af3b45e7)
+- add verbose flag [`4afe607`](https://github.com/microsoft/devicescript/commit/4afe6078ab688240370dbe9550508ca8225113a4)
+- updated .gitignore [`0e9d2d4`](https://github.com/microsoft/devicescript/commit/0e9d2d42bc710237d536a9a4c140c1cf6b595447)
+
 #### [v2.15.22](https://github.com/microsoft/devicescript/compare/v2.15.21...v2.15.22)
 
 > 5 December 2023
