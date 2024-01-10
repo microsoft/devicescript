@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.16.0](https://github.com/microsoft/devicescript/compare/v2.15.23...v2.16.0)
+
+> 2 January 2024
+
+- attempt at migrating to node 20 [`#673`](https://github.com/microsoft/devicescript/pull/673)
+- added rp2040 error message [`e63fe9e`](https://github.com/microsoft/devicescript/commit/e63fe9e000e5e02d053e000da7d10535e5110206)
+- switch quiet or verbose [`899a390`](https://github.com/microsoft/devicescript/commit/899a390d82ff2cdf3bdf9894f4c3ad461f2c9bf2)
+
 #### [v2.15.23](https://github.com/microsoft/devicescript/compare/v2.15.22...v2.15.23)
 
 > 13 December 2023
