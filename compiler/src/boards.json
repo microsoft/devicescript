@@ -1,1237 +1,1238 @@
 {
-    "archs": {
-        "esp32": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
-            "binFlashOffset": "0x1000",
-            "binGenericFlashOffset": "0x10000",
-            "dcfgOffset": "0x9000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x1c0000",
-            "fstorPages": 64,
-            "id": "esp32",
-            "name": "ESP32",
-            "pins": {
-                "analogIn": "32-39",
-                "analogOut": "25,26",
-                "boot": "0,2,5,12,15",
-                "bootUart": "1,3",
-                "debug": "12-15",
-                "flash": "6-11",
-                "input": "io,34,35,36,37,38,39",
-                "io": "boot,4,13,14,18,19,21,22,23,25,26,27,32,33",
-                "psram": "16,17",
-                "touch": "0,2,4,12-15,27,32,33"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-esp32"
-        },
-        "esp32c3": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
-            "binFlashOffset": 0,
-            "binGenericFlashOffset": "0x10000",
-            "dcfgOffset": "0x9000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x1c0000",
-            "fstorPages": 64,
-            "id": "esp32c3",
-            "name": "ESP32-C3",
-            "pins": {
-                "analogIn": "0-4",
-                "boot": "2,8,9",
-                "bootUart": "20,21",
-                "debug": "4-7",
-                "flash": "11-17",
-                "io": "0-10,bootUart",
-                "usb": "18,19"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-esp32"
-        },
-        "esp32s2": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
-            "binFlashOffset": "0x1000",
-            "binGenericFlashOffset": "0x10000",
-            "dcfgOffset": "0x9000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x1c0000",
-            "fstorPages": 64,
-            "id": "esp32s2",
-            "name": "ESP32-S2",
-            "pins": {
-                "analogIn": "1-10",
-                "analogOut": "17,18",
-                "boot": "0,45,46",
-                "debug": "39-42",
-                "flash": "26-32",
-                "input": "io,46",
-                "io": "0-18,21,33-45",
-                "usb": "19,20"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-esp32"
-        },
-        "esp32s3": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_bare-0x0.bin",
-            "binFlashOffset": "0x0",
-            "binGenericFlashOffset": "0x10000",
-            "dcfgOffset": "0x9000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x1c0000",
-            "fstorPages": 64,
-            "id": "esp32s3",
-            "name": "ESP32-S3",
-            "pins": {
-                "analogIn": "1-10",
-                "analogOut": "17,18",
-                "boot": "0,45,46",
-                "debug": "39-42",
-                "flash": "26-32,35-37",
-                "input": "io",
-                "io": "0-18,21,33-48",
-                "usb": "19,20"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-esp32"
-        },
-        "rp2040": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-pico.uf2",
-            "dcfgOffset": "0x100dc000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x100e0000",
-            "fstorPages": 32,
-            "id": "rp2040",
-            "name": "RP2040",
-            "pins": {
-                "analogIn": "26-29",
-                "io": "0-29"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-pico",
-            "uf2Align": 4096
-        },
-        "rp2040w": {
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040archconfig.schema.json",
-            "bareUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
-            "dcfgOffset": "0x100dc000",
-            "flashPageSize": 4096,
-            "fstorOffset": "0x100e0000",
-            "fstorPages": 32,
-            "id": "rp2040w",
-            "name": "RP2040 + CYW43 WiFi",
-            "pins": {
-                "analogIn": "26-28",
-                "io": "0-22,analogIn",
-                "wifi": "23,24,25,29"
-            },
-            "repoUrl": "https://github.com/microsoft/devicescript-pico",
-            "uf2Align": 4096
-        }
+  "archs": {
+    "esp32": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
+      "binFlashOffset": "0x1000",
+      "binGenericFlashOffset": "0x10000",
+      "dcfgOffset": "0x9000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x1c0000",
+      "fstorPages": 64,
+      "id": "esp32",
+      "name": "ESP32",
+      "pins": {
+        "analogIn": "32-39",
+        "analogOut": "25,26",
+        "boot": "0,2,5,12,15",
+        "bootUart": "1,3",
+        "debug": "12-15",
+        "flash": "6-11",
+        "input": "io,34,35,36,37,38,39",
+        "io": "boot,4,13,14,18,19,21,22,23,25,26,27,32,33",
+        "psram": "16,17",
+        "touch": "0,2,4,12-15,27,32,33"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-esp32"
     },
-    "boards": {
-        "adafruit_feather_esp32_s2": {
-            "$description": "A S2 Feather from Adafruit. (untested)",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-adafruit_feather_esp32_s2-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s2",
-            "devName": "Adafruit Feather ESP32-S2",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": "SCL",
-                "pinSDA": "SDA"
-            },
-            "id": "adafruit_feather_esp32_s2",
-            "led": {
-                "pin": 33,
-                "type": 1
-            },
-            "log": {
-                "pinTX": 43
-            },
-            "pins": {
-                "A0": 18,
-                "A1": 17,
-                "A2": 16,
-                "A3": 15,
-                "A4_D24": 14,
-                "A5_D25": 8,
-                "D10": 10,
-                "D11": 11,
-                "D12": 12,
-                "D13": 13,
-                "D5": 5,
-                "D6": 6,
-                "D9": 9,
-                "LED_PWR": 21,
-                "MISO": 37,
-                "MOSI": 35,
-                "PWR": 7,
-                "RX_D0": 38,
-                "SCK": 36,
-                "SCL": 4,
-                "SDA": 3,
-                "TX_D1": 39
-            },
-            "productId": "0x3c2ed99e",
-            "sPin": {
-                "LED_PWR": 1,
-                "PWR": 1
-            },
-            "url": "https://www.adafruit.com/product/5000"
-        },
-        "adafruit_qt_py_c3": {
-            "$description": "A tiny ESP32-C3 board.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": 9,
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "Adafruit QT Py ESP32-C3 WiFi",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": "SCL_D5",
-                "pinSDA": "SDA_D4"
-            },
-            "id": "adafruit_qt_py_c3",
-            "led": {
-                "pin": 2,
-                "type": 1
-            },
-            "log": {
-                "pinTX": "TX_D6"
-            },
-            "pins": {
-                "A0_D0": 4,
-                "A1_D1": 3,
-                "A2_D2": 1,
-                "A3_D3": 0,
-                "MISO_D9": 8,
-                "MOSI_D10": 7,
-                "RX_D7": 20,
-                "SCK_D8": 10,
-                "SCL_D5": 6,
-                "SDA_D4": 5,
-                "TX_D6": 21
-            },
-            "productId": "0x3693d40b",
-            "url": "https://www.adafruit.com/product/5405"
-        },
-        "esp32_bare": {
-            "$description": "Bare ESP32 without any default functions for pins.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32",
-            "devName": "Espressif ESP32 (bare)",
-            "id": "esp32_bare",
-            "pins": {
-                "P13": 13,
-                "P14": 14,
-                "P18": 18,
-                "P19": 19,
-                "P21": 21,
-                "P22": 22,
-                "P23": 23,
-                "P25": 25,
-                "P26": 26,
-                "P27": 27,
-                "P32": 32,
-                "P33": 33,
-                "P34": 34,
-                "P35": 35,
-                "P36": 36,
-                "P39": 39,
-                "P4": 4
-            },
-            "productId": "0x3ff6ffeb",
-            "url": "https://www.espressif.com/en/products/socs/esp32"
-        },
-        "esp32_c3fh4_rgb": {
-            "$description": "A tiny ESP32-C3 board with 5x5 LED array.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32_c3fh4_rgb-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": 9,
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "ESP32-C3FH4-RGB",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": 1,
-                "pinSDA": 0
-            },
-            "id": "esp32_c3fh4_rgb",
-            "led": {
-                "isMono": true,
-                "pin": 10
-            },
-            "log": {
-                "pinTX": 21
-            },
-            "pins": {
-                "LEDS": 8,
-                "P2": 2,
-                "P20": 20,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7
-            },
-            "productId": "0x3a90885c",
-            "url": "https://github.com/01Space/ESP32-C3FH4-RGB"
-        },
-        "esp32_devkit_c": {
-            "$description": "There are currently issues with serial chip on these, best avoid. ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonIO0",
-                    "pin": 0,
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32",
-            "devName": "Espressif ESP32-DevKitC",
-            "id": "esp32_devkit_c",
-            "led": {
-                "pin": 2
-            },
-            "pins": {
-                "P13": 13,
-                "P14": 14,
-                "P18": 18,
-                "P19": 19,
-                "P21": 21,
-                "P22": 22,
-                "P23": 23,
-                "P25": 25,
-                "P26": 26,
-                "P27": 27,
-                "P32": 32,
-                "P33": 33,
-                "P34": 34,
-                "P35": 35,
-                "P4": 4,
-                "VN": 39,
-                "VP": 36
-            },
-            "productId": "0x3c507a05",
-            "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html"
-        },
-        "esp32c3_bare": {
-            "$description": "A bare ESP32-C3 board without any pin functions.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": "P9",
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "Espressif ESP32-C3 (bare)",
-            "id": "esp32c3_bare",
-            "log": {
-                "pinTX": "P21"
-            },
-            "pins": {
-                "P0": 0,
-                "P1": 1,
-                "P10": 10,
-                "P2": 2,
-                "P20": 20,
-                "P21": 21,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7,
-                "P8": 8,
-                "P9": 9
-            },
-            "productId": "0x3a1d89be",
-            "url": "https://www.espressif.com/en/products/socs/esp32-c3"
-        },
-        "esp32c3_rust_devkit": {
-            "$description": "A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_rust_devkit-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": "P9",
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "Espressif ESP32-C3-RUST-DevKit",
-            "i2c": {
-                "$connector": "Header",
-                "pinSCL": 8,
-                "pinSDA": 10
-            },
-            "id": "esp32c3_rust_devkit",
-            "led": {
-                "pin": 2,
-                "type": 1
-            },
-            "log": {
-                "pinTX": "P21"
-            },
-            "pins": {
-                "LED": 7,
-                "P0": 0,
-                "P1": 1,
-                "P20": 20,
-                "P21": 21,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6,
-                "P9": 9
-            },
-            "productId": "0x33f29c59",
-            "url": "https://github.com/esp-rs/esp-rust-board"
-        },
-        "esp32c3_supermini": {
-            "$description": "A super tiny ESP32-C3 board.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_supermini-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": 9,
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "ESP32-C3 SuperMini",
-            "i2c": {
-                "pinSCL": 7,
-                "pinSDA": 6
-            },
-            "id": "esp32c3_supermini",
-            "led": {
-                "isMono": true,
-                "pin": 8
-            },
-            "log": {
-                "pinTX": 21
-            },
-            "pins": {
-                "P0": 0,
-                "P1": 1,
-                "P10": 10,
-                "P2": 2,
-                "P20": 20,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5
-            },
-            "productId": "0x31606c1c",
-            "url": "https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html"
-        },
-        "esp32s2_bare": {
-            "$description": "A bare ESP32-S2 board without any pin functions.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s2",
-            "devName": "Espressif ESP32-S2 (bare)",
-            "id": "esp32s2_bare",
-            "log": {
-                "pinTX": "P43"
-            },
-            "pins": {
-                "P0": 0,
-                "P1": 1,
-                "P10": 10,
-                "P11": 11,
-                "P12": 12,
-                "P13": 13,
-                "P14": 14,
-                "P15": 15,
-                "P16": 16,
-                "P17": 17,
-                "P18": 18,
-                "P2": 2,
-                "P21": 21,
-                "P3": 3,
-                "P33": 33,
-                "P34": 34,
-                "P35": 35,
-                "P36": 36,
-                "P37": 37,
-                "P38": 38,
-                "P39": 39,
-                "P4": 4,
-                "P40": 40,
-                "P41": 41,
-                "P42": 42,
-                "P43": 43,
-                "P44": 44,
-                "P45": 45,
-                "P46": 46,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7,
-                "P8": 8,
-                "P9": 9
-            },
-            "productId": "0x3f140dcc",
-            "url": "https://www.espressif.com/en/products/socs/esp32-s2"
-        },
-        "esp32s3_bare": {
-            "$description": "A bare ESP32-S3 board without any pin functions.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_bare-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s3",
-            "devName": "Espressif ESP32-S3 (bare)",
-            "id": "esp32s3_bare",
-            "log": {
-                "pinTX": "P43"
-            },
-            "pins": {
-                "#P35": 35,
-                "#P36": 36,
-                "#P37": 37,
-                "P0": 0,
-                "P1": 1,
-                "P10": 10,
-                "P11": 11,
-                "P12": 12,
-                "P13": 13,
-                "P14": 14,
-                "P15": 15,
-                "P16": 16,
-                "P17": 17,
-                "P18": 18,
-                "P2": 2,
-                "P21": 21,
-                "P3": 3,
-                "P33": 33,
-                "P34": 34,
-                "P38": 38,
-                "P39": 39,
-                "P4": 4,
-                "P40": 40,
-                "P41": 41,
-                "P42": 42,
-                "P43": 43,
-                "P44": 44,
-                "P45": 45,
-                "P46": 46,
-                "P47": 47,
-                "P48": 48,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7,
-                "P8": 8,
-                "P9": 9
-            },
-            "productId": "0x3e121501",
-            "url": "https://www.espressif.com/en/products/socs/esp32-s3"
-        },
-        "esp32s3_devkit_m": {
-            "$description": "ESP32-S3 DevKitM development board. Should also work for DevKitC.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_devkit_m-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s3",
-            "devName": "Espressif ESP32-S3 DevKitM",
-            "id": "esp32s3_devkit_m",
-            "led": {
-                "pin": "P48",
-                "type": 1
-            },
-            "log": {
-                "pinTX": "P43"
-            },
-            "pins": {
-                "P0": 0,
-                "P1": 1,
-                "P10": 10,
-                "P11": 11,
-                "P12": 12,
-                "P13": 13,
-                "P14": 14,
-                "P15": 15,
-                "P16": 16,
-                "P17": 17,
-                "P18": 18,
-                "P2": 2,
-                "P21": 21,
-                "P3": 3,
-                "P33": 33,
-                "P34": 34,
-                "P38": 38,
-                "P39": 39,
-                "P4": 4,
-                "P40": 40,
-                "P41": 41,
-                "P42": 42,
-                "P43": 43,
-                "P45": 45,
-                "P46": 46,
-                "P47": 47,
-                "P48": 48,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7,
-                "P8": 8,
-                "P9": 9
-            },
-            "productId": "0x3574d277",
-            "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html"
-        },
-        "feather_s2": {
-            "$description": "ESP32-S2 based development board in a Feather format.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
-            "$pins": {
-                "P1": "D9",
-                "P10": "D12",
-                "P11": "D13",
-                "P12": "A3",
-                "P14": "A2",
-                "P17": "A0",
-                "P18": "A1",
-                "P3": "D10",
-                "P33": "D5",
-                "P38": "D6",
-                "P5": "A5_D25",
-                "P6": "A4_D24",
-                "P7": "D11",
-                "SDI": "MISO",
-                "SDO": "MOSI"
-            },
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": 0,
-                    "service": "button"
-                },
-                {
-                    "name": "ambientLight",
-                    "pin": 4,
-                    "service": "analog:lightLevel"
-                }
-            ],
-            "archId": "esp32s2",
-            "devName": "Unexpected Maker FeatherS2 ESP32-S2",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": "SCL",
-                "pinSDA": "SDA"
-            },
-            "id": "feather_s2",
-            "led": {
-                "pin": 40,
-                "pinCLK": 45,
-                "type": 2
-            },
-            "log": {
-                "pinTX": "TX_D1"
-            },
-            "pins": {
-                "A0": 17,
-                "A1": 18,
-                "A2": 14,
-                "A3": 12,
-                "A4_D24": 6,
-                "A5_D25": 5,
-                "D10": 3,
-                "D11": 7,
-                "D12": 10,
-                "D13": 11,
-                "D5": 33,
-                "D6": 38,
-                "D9": 1,
-                "LED0": 13,
-                "LED_PWR": 21,
-                "MISO": 37,
-                "MOSI": 35,
-                "RX_D0": 44,
-                "SCK": 36,
-                "SCL": 9,
-                "SDA": 8,
-                "TX_D1": 43
-            },
-            "productId": "0x3126f707",
-            "sPin": {
-                "LED_PWR": 1
-            },
-            "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2"
-        },
-        "kittenbot_grapebit_esp32c3": {
-            "$description": "A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-kittenbot_grapebit_esp32c3-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonA",
-                    "pin": 21,
-                    "service": "button"
-                },
-                {
-                    "name": "buttonB",
-                    "pin": 9,
-                    "service": "button"
-                },
-                {
-                    "name": "music",
-                    "pin": 3,
-                    "service": "buzzer"
-                },
-                {
-                    "dir": -1,
-                    "en": -1,
-                    "name": "M1",
-                    "pwm": 1,
-                    "service": "motor"
-                },
-                {
-                    "dir": -1,
-                    "en": -1,
-                    "name": "M2",
-                    "pwm": 4,
-                    "service": "motor"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "KittenBot Grape:Bit ESP32-C3",
-            "i2c": {
-                "pinSCL": 7,
-                "pinSDA": 6
-            },
-            "id": "kittenbot_grapebit_esp32c3",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 5
-            },
-            "led": {
-                "num": 4,
-                "pin": 10,
-                "type": 1
-            },
-            "pins": {
-                "P1": 2,
-                "P2": 0
-            },
-            "productId": "0x38ccab8d",
-            "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"
-        },
-        "kittenbot_nanoscript": {
-            "$description": "A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-kittenbot_nanoscript.uf2",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
-            "archId": "rp2040",
-            "devName": "KittenBot NanoScript 1.0",
-            "id": "kittenbot_nanoscript",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 9
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 16
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 14
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 15
-                    }
-                ]
-            },
-            "log": {
-                "baud": 115200,
-                "pinTX": 0
-            },
-            "pins": {
-                "@HILIM": 18,
-                "P1": 1,
-                "P10": 10,
-                "P2": 2,
-                "P24": 24,
-                "P25": 25,
-                "P26": 26,
-                "P27": 27,
-                "P28": 28,
-                "P29": 29,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7
-            },
-            "productId": "0x37c2fcc5",
-            "sPin": {
-                "#": "enable high power limiter mode",
-                "@HILIM": 0
-            },
-            "services": [
-                {
-                    "faultIgnoreMs": 1000,
-                    "mode": 3,
-                    "name": "power",
-                    "pinEn": 22,
-                    "pinFault": 12,
-                    "pinLedPulse": 13,
-                    "pinPulse": 8,
-                    "pinUsbDetect": 11,
-                    "service": "power"
-                }
-            ],
-            "url": "https://www.kittenbot.cc/products/devicescript-enhanced-development-board-with-rp2040"
-        },
-        "msr124": {
-            "$description": "Prototype board",
-            "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
-            "archId": "rp2040",
-            "devName": "MSR RP2040 Brain 124 v0.1",
-            "id": "msr124",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 9
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 16
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 14
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 15
-                    }
-                ]
-            },
-            "log": {
-                "baud": 115200,
-                "pinTX": 0
-            },
-            "pins": {
-                "@HILIM": 18,
-                "P1": 1,
-                "P10": 10,
-                "P2": 2,
-                "P24": 24,
-                "P25": 25,
-                "P26": 26,
-                "P27": 27,
-                "P28": 28,
-                "P29": 29,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6,
-                "P7": 7
-            },
-            "productId": "0x3875e80d",
-            "sPin": {
-                "#": "enable high power limiter mode",
-                "@HILIM": 0
-            },
-            "services": [
-                {
-                    "faultIgnoreMs": 1000,
-                    "mode": 3,
-                    "name": "power",
-                    "pinEn": 22,
-                    "pinFault": 12,
-                    "pinLedPulse": 13,
-                    "pinPulse": 8,
-                    "pinUsbDetect": 11,
-                    "service": "power"
-                }
-            ]
-        },
-        "msr207_v42": {
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr207_v42-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s2",
-            "devName": "MSR JM Brain S2-mini 207 v4.2",
-            "id": "msr207_v42",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 17
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 8
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 7
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 6
-                    }
-                ]
-            },
-            "log": {
-                "pinTX": 43
-            },
-            "pins": {
-                "P33": 33,
-                "P34": 34
-            },
-            "productId": "0x322e0e64",
-            "sd": {
-                "pinCS": 38,
-                "pinMISO": 37,
-                "pinMOSI": 35,
-                "pinSCK": 36
-            },
-            "services": [
-                {
-                    "faultIgnoreMs": 100,
-                    "mode": 0,
-                    "name": "power",
-                    "pinEn": 2,
-                    "pinFault": 13,
-                    "service": "power"
-                }
-            ]
-        },
-        "msr207_v43": {
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s2",
-            "devName": "MSR JM Brain S2-mini 207 v4.3",
-            "id": "msr207_v43",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 17
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 8
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 7
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 6
-                    }
-                ]
-            },
-            "log": {
-                "pinTX": 43
-            },
-            "pins": {
-                "P33": 33,
-                "P34": 34
-            },
-            "productId": "0x322e0e64",
-            "sd": {
-                "pinCS": 38,
-                "pinMISO": 37,
-                "pinMOSI": 35,
-                "pinSCK": 36
-            },
-            "services": [
-                {
-                    "faultIgnoreMs": 100,
-                    "mode": 1,
-                    "name": "power",
-                    "pinEn": 2,
-                    "pinFault": 13,
-                    "service": "power"
-                }
-            ]
-        },
-        "msr48": {
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "archId": "esp32s2",
-            "devName": "MSR JacdacIoT 48 v0.2",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": 10,
-                "pinSDA": 9
-            },
-            "id": "msr48",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 17
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 8
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 7
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 6
-                    }
-                ]
-            },
-            "log": {
-                "pinTX": 43
-            },
-            "pins": {
-                "P33": 33,
-                "P34": 34,
-                "P35": 35,
-                "P36": 36,
-                "RX": 38,
-                "TX": 37
-            },
-            "productId": "0x3de1398b",
-            "services": [
-                {
-                    "faultIgnoreMs": 100,
-                    "mode": 0,
-                    "name": "power",
-                    "pinEn": 2,
-                    "pinFault": 13,
-                    "service": "power"
-                }
-            ]
-        },
-        "msr59": {
-            "$description": "Prototype board",
-            "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr59.uf2",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
-            "archId": "rp2040",
-            "devName": "MSR Brain RP2040 59 v0.1",
-            "id": "msr59",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": 9
-            },
-            "led": {
-                "rgb": [
-                    {
-                        "mult": 250,
-                        "pin": 11
-                    },
-                    {
-                        "mult": 60,
-                        "pin": 13
-                    },
-                    {
-                        "mult": 150,
-                        "pin": 15
-                    }
-                ]
-            },
-            "log": {
-                "baud": 115200,
-                "pinTX": 2
-            },
-            "pins": {
-                "P26": 26,
-                "P27": 27,
-                "P3": 3,
-                "P4": 4,
-                "P5": 5,
-                "P6": 6
-            },
-            "productId": "0x35a678a3",
-            "services": [
-                {
-                    "faultIgnoreMs": 100,
-                    "mode": 2,
-                    "name": "power",
-                    "pinEn": 19,
-                    "pinFault": 25,
-                    "service": "power"
-                }
-            ]
-        },
-        "pico": {
-            "$description": "RP2040 board from Raspberry Pi.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-pico.uf2",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
-            "archId": "rp2040",
-            "devName": "Raspberry Pi Pico",
-            "id": "pico",
-            "led": {
-                "#": "type=100 - special handling for Pico LED",
-                "pin": 25,
-                "type": 100
-            },
-            "pins": {
-                "GP0": 0,
-                "GP1": 1,
-                "GP10": 10,
-                "GP11": 11,
-                "GP12": 12,
-                "GP13": 13,
-                "GP14": 14,
-                "GP15": 15,
-                "GP16": 16,
-                "GP17": 17,
-                "GP18": 18,
-                "GP19": 19,
-                "GP2": 2,
-                "GP20": 20,
-                "GP21": 21,
-                "GP22": 22,
-                "GP26": 26,
-                "GP27": 27,
-                "GP28": 28,
-                "GP3": 3,
-                "GP4": 4,
-                "GP5": 5,
-                "GP6": 6,
-                "GP7": 7,
-                "GP8": 8,
-                "GP9": 9
-            },
-            "productId": "0x3f6e1f0c",
-            "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html"
-        },
-        "pico_w": {
-            "$description": "RP2040 board from Raspberry Pi with a WiFi chip.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
-            "archId": "rp2040w",
-            "devName": "Raspberry Pi Pico W",
-            "id": "pico_w",
-            "led": {
-                "#": "type=100 - special handling for Pico LED",
-                "pin": 25,
-                "type": 100
-            },
-            "pins": {
-                "GP0": 0,
-                "GP1": 1,
-                "GP10": 10,
-                "GP11": 11,
-                "GP12": 12,
-                "GP13": 13,
-                "GP14": 14,
-                "GP15": 15,
-                "GP16": 16,
-                "GP17": 17,
-                "GP18": 18,
-                "GP19": 19,
-                "GP2": 2,
-                "GP20": 20,
-                "GP21": 21,
-                "GP22": 22,
-                "GP26": 26,
-                "GP27": 27,
-                "GP28": 28,
-                "GP3": 3,
-                "GP4": 4,
-                "GP5": 5,
-                "GP6": 6,
-                "GP7": 7,
-                "GP8": 8,
-                "GP9": 9
-            },
-            "productId": "0x3a513204",
-            "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html"
-        },
-        "seeed_xiao_esp32c3": {
-            "$description": "A tiny ESP32-C3 board.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [
-                {
-                    "name": "buttonBOOT",
-                    "pin": "MISO_D9",
-                    "service": "button"
-                }
-            ],
-            "archId": "esp32c3",
-            "devName": "Seeed Studio XIAO ESP32C3",
-            "id": "seeed_xiao_esp32c3",
-            "log": {
-                "pinTX": "TX_D6"
-            },
-            "pins": {
-                "A0_D0": 2,
-                "A1_D1": 3,
-                "A2_D2": 4,
-                "A3_D3": 5,
-                "MISO_D9": 9,
-                "MOSI_D10": 10,
-                "RX_D7": 20,
-                "SCK_D8": 8,
-                "SCL_D5": 7,
-                "SDA_D4": 6,
-                "TX_D6": 21
-            },
-            "productId": "0x3eff6b51",
-            "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
-        },
-        "seeed_xiao_esp32c3_msr218": {
-            "$description": "A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.",
-            "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3_msr218-0x0.bin",
-            "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
-            "$services": [],
-            "archId": "esp32c3",
-            "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
-            "i2c": {
-                "$connector": "Qwiic",
-                "pinSCL": "SCL",
-                "pinSDA": "SDA"
-            },
-            "id": "seeed_xiao_esp32c3_msr218",
-            "jacdac": {
-                "$connector": "Jacdac",
-                "pin": "JD"
-            },
-            "led": {
-                "pin": "LED",
-                "type": 1
-            },
-            "log": {
-                "pinTX": "TX"
-            },
-            "pins": {
-                "A0": 2,
-                "A1": 3,
-                "A2": 4,
-                "D9": 9,
-                "JD": 5,
-                "LED": 10,
-                "LED_PWR": 8,
-                "RX": 20,
-                "SCL": 7,
-                "SDA": 6,
-                "TX": 21
-            },
-            "productId": "0x36b64827",
-            "sPin": {
-                "LED_PWR": 1
-            },
-            "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
-        }
+    "esp32c3": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
+      "binFlashOffset": 0,
+      "binGenericFlashOffset": "0x10000",
+      "dcfgOffset": "0x9000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x1c0000",
+      "fstorPages": 64,
+      "id": "esp32c3",
+      "name": "ESP32-C3",
+      "pins": {
+        "analogIn": "0-4",
+        "boot": "2,8,9",
+        "bootUart": "20,21",
+        "debug": "4-7",
+        "flash": "11-17",
+        "io": "0-10,bootUart",
+        "usb": "18,19"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-esp32"
+    },
+    "esp32s2": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
+      "binFlashOffset": "0x1000",
+      "binGenericFlashOffset": "0x10000",
+      "dcfgOffset": "0x9000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x1c0000",
+      "fstorPages": 64,
+      "id": "esp32s2",
+      "name": "ESP32-S2",
+      "pins": {
+        "analogIn": "1-10",
+        "analogOut": "17,18",
+        "boot": "0,45,46",
+        "debug": "39-42",
+        "flash": "26-32",
+        "input": "io,46",
+        "io": "0-18,21,33-45",
+        "usb": "19,20"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-esp32"
+    },
+    "esp32s3": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_bare-0x0.bin",
+      "binFlashOffset": "0x0",
+      "binGenericFlashOffset": "0x10000",
+      "dcfgOffset": "0x9000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x1c0000",
+      "fstorPages": 64,
+      "id": "esp32s3",
+      "name": "ESP32-S3",
+      "pins": {
+        "analogIn": "1-10",
+        "analogOut": "17,18",
+        "boot": "0,45,46",
+        "debug": "39-42",
+        "flash": "26-32",
+        "input": "io",
+        "io": "0-18,21,33-48",
+        "octal-flash": "33-37",
+        "usb": "19,20"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-esp32"
+    },
+    "rp2040": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-pico.uf2",
+      "dcfgOffset": "0x100dc000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x100e0000",
+      "fstorPages": 32,
+      "id": "rp2040",
+      "name": "RP2040",
+      "pins": {
+        "analogIn": "26-29",
+        "io": "0-29"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-pico",
+      "uf2Align": 4096
+    },
+    "rp2040w": {
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040archconfig.schema.json",
+      "bareUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
+      "dcfgOffset": "0x100dc000",
+      "flashPageSize": 4096,
+      "fstorOffset": "0x100e0000",
+      "fstorPages": 32,
+      "id": "rp2040w",
+      "name": "RP2040 + CYW43 WiFi",
+      "pins": {
+        "analogIn": "26-28",
+        "io": "0-22,analogIn",
+        "wifi": "23,24,25,29"
+      },
+      "repoUrl": "https://github.com/microsoft/devicescript-pico",
+      "uf2Align": 4096
     }
+  },
+  "boards": {
+    "adafruit_feather_esp32_s2": {
+      "$description": "A S2 Feather from Adafruit. (untested)",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-adafruit_feather_esp32_s2-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "Adafruit Feather ESP32-S2",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
+      },
+      "id": "adafruit_feather_esp32_s2",
+      "led": {
+        "pin": 33,
+        "type": 1
+      },
+      "log": {
+        "pinTX": 43
+      },
+      "pins": {
+        "A0": 18,
+        "A1": 17,
+        "A2": 16,
+        "A3": 15,
+        "A4_D24": 14,
+        "A5_D25": 8,
+        "D10": 10,
+        "D11": 11,
+        "D12": 12,
+        "D13": 13,
+        "D5": 5,
+        "D6": 6,
+        "D9": 9,
+        "LED_PWR": 21,
+        "MISO": 37,
+        "MOSI": 35,
+        "PWR": 7,
+        "RX_D0": 38,
+        "SCK": 36,
+        "SCL": 4,
+        "SDA": 3,
+        "TX_D1": 39
+      },
+      "productId": "0x3c2ed99e",
+      "sPin": {
+        "LED_PWR": 1,
+        "PWR": 1
+      },
+      "url": "https://www.adafruit.com/product/5000"
+    },
+    "adafruit_qt_py_c3": {
+      "$description": "A tiny ESP32-C3 board.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 9,
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "Adafruit QT Py ESP32-C3 WiFi",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": "SCL_D5",
+        "pinSDA": "SDA_D4"
+      },
+      "id": "adafruit_qt_py_c3",
+      "led": {
+        "pin": 2,
+        "type": 1
+      },
+      "log": {
+        "pinTX": "TX_D6"
+      },
+      "pins": {
+        "A0_D0": 4,
+        "A1_D1": 3,
+        "A2_D2": 1,
+        "A3_D3": 0,
+        "MISO_D9": 8,
+        "MOSI_D10": 7,
+        "RX_D7": 20,
+        "SCK_D8": 10,
+        "SCL_D5": 6,
+        "SDA_D4": 5,
+        "TX_D6": 21
+      },
+      "productId": "0x3693d40b",
+      "url": "https://www.adafruit.com/product/5405"
+    },
+    "esp32_bare": {
+      "$description": "Bare ESP32 without any default functions for pins.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32",
+      "devName": "Espressif ESP32 (bare)",
+      "id": "esp32_bare",
+      "pins": {
+        "P13": 13,
+        "P14": 14,
+        "P18": 18,
+        "P19": 19,
+        "P21": 21,
+        "P22": 22,
+        "P23": 23,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P32": 32,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "P39": 39,
+        "P4": 4
+      },
+      "productId": "0x3ff6ffeb",
+      "url": "https://www.espressif.com/en/products/socs/esp32"
+    },
+    "esp32_c3fh4_rgb": {
+      "$description": "A tiny ESP32-C3 board with 5x5 LED array.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32_c3fh4_rgb-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 9,
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "ESP32-C3FH4-RGB",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 1,
+        "pinSDA": 0
+      },
+      "id": "esp32_c3fh4_rgb",
+      "led": {
+        "isMono": true,
+        "pin": 10
+      },
+      "log": {
+        "pinTX": 21
+      },
+      "pins": {
+        "LEDS": 8,
+        "P2": 2,
+        "P20": 20,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7
+      },
+      "productId": "0x3a90885c",
+      "url": "https://github.com/01Space/ESP32-C3FH4-RGB"
+    },
+    "esp32_devkit_c": {
+      "$description": "There are currently issues with serial chip on these, best avoid. ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonIO0",
+          "pin": 0,
+          "service": "button"
+        }
+      ],
+      "archId": "esp32",
+      "devName": "Espressif ESP32-DevKitC",
+      "id": "esp32_devkit_c",
+      "led": {
+        "pin": 2
+      },
+      "pins": {
+        "P13": 13,
+        "P14": 14,
+        "P18": 18,
+        "P19": 19,
+        "P21": 21,
+        "P22": 22,
+        "P23": 23,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P32": 32,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P4": 4,
+        "VN": 39,
+        "VP": 36
+      },
+      "productId": "0x3c507a05",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html"
+    },
+    "esp32c3_bare": {
+      "$description": "A bare ESP32-C3 board without any pin functions.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": "P9",
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "Espressif ESP32-C3 (bare)",
+      "id": "esp32c3_bare",
+      "log": {
+        "pinTX": "P21"
+      },
+      "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P20": 20,
+        "P21": 21,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "P8": 8,
+        "P9": 9
+      },
+      "productId": "0x3a1d89be",
+      "url": "https://www.espressif.com/en/products/socs/esp32-c3"
+    },
+    "esp32c3_rust_devkit": {
+      "$description": "A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_rust_devkit-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": "P9",
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "Espressif ESP32-C3-RUST-DevKit",
+      "i2c": {
+        "$connector": "Header",
+        "pinSCL": 8,
+        "pinSDA": 10
+      },
+      "id": "esp32c3_rust_devkit",
+      "led": {
+        "pin": 2,
+        "type": 1
+      },
+      "log": {
+        "pinTX": "P21"
+      },
+      "pins": {
+        "LED": 7,
+        "P0": 0,
+        "P1": 1,
+        "P20": 20,
+        "P21": 21,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P9": 9
+      },
+      "productId": "0x33f29c59",
+      "url": "https://github.com/esp-rs/esp-rust-board"
+    },
+    "esp32c3_supermini": {
+      "$description": "A super tiny ESP32-C3 board.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_supermini-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 9,
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "ESP32-C3 SuperMini",
+      "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+      },
+      "id": "esp32c3_supermini",
+      "led": {
+        "isMono": true,
+        "pin": 8
+      },
+      "log": {
+        "pinTX": 21
+      },
+      "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P20": 20,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5
+      },
+      "productId": "0x31606c1c",
+      "url": "https://banggood.com/ESP32-C3-Development-Board-ESP32-SuperMini-WiFi-Bluetooth-Mini-Module-p-1997449.html"
+    },
+    "esp32s2_bare": {
+      "$description": "A bare ESP32-S2 board without any pin functions.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "Espressif ESP32-S2 (bare)",
+      "id": "esp32s2_bare",
+      "log": {
+        "pinTX": "P43"
+      },
+      "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P13": 13,
+        "P14": 14,
+        "P15": 15,
+        "P16": 16,
+        "P17": 17,
+        "P18": 18,
+        "P2": 2,
+        "P21": 21,
+        "P3": 3,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "P37": 37,
+        "P38": 38,
+        "P39": 39,
+        "P4": 4,
+        "P40": 40,
+        "P41": 41,
+        "P42": 42,
+        "P43": 43,
+        "P44": 44,
+        "P45": 45,
+        "P46": 46,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "P8": 8,
+        "P9": 9
+      },
+      "productId": "0x3f140dcc",
+      "url": "https://www.espressif.com/en/products/socs/esp32-s2"
+    },
+    "esp32s3_bare": {
+      "$description": "A bare ESP32-S3 board without any pin functions.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_bare-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s3",
+      "devName": "Espressif ESP32-S3 (bare)",
+      "id": "esp32s3_bare",
+      "log": {
+        "pinTX": "P43"
+      },
+      "pins": {
+        "#P35": 35,
+        "#P36": 36,
+        "#P37": 37,
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P13": 13,
+        "P14": 14,
+        "P15": 15,
+        "P16": 16,
+        "P17": 17,
+        "P18": 18,
+        "P2": 2,
+        "P21": 21,
+        "P3": 3,
+        "P33": 33,
+        "P34": 34,
+        "P38": 38,
+        "P39": 39,
+        "P4": 4,
+        "P40": 40,
+        "P41": 41,
+        "P42": 42,
+        "P43": 43,
+        "P44": 44,
+        "P45": 45,
+        "P46": 46,
+        "P47": 47,
+        "P48": 48,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "P8": 8,
+        "P9": 9
+      },
+      "productId": "0x3e121501",
+      "url": "https://www.espressif.com/en/products/socs/esp32-s3"
+    },
+    "esp32s3_devkit_m": {
+      "$description": "ESP32-S3 DevKitM development board. Should also work for DevKitC.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s3-esp32s3_devkit_m-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s3",
+      "devName": "Espressif ESP32-S3 DevKitM",
+      "id": "esp32s3_devkit_m",
+      "led": {
+        "pin": "P48",
+        "type": 1
+      },
+      "log": {
+        "pinTX": "P43"
+      },
+      "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P13": 13,
+        "P14": 14,
+        "P15": 15,
+        "P16": 16,
+        "P17": 17,
+        "P18": 18,
+        "P2": 2,
+        "P21": 21,
+        "P3": 3,
+        "P33": 33,
+        "P34": 34,
+        "P38": 38,
+        "P39": 39,
+        "P4": 4,
+        "P40": 40,
+        "P41": 41,
+        "P42": 42,
+        "P43": 43,
+        "P45": 45,
+        "P46": 46,
+        "P47": 47,
+        "P48": 48,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "P8": 8,
+        "P9": 9
+      },
+      "productId": "0x3574d277",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html"
+    },
+    "feather_s2": {
+      "$description": "ESP32-S2 based development board in a Feather format.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
+      "$pins": {
+        "P1": "D9",
+        "P10": "D12",
+        "P11": "D13",
+        "P12": "A3",
+        "P14": "A2",
+        "P17": "A0",
+        "P18": "A1",
+        "P3": "D10",
+        "P33": "D5",
+        "P38": "D6",
+        "P5": "A5_D25",
+        "P6": "A4_D24",
+        "P7": "D11",
+        "SDI": "MISO",
+        "SDO": "MOSI"
+      },
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 0,
+          "service": "button"
+        },
+        {
+          "name": "ambientLight",
+          "pin": 4,
+          "service": "analog:lightLevel"
+        }
+      ],
+      "archId": "esp32s2",
+      "devName": "Unexpected Maker FeatherS2 ESP32-S2",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
+      },
+      "id": "feather_s2",
+      "led": {
+        "pin": 40,
+        "pinCLK": 45,
+        "type": 2
+      },
+      "log": {
+        "pinTX": "TX_D1"
+      },
+      "pins": {
+        "A0": 17,
+        "A1": 18,
+        "A2": 14,
+        "A3": 12,
+        "A4_D24": 6,
+        "A5_D25": 5,
+        "D10": 3,
+        "D11": 7,
+        "D12": 10,
+        "D13": 11,
+        "D5": 33,
+        "D6": 38,
+        "D9": 1,
+        "LED0": 13,
+        "LED_PWR": 21,
+        "MISO": 37,
+        "MOSI": 35,
+        "RX_D0": 44,
+        "SCK": 36,
+        "SCL": 9,
+        "SDA": 8,
+        "TX_D1": 43
+      },
+      "productId": "0x3126f707",
+      "sPin": {
+        "LED_PWR": 1
+      },
+      "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2"
+    },
+    "kittenbot_grapebit_esp32c3": {
+      "$description": "A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-kittenbot_grapebit_esp32c3-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonA",
+          "pin": 21,
+          "service": "button"
+        },
+        {
+          "name": "buttonB",
+          "pin": 9,
+          "service": "button"
+        },
+        {
+          "name": "music",
+          "pin": 3,
+          "service": "buzzer"
+        },
+        {
+          "dir": -1,
+          "en": -1,
+          "name": "M1",
+          "pwm": 1,
+          "service": "motor"
+        },
+        {
+          "dir": -1,
+          "en": -1,
+          "name": "M2",
+          "pwm": 4,
+          "service": "motor"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "KittenBot Grape:Bit ESP32-C3",
+      "i2c": {
+        "pinSCL": 7,
+        "pinSDA": 6
+      },
+      "id": "kittenbot_grapebit_esp32c3",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 5
+      },
+      "led": {
+        "num": 4,
+        "pin": 10,
+        "type": 1
+      },
+      "pins": {
+        "P1": 2,
+        "P2": 0
+      },
+      "productId": "0x38ccab8d",
+      "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"
+    },
+    "kittenbot_nanoscript": {
+      "$description": "A RP2040 board featuring a Jacdac connector, compatible with SMT-mounting.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-kittenbot_nanoscript.uf2",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+      "archId": "rp2040",
+      "devName": "KittenBot NanoScript 1.0",
+      "id": "kittenbot_nanoscript",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 9
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 16
+          },
+          {
+            "mult": 60,
+            "pin": 14
+          },
+          {
+            "mult": 150,
+            "pin": 15
+          }
+        ]
+      },
+      "log": {
+        "baud": 115200,
+        "pinTX": 0
+      },
+      "pins": {
+        "@HILIM": 18,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P24": 24,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P28": 28,
+        "P29": 29,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7
+      },
+      "productId": "0x37c2fcc5",
+      "sPin": {
+        "#": "enable high power limiter mode",
+        "@HILIM": 0
+      },
+      "services": [
+        {
+          "faultIgnoreMs": 1000,
+          "mode": 3,
+          "name": "power",
+          "pinEn": 22,
+          "pinFault": 12,
+          "pinLedPulse": 13,
+          "pinPulse": 8,
+          "pinUsbDetect": 11,
+          "service": "power"
+        }
+      ],
+      "url": "https://www.kittenbot.cc/products/devicescript-enhanced-development-board-with-rp2040"
+    },
+    "msr124": {
+      "$description": "Prototype board",
+      "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+      "archId": "rp2040",
+      "devName": "MSR RP2040 Brain 124 v0.1",
+      "id": "msr124",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 9
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 16
+          },
+          {
+            "mult": 60,
+            "pin": 14
+          },
+          {
+            "mult": 150,
+            "pin": 15
+          }
+        ]
+      },
+      "log": {
+        "baud": 115200,
+        "pinTX": 0
+      },
+      "pins": {
+        "@HILIM": 18,
+        "P1": 1,
+        "P10": 10,
+        "P2": 2,
+        "P24": 24,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P28": 28,
+        "P29": 29,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7
+      },
+      "productId": "0x3875e80d",
+      "sPin": {
+        "#": "enable high power limiter mode",
+        "@HILIM": 0
+      },
+      "services": [
+        {
+          "faultIgnoreMs": 1000,
+          "mode": 3,
+          "name": "power",
+          "pinEn": 22,
+          "pinFault": 12,
+          "pinLedPulse": 13,
+          "pinPulse": 8,
+          "pinUsbDetect": 11,
+          "service": "power"
+        }
+      ]
+    },
+    "msr207_v42": {
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr207_v42-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "MSR JM Brain S2-mini 207 v4.2",
+      "id": "msr207_v42",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 17
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 8
+          },
+          {
+            "mult": 60,
+            "pin": 7
+          },
+          {
+            "mult": 150,
+            "pin": 6
+          }
+        ]
+      },
+      "log": {
+        "pinTX": 43
+      },
+      "pins": {
+        "P33": 33,
+        "P34": 34
+      },
+      "productId": "0x322e0e64",
+      "sd": {
+        "pinCS": 38,
+        "pinMISO": 37,
+        "pinMOSI": 35,
+        "pinSCK": 36
+      },
+      "services": [
+        {
+          "faultIgnoreMs": 100,
+          "mode": 0,
+          "name": "power",
+          "pinEn": 2,
+          "pinFault": 13,
+          "service": "power"
+        }
+      ]
+    },
+    "msr207_v43": {
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "MSR JM Brain S2-mini 207 v4.3",
+      "id": "msr207_v43",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 17
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 8
+          },
+          {
+            "mult": 60,
+            "pin": 7
+          },
+          {
+            "mult": 150,
+            "pin": 6
+          }
+        ]
+      },
+      "log": {
+        "pinTX": 43
+      },
+      "pins": {
+        "P33": 33,
+        "P34": 34
+      },
+      "productId": "0x322e0e64",
+      "sd": {
+        "pinCS": 38,
+        "pinMISO": 37,
+        "pinMOSI": 35,
+        "pinSCK": 36
+      },
+      "services": [
+        {
+          "faultIgnoreMs": 100,
+          "mode": 1,
+          "name": "power",
+          "pinEn": 2,
+          "pinFault": 13,
+          "service": "power"
+        }
+      ]
+    },
+    "msr48": {
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "MSR JacdacIoT 48 v0.2",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 10,
+        "pinSDA": 9
+      },
+      "id": "msr48",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 17
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 8
+          },
+          {
+            "mult": 60,
+            "pin": 7
+          },
+          {
+            "mult": 150,
+            "pin": 6
+          }
+        ]
+      },
+      "log": {
+        "pinTX": 43
+      },
+      "pins": {
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "RX": 38,
+        "TX": 37
+      },
+      "productId": "0x3de1398b",
+      "services": [
+        {
+          "faultIgnoreMs": 100,
+          "mode": 0,
+          "name": "power",
+          "pinEn": 2,
+          "pinFault": 13,
+          "service": "power"
+        }
+      ]
+    },
+    "msr59": {
+      "$description": "Prototype board",
+      "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr59.uf2",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+      "archId": "rp2040",
+      "devName": "MSR Brain RP2040 59 v0.1",
+      "id": "msr59",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 9
+      },
+      "led": {
+        "rgb": [
+          {
+            "mult": 250,
+            "pin": 11
+          },
+          {
+            "mult": 60,
+            "pin": 13
+          },
+          {
+            "mult": 150,
+            "pin": 15
+          }
+        ]
+      },
+      "log": {
+        "baud": 115200,
+        "pinTX": 2
+      },
+      "pins": {
+        "P26": 26,
+        "P27": 27,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6
+      },
+      "productId": "0x35a678a3",
+      "services": [
+        {
+          "faultIgnoreMs": 100,
+          "mode": 2,
+          "name": "power",
+          "pinEn": 19,
+          "pinFault": 25,
+          "service": "power"
+        }
+      ]
+    },
+    "pico": {
+      "$description": "RP2040 board from Raspberry Pi.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-pico.uf2",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+      "archId": "rp2040",
+      "devName": "Raspberry Pi Pico",
+      "id": "pico",
+      "led": {
+        "#": "type=100 - special handling for Pico LED",
+        "pin": 25,
+        "type": 100
+      },
+      "pins": {
+        "GP0": 0,
+        "GP1": 1,
+        "GP10": 10,
+        "GP11": 11,
+        "GP12": 12,
+        "GP13": 13,
+        "GP14": 14,
+        "GP15": 15,
+        "GP16": 16,
+        "GP17": 17,
+        "GP18": 18,
+        "GP19": 19,
+        "GP2": 2,
+        "GP20": 20,
+        "GP21": 21,
+        "GP22": 22,
+        "GP26": 26,
+        "GP27": 27,
+        "GP28": 28,
+        "GP3": 3,
+        "GP4": 4,
+        "GP5": 5,
+        "GP6": 6,
+        "GP7": 7,
+        "GP8": 8,
+        "GP9": 9
+      },
+      "productId": "0x3f6e1f0c",
+      "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html"
+    },
+    "pico_w": {
+      "$description": "RP2040 board from Raspberry Pi with a WiFi chip.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+      "archId": "rp2040w",
+      "devName": "Raspberry Pi Pico W",
+      "id": "pico_w",
+      "led": {
+        "#": "type=100 - special handling for Pico LED",
+        "pin": 25,
+        "type": 100
+      },
+      "pins": {
+        "GP0": 0,
+        "GP1": 1,
+        "GP10": 10,
+        "GP11": 11,
+        "GP12": 12,
+        "GP13": 13,
+        "GP14": 14,
+        "GP15": 15,
+        "GP16": 16,
+        "GP17": 17,
+        "GP18": 18,
+        "GP19": 19,
+        "GP2": 2,
+        "GP20": 20,
+        "GP21": 21,
+        "GP22": 22,
+        "GP26": 26,
+        "GP27": 27,
+        "GP28": 28,
+        "GP3": 3,
+        "GP4": 4,
+        "GP5": 5,
+        "GP6": 6,
+        "GP7": 7,
+        "GP8": 8,
+        "GP9": 9
+      },
+      "productId": "0x3a513204",
+      "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html"
+    },
+    "seeed_xiao_esp32c3": {
+      "$description": "A tiny ESP32-C3 board.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [
+        {
+          "name": "buttonBOOT",
+          "pin": "MISO_D9",
+          "service": "button"
+        }
+      ],
+      "archId": "esp32c3",
+      "devName": "Seeed Studio XIAO ESP32C3",
+      "id": "seeed_xiao_esp32c3",
+      "log": {
+        "pinTX": "TX_D6"
+      },
+      "pins": {
+        "A0_D0": 2,
+        "A1_D1": 3,
+        "A2_D2": 4,
+        "A3_D3": 5,
+        "MISO_D9": 9,
+        "MOSI_D10": 10,
+        "RX_D7": 20,
+        "SCK_D8": 8,
+        "SCL_D5": 7,
+        "SDA_D4": 6,
+        "TX_D6": 21
+      },
+      "productId": "0x3eff6b51",
+      "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
+    },
+    "seeed_xiao_esp32c3_msr218": {
+      "$description": "A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3_msr218-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "$services": [],
+      "archId": "esp32c3",
+      "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": "SCL",
+        "pinSDA": "SDA"
+      },
+      "id": "seeed_xiao_esp32c3_msr218",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": "JD"
+      },
+      "led": {
+        "pin": "LED",
+        "type": 1
+      },
+      "log": {
+        "pinTX": "TX"
+      },
+      "pins": {
+        "A0": 2,
+        "A1": 3,
+        "A2": 4,
+        "D9": 9,
+        "JD": 5,
+        "LED": 10,
+        "LED_PWR": 8,
+        "RX": 20,
+        "SCL": 7,
+        "SDA": 6,
+        "TX": 21
+      },
+      "productId": "0x36b64827",
+      "sPin": {
+        "LED_PWR": 1
+      },
+      "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
+    }
+  }
 }
