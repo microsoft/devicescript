@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.16.1](https://github.com/microsoft/devicescript/compare/v2.16.0...v2.16.1)
+
+> 10 January 2024
+
+- updated jacdac-specs [`e33ff6e`](https://github.com/microsoft/devicescript/commit/e33ff6e04929b9ae7dd8eff204665ab155fe5683)
+- updated jacdac-c [`75b5900`](https://github.com/microsoft/devicescript/commit/75b590088d3d21936f9b7e50df600c90969221aa)
+
 #### [v2.16.0](https://github.com/microsoft/devicescript/compare/v2.15.23...v2.16.0)
 
 > 2 January 2024
