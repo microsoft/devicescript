@@ -890,7 +890,7 @@ export class DeveloperToolsManager extends JDEventSource {
             if (!(v.major >= MIN_NODE_VERSION)) {
                 showErrorMessage(
                     "terminal.nodeversion",
-                    `Node.JS version outdated, found ${v.major}.${v.minor} but needed v16+.`
+                    `Node.JS version outdated, found ${v.major}.${v.minor} but needed v${MIN_NODE_VERSION}+.`
                 )
                 return undefined
             }
