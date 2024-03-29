@@ -280,7 +280,7 @@ const config = configure(
                             ],
                         },
                         {
-                            title: "Community",
+                            title: "Info",
                             items: [
                                 {
                                     label: "GitHub",
@@ -290,6 +290,10 @@ const config = configure(
                                     label: "Discussions",
                                     href: "https://github.com/microsoft/devicescript/discussions",
                                 },
+                                {
+                                    label: "Consumer Health Privacy",
+                                    href:"https://go.microsoft.com/fwlink/?linkid=2259814"
+                                }
                             ],
                         },
                     ],
