@@ -2,6 +2,7 @@
     "recommendations": [
         "dotenv.dotenv-vscode",
         "rpdswtk.vsmqtt",
-        "unifiedjs.vscode-mdx"
+        "unifiedjs.vscode-mdx",
+        "genaiscript.genaiscript-vscode"
     ]
 }
