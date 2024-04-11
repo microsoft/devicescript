@@ -721,7 +721,8 @@
       },
       "pins": {
         "P1": 2,
-        "P2": 0
+        "P2": 0,
+        "LED": 10
       },
       "productId": "0x38ccab8d",
       "url": "https://www.kittenbot.cc/products/kittenbot-grapebit"

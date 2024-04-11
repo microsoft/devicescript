@@ -37,6 +37,7 @@ A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.
 |:---------|:------------|---------:|
 | **P1** |  GPIO2 |  analogIn,  boot,  io |
 | **P2** |  GPIO0 |  analogIn,  io |
+| **LED** |  GPIO10 |  io |
 | **$services.buttonA[0].pin** |  GPIO21 |  $services.buttonA[0].pin,  bootUart,  io |
 | **$services.buttonB[1].pin** |  GPIO9 |  $services.buttonB[1].pin,  boot,  io |
 | **$services.music[2].pin** |  GPIO3 |  $services.music[2].pin,  analogIn,  io |
@@ -45,7 +46,6 @@ A round board packed with IMU, buzzer, motor control, 4 RGB LEDs, and Jacdac.
 | **i2c.pinSCL** |  GPIO7 |  i2c.pinSCL,  debug,  io |
 | **i2c.pinSDA** |  GPIO6 |  i2c.pinSDA,  debug,  io |
 | **jacdac.pin** |  GPIO5 |  jacdac.pin,  debug,  io |
-| **led.pin** |  GPIO10 |  led.pin,  io |
 
 
 
@@ -132,7 +132,8 @@ devicescript flash --board kittenbot_grapebit_esp32c3
     },
     "pins": {
         "P1": 2,
-        "P2": 0
+        "P2": 0,
+        "LED": 10
     }
 }
 ```

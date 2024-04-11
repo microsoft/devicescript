@@ -2,6 +2,8 @@ import { configureHardware } from "@devicescript/servers"
 import { pins, board } from "@dsboard/kittenbot_grapebit_esp32c3"
 import { startAccelerometer } from "./accelerometer"
 import { DA213BDriver } from "./da213b"
+import { startLed } from "./ledserver"
+import { LedStripLightType, LedVariant } from "@devicescript/core"
 /**
  * Support for KittenBot Grape:bit ESP32-C3
  *
@@ -72,5 +74,20 @@ export class KittenBotGrapeBit {
         await driver.init()
         const acc = await startAccelerometer(driver, {})
         return acc
+    }
+
+    /**
+     * Start On board LED
+     */
+    async startLed() {
+        const led = await startLed({
+            length: 4,
+            variant: LedVariant.Ring,
+            hwConfig: {
+                type: LedStripLightType.WS2812B_GRB,
+                pin: pins.LED,
+            }
+        })
+        return led
     }
 }
