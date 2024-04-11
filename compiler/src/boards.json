@@ -693,17 +693,13 @@
           "service": "buzzer"
         },
         {
-          "dir": -1,
-          "en": -1,
           "name": "M1",
-          "pwm": 1,
+          "pin1": 1,
           "service": "motor"
         },
         {
-          "dir": -1,
-          "en": -1,
+          "pin1": 4,
           "name": "M2",
-          "pwm": 4,
           "service": "motor"
         }
       ],

@@ -69,6 +69,7 @@ export class KittenBotGrapeBit {
      */
     async startAccelerometer() {
         const driver = new DA213BDriver()
+        await driver.init()
         const acc = await startAccelerometer(driver, {})
         return acc
     }
