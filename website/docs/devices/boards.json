@@ -569,17 +569,13 @@
         "service": "buzzer"
       },
       {
-        "dir": -1,
-        "en": -1,
         "name": "M1",
-        "pwm": 1,
+        "pin1": 1,
         "service": "motor"
       },
       {
-        "dir": -1,
-        "en": -1,
+        "pin1": 4,
         "name": "M2",
-        "pwm": 4,
         "service": "motor"
       }
     ],
@@ -601,7 +597,8 @@
     },
     "pins": {
       "P1": 2,
-      "P2": 0
+      "P2": 0,
+      "LED": 10
     },
     "productId": "0x38ccab8d",
     "url": "https://www.kittenbot.cc/products/kittenbot-grapebit",
