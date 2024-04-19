@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.16.3](https://github.com/microsoft/devicescript/compare/v2.16.2...v2.16.3)
+
+> 19 April 2024
+
+- Grapebit fixes [`#690`](https://github.com/microsoft/devicescript/pull/690)
+- Update docs on required node version [`#681`](https://github.com/microsoft/devicescript/pull/681)
+- add permissions [`cd8a966`](https://github.com/microsoft/devicescript/commit/cd8a966ab1ebeb2575c0b4c8699a30f33b464bd1)
+- add consumer health link [`ef6f1a9`](https://github.com/microsoft/devicescript/commit/ef6f1a98d673908b4bd82543279b5c556eb9abcd)
+- added permissions [`ac09abd`](https://github.com/microsoft/devicescript/commit/ac09abd126421cae1d49f0d59ccc1c04306c9380)
+
 #### [v2.16.2](https://github.com/microsoft/devicescript/compare/v2.16.1...v2.16.2)
 
 > 31 January 2024
