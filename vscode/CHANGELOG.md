@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.16.2](https://github.com/microsoft/devicescript/compare/v2.16.1...v2.16.2)
+
+> 31 January 2024
+
+- Update node version warning in devtoolsserver.ts [`#680`](https://github.com/microsoft/devicescript/pull/680)
+- sync devicescript-esp32 updates; fixes #679 [`#679`](https://github.com/microsoft/devicescript/issues/679)
+
 #### [v2.16.1](https://github.com/microsoft/devicescript/compare/v2.16.0...v2.16.1)
 
 > 10 January 2024
