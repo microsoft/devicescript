@@ -12,6 +12,9 @@ on:
 
 jobs:
     build:
+        permissions: 
+            actions: read
+            contents: write        
         env:
             EM_VERSION: 3.1.45
             EM_CACHE_FOLDER: "emsdk-cache2"
