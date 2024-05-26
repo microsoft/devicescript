@@ -430,6 +430,11 @@ interface Array<T> {
      * ```
      */
     sort(compareFn?: (a: T, b: T) => number): this
+
+    /**
+     * Returns an iterable of keys in the array
+     */
+    keys(): IterableIterator<number>;
 }
 
 interface ArrayConstructor {

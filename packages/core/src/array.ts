@@ -210,6 +210,11 @@ Array.prototype.sort = function <T>(compareFn?: (a: T, b: T) => number) {
     return this
 }
 
+Array.prototype.keys = function () {
+    console.log ('KEYS', this.length);
+    return Array(this.length).fill(0).map((_, i) => i);
+}
+
 Buffer.prototype.set = function (other: Buffer, trgOff?: number) {
     if (!trgOff) trgOff = 0
     this.blitAt(trgOff, other, 0, other.length)
