@@ -254,7 +254,7 @@ const optionalFiles: FileSet = {
         tabWidth: 4,
     },
     ".vscode/extensions.json": {
-        recommendations: [MARKETPLACE_EXTENSION_ID, "esbenp.prettier-vscode"],
+        recommendations: [MARKETPLACE_EXTENSION_ID, "esbenp.prettier-vscode", "genaiscript.genaiscript-vscode"],
     },
     ".vscode/launch.json": {
         version: "0.2.0",
