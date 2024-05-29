@@ -204,6 +204,22 @@ function testArraySort() {
     assert(mixed.join() === "2,5,9,apple,banana,cherry", "sort5")
 }
 
+function testArrayKeys() {
+    const sparseArray = ['a', undefined , 'c']
+    const array = ["a", "b", "c"]
+
+    assert(joinIterable(array.keys()) === '0,1,2', "arrayKeys")
+    assert(joinIterable(sparseArray.keys()) === '0,1,2', "sparseArrayKeys")
+
+    function joinIterable(iterator: IterableIterator<number>): string {
+        const values:number[] = [];
+        for (const key of iterator) {
+            values.push(key)
+        }
+        return values.join();
+    }
+}
+
 testArraySome()
 testArrayEvery()
 testArrayFill()
@@ -219,3 +235,4 @@ testArrayIncludes()
 testArrayAt()
 testArrayWith()
 testArraySort()
+testArrayKeys()
