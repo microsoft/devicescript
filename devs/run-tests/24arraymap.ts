@@ -220,6 +220,14 @@ function testArrayKeys() {
     }
 }
 
+function testArrayReverse() {
+    const array = ['one', 'two', 'three'];
+
+    const reversed = array.reverse();
+    assert(reversed.join() === 'three,two,one', "reversed");
+    assert(array.join() === 'three,two,one', "reversedDestructive");
+}
+
 testArraySome()
 testArrayEvery()
 testArrayFill()
@@ -236,3 +244,4 @@ testArrayAt()
 testArrayWith()
 testArraySort()
 testArrayKeys()
+testArrayReverse()

@@ -215,6 +215,22 @@ Array.prototype.keys = function () {
     return Array(this.length).fill(0).map((_, i) => i);
 }
 
+Array.prototype.reverse = function () {
+    const len = this.length;
+    const middle = Math.floor(len / 2);
+    let lower = 0;
+
+    while (lower !== middle) {
+        const upper = len - lower - 1;
+        const lowerValue = this[lower];
+        this[lower] = this[upper];
+        this[upper] = lowerValue;
+        lower++;
+    }
+    return this;
+}
+
+
 Buffer.prototype.set = function (other: Buffer, trgOff?: number) {
     if (!trgOff) trgOff = 0
     this.blitAt(trgOff, other, 0, other.length)
