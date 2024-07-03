@@ -132,10 +132,10 @@ String.prototype.replaceAll = function (
     let match = this.indexOf(searchValue)
     while (match !== -1) {
         resultString =
-            resultString.slice(0, match) +
-            replaceValue +
-            resultString.slice(match + searchValue.length)
-        match = resultString.indexOf(searchValue)
+        resultString.slice(0, match) +
+        replaceValue +
+        resultString.slice(match + searchValue.length)
+        match = resultString.indexOf(searchValue, match + replaceValue.length)
     }
     return resultString
 }

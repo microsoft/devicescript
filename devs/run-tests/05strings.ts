@@ -132,11 +132,18 @@ function testReplace() {
     const q = "a,b,c,d"
     const sq = q.replace(",", ":")
     isEq(sq, "a:b,c,d")
+    const q2 = "a,b,c,d"
+    const sq2 = q2.replace("c,d", "c,d,e,f")
+    isEq(sq2, "a,b,c,d,e,f")
 }
+
 function testReplaceAll() {
     const q = "a,b,c,d"
     const sq = q.replaceAll(",", ":")
     isEq(sq, "a:b:c:d")
+    const q2 = "a,b,c,d,c,d"
+    const sq2 = q2.replaceAll("c,d", "c,d,e,f")
+    isEq(sq2, "a,b,c,d,e,f,c,d,e,f")
 }
 
 testStrings()
