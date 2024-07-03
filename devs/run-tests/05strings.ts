@@ -128,9 +128,22 @@ function testSplit() {
     isEq(sq3[2], "c,d")
 }
 
+function testReplace() {
+    const q = "a,b,c,d"
+    const sq = q.replace(",", ":")
+    isEq(sq, "a:b,c,d")
+}
+function testReplaceAll() {
+    const q = "a,b,c,d"
+    const sq = q.replaceAll(",", ":")
+    isEq(sq, "a:b:c:d")
+}
+
 testStrings()
 testStringOps()
 consStringTest()
 
 testSlice()
 testSplit()
+testReplace()
+testReplaceAll()

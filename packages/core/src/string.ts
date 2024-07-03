@@ -109,6 +109,36 @@ String.prototype.split = function (
     return A
 }
 
+String.prototype.replace = function (
+    this: string,
+    searchValue: string,
+    replaceValue: string
+): string {
+    const match = this.indexOf(searchValue)
+    if (match === -1) return this
+    return (
+        this.slice(0, match) +
+        replaceValue +
+        this.slice(match + searchValue.length)
+    )
+}
+
+String.prototype.replaceAll = function (
+    this: string,
+    searchValue: string,
+    replaceValue: string
+): string {
+    let resultString = this
+    let match = this.indexOf(searchValue)
+    while (match !== -1) {
+        resultString =
+            resultString.slice(0, match) +
+            replaceValue +
+            resultString.slice(match + searchValue.length)
+        match = resultString.indexOf(searchValue)
+    }
+    return resultString
+}
 function splitMatch(S: string, q: number, R: string): number {
     return S.indexOf(R, q, q + 1) === q ? q + R.length : -1
 }
