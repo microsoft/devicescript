@@ -5,7 +5,7 @@ title: Accelerometer
 
 # Accelerometer
 
-The `startAccelerometer` function starts a [accelerometer](https://microsoft.github.io/jacdac-docs/services/accelerometer) server on the device and returns a [client](/api/clients/accelerometer).
+The `startAccelerometer` function starts an [accelerometer](https://microsoft.github.io/jacdac-docs/services/accelerometer) server on the device and returns a [client](/api/clients/accelerometer).
 
 The accelerometer IMU chip will be auto-detected if it is supported.
 

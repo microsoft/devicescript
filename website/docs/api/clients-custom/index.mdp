@@ -1,7 +1,7 @@
 In DeviceScript, hardware peripherals (and generally anything outside the VM) are modelled
 as [Jacdac services](https://microsoft.github.io/jacdac-docs/services/).
 
-The peripherals are **servers** and the your client application creates **clients** to interact with them.
+The peripherals are **servers** and your client application creates **clients** to interact with them.
 
 ## Declaring roles
 
