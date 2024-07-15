@@ -15,4 +15,4 @@ const { temperature, humidity } = await startAHT20()
 
 ## Configuration
 
--   Configure I2C throught the [board configuration](/developer/board-configuration)
+-   Configure I2C through the [board configuration](/developer/board-configuration)

@@ -196,7 +196,7 @@ The JSON object is converted to a buffer and
 encrypted using AES-256-CCM and an 8-byte authentication tag is appended.
 The initialization vector (IV) is all-zero.
 
-This is send to the server, which decrypts the request accordingly.
+This is sent to the server, which decrypts the request accordingly.
 
 :::warning
 
@@ -206,7 +206,7 @@ Otherwise, someone can replay a client request.
 
 :::
 
-If the server responds with with `2xx` code, the response is assumed to be
+If the server responds with `2xx` code, the response is assumed to be
 a JSON object encrypted using a key derived using HKDF from the password,
 the previously generated salt, and `info` parameter set to the value
 of `x-devs-enc-fetch-info` in the response.

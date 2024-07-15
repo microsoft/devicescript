@@ -1,7 +1,7 @@
 ### axes {#ro:axes}
 
 An array representing the controls with axes present on the device (e.g. analog thumb sticks),
-as `[x, y]`. Each entry in the array is a floating point value in the range ` -1.0 – 1.0``, representing the axis position from the lowest value ( `-1.0`) to the highest value (`1.0`).
+as `[x, y]`. Each entry in the array is a floating point value in the range `-1.0 – 1.0`, representing the axis position from the lowest value (`-1.0`) to the highest value (`1.0`).
 
 -   type: `ClientRegister<{ x: number; y: number }>` (packing format `i1.15 i1.15`)
 

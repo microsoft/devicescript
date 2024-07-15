@@ -9,7 +9,7 @@ sidebar_position: 49
 DeviceScript provides access to digital GPIO (General Purpose Input/Output) operations
 on pins that do **not** require precise real time timings.
 
-It is recommend to encapsulate the GPIO access into server implementation as they are rather low level.
+It is recommended to encapsulate the GPIO access into server implementation as they are rather low level.
 
 :::caution
 
@@ -21,7 +21,7 @@ natively in C using interrupts, or better yet offload it to an [external Jacdac 
 
 ## Pin mappings
 
-While you can use hardware GPIO numbers with the `ds.gpio()` function, 
+While you can use hardware GPIO numbers with the `ds.gpio()` function,
 it is highly recommended that you instead import a board definition file an use pin names
 matching silk on the hardware.
 
