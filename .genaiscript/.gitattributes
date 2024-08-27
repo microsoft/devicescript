@@ -1,0 +1,4 @@
+# avoid merge issues and ignore files in diffs
+*.json -diff merge=ours linguist-generated
+*.jsonl -diff merge=ours linguist-generated        
+*.js -diff merge=ours linguist-generated

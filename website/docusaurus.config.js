@@ -305,14 +305,6 @@ const config = configure(
             }),
     },
     {
-        appInsights: {
-            instrumentationKey: "06283122-cd76-493c-9641-fbceeeefd9c6",
-        },
-        algolia: {
-            appId: "AL1OJNE8M9",
-            apiKey: "0d31b2119e202cd71b47e914cc567fab",
-            indexName: "devicescript",
-        },
         codeSandbox: {
             defaultTemplate: "devicescript",
             templates: {
