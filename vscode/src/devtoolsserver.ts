@@ -927,6 +927,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     "devicescript.jacdac"
                 )
                 const isWindows = globalThis.process?.platform === "win32"
+                const isLinux = globalThis.process?.platform === "linux"
                 const useShell =
                     this.lastCreateCliFailed ||
                     (options.useShell ?? !!devToolsConfig.get("shell"))
@@ -939,6 +940,9 @@ export class DeveloperToolsManager extends JDEventSource {
                 const internet =
                     options.internet || !!devToolsConfig.get("internet")
                 let cli = nodePath || "node"
+                if(isLinux) {
+                    cli = "";
+                }
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
