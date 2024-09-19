@@ -113,7 +113,19 @@ interface String {
      * If this value is not specified, the substring continues to the end of stringObj.
      */
     slice(start?: number, end?: number): string
+    /**
+     * Replace the first instance of a substring in a string, using a search string.
+     * @param searchValue The substring to search for.
+     * @param replaceValue The string containing the text to replace the matched substring.
+     */
+    replace(searchValue: string, replaceValue: string): string
 
+    /**
+     * Replace all instances of a substring in a string, using a search string.
+     * @param searchValue The substring to search for.
+     * @param replaceValue The string containing the text to replace all the matches found.
+     */
+    replaceAll(searchValue: string, replaceValue: string): string
     /** Returns the length of a String object. */
     readonly length: number
 
@@ -440,7 +452,7 @@ interface Array<T> {
     /**
      * Returns an iterable of keys in the array
      */
-    keys(): IterableIterator<number>;
+    keys(): IterableIterator<number>
 }
 
 interface ArrayConstructor {
@@ -725,10 +737,10 @@ declare var Promise: PromiseConstructor
 type Awaited<T> = T extends null | undefined
     ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
     : T extends object & { then(onfulfilled: infer F, ...args: infer _): any } // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped
-    ? F extends (value: infer V, ...args: infer _) => any // if the argument to `then` is callable, extracts the first argument
-        ? Awaited<V> // recursively unwrap the value
-        : never // the argument to `then` was not callable
-    : T // non-object or non-thenable
+      ? F extends (value: infer V, ...args: infer _) => any // if the argument to `then` is callable, extracts the first argument
+          ? Awaited<V> // recursively unwrap the value
+          : never // the argument to `then` was not callable
+      : T // non-object or non-thenable
 
 // utility types
 
