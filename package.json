@@ -41,7 +41,9 @@
         "package:vscode": "cd vscode && yarn package",
         "processvideos": "node scripts/processvideos.mjs",
         "bumprelease": "node scripts/bump.mjs --cloud",
-        "changelog": "auto-changelog -o ./vscode/CHANGELOG.md --hide-credit --hide-empty-releases --ignore-commit-pattern \"(skip ci|bump bytecode|bump to)\""
+        "changelog": "auto-changelog -o ./vscode/CHANGELOG.md --hide-credit --hide-empty-releases --ignore-commit-pattern \"(skip ci|bump bytecode|bump to)\"",
+        "genai": "npx --yes genaiscript run",
+        "gcm": "npx --yes genaiscript run gcm"
     },
     "workspaces": [
         "interop",
