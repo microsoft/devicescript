@@ -16,6 +16,8 @@ md.replace(/##\s+(?<name>.+)\s+\{#(?<id>[^}]+)\}/gi, _ => {
     return ""
 })
 
+console.log ('ANY CHANGE WOULD DO')
+
 const fn = "./interop/src/errors.ts"
 const newTs = `// generated file, run scripts/builderrors.mjs to update
 export const errors: Record<string, string> = ${JSON.stringify(
