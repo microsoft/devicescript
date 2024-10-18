@@ -4,3 +4,5 @@ retrieval/
 containers/
 temp/
 tests/
+stats/
+*.csv
